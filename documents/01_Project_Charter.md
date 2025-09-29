@@ -22,8 +22,8 @@ and financial integrity (QuickBooks Online), with site-scoped security and real-
 - DR drill: RPO ≤5m, RTO ≤30m; security scans clean; <0.1% DLQ on compliance/accounting queues (7d).
 
 ## Scope & Phasing
-- **MVP (Foundations + Core Ops/Compliance):** Identity/RLS, Sites & Spatial, Genetics/Cloning, Batch lifecycle & tasks (Slack notify-only), Telemetry + rollups, Irrigation (open-loop), Inventory & labels, Processing basics, Compliance queues, COA ingestion & holds, QBO item-level, Reporting, Observability.
-- **Phase 2:** Closed-loop EC/pH (flagged + shadow), interlocks & dryback auto-shots, Slack two-way, AI Yield, GL-summary JE, sustainability dashboards, two-person destruction.
+- **MVP (Foundations + Core Ops/Compliance + Cultivation Automation):** Identity/RLS, Sites & Spatial, Genetics/Cloning, Batch lifecycle & tasks (Slack notify-only), Telemetry + rollups, Environmental monitoring with alarming, Irrigation (open-loop) with programs and guardrails, Interlocks & safety controls, Inventory & labels, Processing basics, Compliance queues, COA ingestion & holds, QBO item-level, Reporting, Observability. **Note:** Closed-loop control (HVAC, lighting, VPD, EC/pH) will run in shadow/monitor mode during MVP pilot and be promoted to full actuation in Phase 2 after validation per FRP-05, FRP-06, FRP-14 promotion checklists.
+- **Phase 2:** Closed-loop EC/pH control (shadow → enable with feature flags per FRP-14), Dryback auto-shots, Advanced crop analytics, Slack two-way integration, AI Yield prediction, GL-summary JE, Sustainability dashboards (WUE/NUE/kWh), ET₀ recommendations (FRP-15), Two-person destruction, MPC-based climate control.
 - **Phase 3:** Lab APIs, additional controllers, PdM at scale, BI exports, mobile offline, GraphQL read layer.
 
 ## Stakeholders & RACI (high level)
