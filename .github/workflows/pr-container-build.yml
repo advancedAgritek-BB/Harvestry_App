@@ -106,26 +106,73 @@ jobs:
 
           echo "Starting container for health check..."
           CONTAINER_ID=$(docker run -d \
+            -p 8080:8080 \
             -e ASPNETCORE_ENVIRONMENT=Development \
+            -e SKIP_MIGRATIONS=true \
+            -e USE_INMEMORY_DB=true \
             -e ConnectionStrings__PostgreSQL="Host=localhost;Database=test;Username=test;Password=test" \
             "$IMAGE_TAG")
 
-          echo "Waiting for container to start..."
-          sleep 10
-
-          echo "Checking container health..."
-          if docker exec "$CONTAINER_ID" wget -q -O- http://localhost:8080/health/live > /dev/null 2>&1; then
-            echo "✅ Health check passed"
-            docker stop "$CONTAINER_ID"
-            docker rm "$CONTAINER_ID"
-            exit 0
+          echo "Container ID: $CONTAINER_ID"
+          
+          # Determine which HTTP client to use (prefer curl, fallback to wget)
+          if command -v curl &> /dev/null; then
+            HTTP_CLIENT="curl"
+            HTTP_CMD="curl -f -s -o /dev/null -w %{http_code}"
+          elif command -v wget &> /dev/null; then
+            HTTP_CLIENT="wget"
+            HTTP_CMD="wget -q -O /dev/null --server-response"
           else
-            echo "❌ Health check failed"
-            docker logs "$CONTAINER_ID"
+            echo "❌ Neither curl nor wget available on runner"
             docker stop "$CONTAINER_ID"
             docker rm "$CONTAINER_ID"
             exit 1
           fi
+          
+          echo "Using $HTTP_CLIENT for health check"
+          
+          # Retry health check with timeout
+          MAX_RETRIES=30
+          RETRY_INTERVAL=2
+          TIMEOUT=60
+          ELAPSED=0
+          RETRY_COUNT=0
+          
+          echo "Polling http://localhost:8080/health/live..."
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ $ELAPSED -lt $TIMEOUT ]; do
+            if [ "$HTTP_CLIENT" == "curl" ]; then
+              HTTP_CODE=$(curl -f -s -o /dev/null -w "%{http_code}" http://localhost:8080/health/live 2>/dev/null || echo "000")
+              if [ "$HTTP_CODE" == "200" ]; then
+                echo "✅ Health check passed (HTTP $HTTP_CODE) after ${ELAPSED}s"
+                docker stop "$CONTAINER_ID"
+                docker rm "$CONTAINER_ID"
+                exit 0
+              fi
+            else
+              if wget -q -O /dev/null http://localhost:8080/health/live 2>/dev/null; then
+                echo "✅ Health check passed after ${ELAPSED}s"
+                docker stop "$CONTAINER_ID"
+                docker rm "$CONTAINER_ID"
+                exit 0
+              fi
+            fi
+            
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            ELAPSED=$((ELAPSED + RETRY_INTERVAL))
+            
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Attempt $RETRY_COUNT/$MAX_RETRIES failed, retrying in ${RETRY_INTERVAL}s..."
+              sleep $RETRY_INTERVAL
+            fi
+          done
+          
+          echo "❌ Health check failed after ${ELAPSED}s and $RETRY_COUNT attempts"
+          echo "Container logs:"
+          docker logs "$CONTAINER_ID"
+          docker stop "$CONTAINER_ID"
+          docker rm "$CONTAINER_ID"
+          exit 1
 
       - name: Scan image for vulnerabilities
         if: github.event.pull_request.head.repo.fork == false

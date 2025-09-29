@@ -19,6 +19,7 @@ TRAFFIC_SHIFT="5,25,50,100"
 SHIFT_INTERVAL=300 # 5 minutes between shifts
 HEALTH_CHECK_RETRIES=10
 ROLLBACK_ON_ERROR=true
+PROMETHEUS_URL="http://prometheus:9090"
 
 # Print usage
 usage() {
@@ -33,6 +34,7 @@ OPTIONS:
     -v, --version VERSION   Version tag to deploy (required)
     -t, --traffic SHIFTS    Traffic shift percentages (comma-separated) [default: 5,25,50,100]
     -i, --interval SECS     Seconds between traffic shifts [default: 300]
+    -p, --prometheus URL    Prometheus URL [default: http://prometheus:9090]
     -r, --no-rollback       Disable automatic rollback on error
     -h, --help              Show this help message
 
@@ -71,6 +73,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -i|--interval)
             SHIFT_INTERVAL="$2"
+            shift 2
+            ;;
+        -p|--prometheus)
+            PROMETHEUS_URL="$2"
             shift 2
             ;;
         -r|--no-rollback)
@@ -125,10 +131,33 @@ echo ""
 # Step 1: Deploy green version
 echo -e "${YELLOW}Step 1: Deploying green version...${NC}"
 
-kubectl --namespace="$K8S_NAMESPACE" create deployment "$GREEN_DEPLOYMENT" \
-    --image="harvestry/${SERVICE}:${VERSION}" \
-    --replicas=1 \
-    --dry-run=client -o yaml | kubectl apply -f -
+cat <<EOF | kubectl --namespace="$K8S_NAMESPACE" apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${GREEN_DEPLOYMENT}
+  namespace: ${K8S_NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${SERVICE}
+      version: green
+  template:
+    metadata:
+      labels:
+        app: ${SERVICE}
+        version: green
+    spec:
+      containers:
+      - name: ${SERVICE}
+        image: harvestry/${SERVICE}:${VERSION}
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: ${ENVIRONMENT}
+EOF
 
 # Wait for green deployment to be ready
 echo -e "${YELLOW}Waiting for green deployment to be ready...${NC}"
@@ -138,7 +167,7 @@ kubectl --namespace="$K8S_NAMESPACE" wait --for=condition=available --timeout=30
 # Step 2: Health check green deployment
 echo -e "${YELLOW}Step 2: Running health checks on green deployment...${NC}"
 
-GREEN_POD=$(kubectl --namespace="$K8S_NAMESPACE" get pods -l app="$GREEN_DEPLOYMENT" \
+GREEN_POD=$(kubectl --namespace="$K8S_NAMESPACE" get pods -l app="$SERVICE",version=green \
     -o jsonpath="{.items[0].metadata.name}")
 
 HEALTH_CHECK_SUCCESS=false
@@ -204,17 +233,18 @@ EOF
     
     MONITORING_SUCCESS=true
     for i in $(seq 1 $((SHIFT_INTERVAL / 30))); do
-        # Check error rate
-        ERROR_RATE=$(kubectl --namespace="$K8S_NAMESPACE" exec -it deploy/prometheus -- \
-            promtool query instant 'rate(http_request_errors_total{service="'$SERVICE'"}[1m]) / rate(http_requests_total{service="'$SERVICE'"}[1m])' | \
-            grep -oP '\d+\.\d+' || echo "0")
-        
+        # Check error rate via HTTP query
+        QUERY="rate(http_request_errors_total{service=\"${SERVICE}\",environment=\"${ENVIRONMENT}\"}[1m]) / rate(http_requests_total{service=\"${SERVICE}\",environment=\"${ENVIRONMENT}\"}[1m])"
+
+        RESPONSE=$(curl -s "${PROMETHEUS_URL}/api/v1/query" --data-urlencode "query=${QUERY}")
+        ERROR_RATE=$(echo "$RESPONSE" | jq -r '.data.result[0].value[1]' 2>/dev/null || echo "0")
+
         if (( $(echo "$ERROR_RATE > 0.01" | bc -l) )); then
             echo -e "${RED}✗ Error rate exceeded threshold: $ERROR_RATE${NC}"
             MONITORING_SUCCESS=false
             break
         fi
-        
+
         echo -e "${GREEN}✓ Metrics healthy (error rate: $ERROR_RATE)${NC}"
         sleep 30
     done

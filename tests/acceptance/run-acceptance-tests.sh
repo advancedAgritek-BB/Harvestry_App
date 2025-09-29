@@ -97,8 +97,8 @@ echo -e "${BLUE}======================================${NC}"
 echo ""
 echo "Environment:  $ENVIRONMENT"
 echo "Duration:     ${DURATION_DAYS} days"
-echo "Start:        $(date -r $START_TIME)"
-echo "End:          $(date -r $END_TIME)"
+echo "Start:        $(date -d "@$START_TIME")"
+echo "End:          $(date -d "@$END_TIME")"
 echo "Check Every:  $((CHECK_INTERVAL / 60)) minutes"
 echo ""
 echo -e "${YELLOW}SLO Targets:${NC}"
@@ -257,7 +257,11 @@ echo "  ]," >> "$RESULTS_FILE"
 echo "  \"end_time\": \"$(date -Iseconds)\"," >> "$RESULTS_FILE"
 echo "  \"total_checks\": $CHECK_COUNT," >> "$RESULTS_FILE"
 echo "  \"failed_checks\": $CHECKS_FAILED," >> "$RESULTS_FILE"
-echo "  \"success_rate\": $(echo "scale=4; (($CHECK_COUNT - $CHECKS_FAILED) / $CHECK_COUNT) * 100" | bc)" >> "$RESULTS_FILE"
+if [ "$CHECK_COUNT" -eq 0 ]; then
+    echo "  \"success_rate\": 0.0000" >> "$RESULTS_FILE"
+else
+    echo "  \"success_rate\": $(echo "scale=4; (($CHECK_COUNT - $CHECKS_FAILED) / $CHECK_COUNT) * 100" | bc)" >> "$RESULTS_FILE"
+fi
 echo "}" >> "$RESULTS_FILE"
 
 # Final summary
@@ -268,7 +272,11 @@ echo ""
 echo "Duration:       ${DURATION_DAYS} days"
 echo "Total Checks:   $CHECK_COUNT"
 echo "Failed Checks:  $CHECKS_FAILED"
-echo "Success Rate:   $(echo "scale=2; (($CHECK_COUNT - $CHECKS_FAILED) / $CHECK_COUNT) * 100" | bc)%"
+if [ "$CHECK_COUNT" -eq 0 ]; then
+    echo "Success Rate:   0.00%"
+else
+    echo "Success Rate:   $(echo "scale=2; (($CHECK_COUNT - $CHECKS_FAILED) / $CHECK_COUNT) * 100" | bc)%"
+fi
 echo ""
 echo "Results saved to: $RESULTS_FILE"
 echo ""

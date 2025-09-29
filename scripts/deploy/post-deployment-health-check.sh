@@ -124,8 +124,9 @@ else
     echo -e "${GREEN}✓ Found $POD_COUNT pod(s)${NC}"
     
     # Check pod ready status
-    READY_PODS=$(kubectl --namespace="$NAMESPACE" get pods -l app="$SERVICE" \
-        -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' | grep -o True | wc -l)
+    READY_STATUS=$(kubectl --namespace="$NAMESPACE" get pods -l app="$SERVICE" \
+        -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
+    READY_PODS=$(echo "$READY_STATUS" | grep -o True | wc -l)
     
     if [ "$READY_PODS" -eq "$POD_COUNT" ]; then
         echo -e "${GREEN}✓ All pods ready ($READY_PODS/$POD_COUNT)${NC}"

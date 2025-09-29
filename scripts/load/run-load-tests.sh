@@ -191,8 +191,8 @@ SLO Targets:
 - API Tasks: p95 < 300ms
 
 Results:
-- Total Tests: $((TEST_SUITE == "all" ? 3 : 1))
-- Passed: $(( (TEST_SUITE == "all" ? 3 : 1) - TESTS_FAILED ))
+- Total Tests: $([ "$TEST_SUITE" == "all" ] && echo "3" || echo "1")
+- Passed: $(TOTAL=$([ "$TEST_SUITE" == "all" ] && echo "3" || echo "1"); echo $((TOTAL - TESTS_FAILED)))
 - Failed: $TESTS_FAILED
 
 Detailed results available in: $RESULTS_DIR

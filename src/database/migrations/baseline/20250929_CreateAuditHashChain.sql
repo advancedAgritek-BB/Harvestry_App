@@ -126,14 +126,23 @@ BEGIN
     
     -- Compute diff if both old and new values provided
     IF p_old_values IS NOT NULL AND p_new_values IS NOT NULL THEN
-        v_diff := jsonb_build_object(
+        SELECT jsonb_build_object(
             'added', p_new_values - p_old_values,
             'removed', p_old_values - p_new_values,
-            'changed', jsonb_object_agg(
-                key, 
+            'changed', COALESCE(changed_agg, '{}'::jsonb)
+        ) INTO v_diff
+        FROM (
+            SELECT jsonb_object_agg(
+                key,
                 jsonb_build_object('old', p_old_values->key, 'new', p_new_values->key)
-            )
-        );
+            ) as changed_agg
+            FROM (
+                SELECT key FROM jsonb_object_keys(p_old_values) key
+                INTERSECT
+                SELECT key FROM jsonb_object_keys(p_new_values) key
+            ) keys
+            WHERE p_old_values->key != p_new_values->key
+        ) diff_query;
     END IF;
     
     -- Compute current hash
@@ -216,7 +225,7 @@ BEGIN
         WHERE a.occurred_at BETWEEN p_start_date AND p_end_date
         ORDER BY a.occurred_at
     )
-    SELECT 
+    SELECT
         s.audit_id,
         s.occurred_at,
         compute_audit_hash(
@@ -225,7 +234,7 @@ BEGIN
             s.action,
             s.entity_type,
             s.entity_id,
-            s.expected_previous_hash
+            s.previous_hash
         ) as expected_hash,
         s.current_hash as actual_hash,
         compute_audit_hash(
@@ -234,8 +243,9 @@ BEGIN
             s.action,
             s.entity_type,
             s.entity_id,
-            s.expected_previous_hash
-        ) = s.current_hash as is_valid
+            s.previous_hash
+        ) = s.current_hash AND
+        s.previous_hash = s.expected_previous_hash as is_valid
     FROM audit_sequence s;
 END;
 $$ LANGUAGE plpgsql;

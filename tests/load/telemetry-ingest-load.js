@@ -19,10 +19,9 @@ export const options = {
     { duration: '2m', target: 0 },    // Ramp down
   ],
   thresholds: {
-    'http_req_duration{endpoint:ingest}': ['p(95)<1000'], // p95 < 1.0s
-    'http_req_duration{endpoint:ingest}': ['p(99)<2500'], // p99 < 2.5s
-    'ingest_errors': ['rate<0.01'],                        // Error rate < 1%
-    'http_req_failed': ['rate<0.01'],                      // HTTP errors < 1%
+    'http_req_duration{endpoint:ingest}': ['p(95)<1000', 'p(99)<2500'], // p95 < 1.0s, p99 < 2.5s
+    'ingest_errors': ['rate<0.01'],                                     // Error rate < 1%
+    'http_req_failed': ['rate<0.01'],                                   // HTTP errors < 1%
   },
 };
 

@@ -101,8 +101,16 @@ var app = builder.Build();
 // Use Sentry middleware
 app.UseSentryTracing();
 
-// Health check endpoint
-app.MapGet("/health/sentry", () => SentrySdk.CaptureMessage("Sentry health check"));
+// Health check endpoint (no side effects)
+app.MapGet("/health/sentry", () => "Sentry integration is configured");
+
+// Admin-only endpoint for manual Sentry testing (requires authentication)
+app.MapPost("/admin/test-sentry", () =>
+{
+    SentrySdk.CaptureMessage("Manual Sentry test triggered by admin", SentryLevel.Info);
+    return Results.Ok(new { message = "Sentry test event sent" });
+})
+.RequireAuthorization("AdminOnly"); // Assumes you have admin policy configured
 
 app.Run();
 ```

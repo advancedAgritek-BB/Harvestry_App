@@ -20,8 +20,7 @@ export const options = {
     { duration: '1m', target: 0 },    // Ramp down
   ],
   thresholds: {
-    'push_latency': ['p(95)<1500'], // p95 < 1.5s
-    'push_latency': ['p(99)<3000'], // p99 < 3.0s
+    'push_latency': ['p(95)<1500', 'p(99)<3000'], // p95 < 1.5s, p99 < 3.0s
     'connection_errors': ['rate<0.05'], // Connection error rate < 5%
   },
 };
