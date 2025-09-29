@@ -1,5 +1,9 @@
 # Grafana Datasource Provisioning
 # Track A: Automated datasource configuration
+#
+# SECURITY NOTE: All credentials use environment variable interpolation.
+# Passwords are loaded from ${VARIABLE_NAME} at runtime and must never be hardcoded.
+# Exposed credentials must be rotated immediately via your secret management system.
 
 apiVersion: 1
 
@@ -55,6 +59,7 @@ datasources:
     version: 1
 
   # PostgreSQL - Direct database queries (for analytics)
+  # SECURITY: Password loaded from GF_DATASOURCES_POSTGRES_PASSWORD environment variable
   - name: PostgreSQL
     type: postgres
     access: proxy
@@ -62,7 +67,7 @@ datasources:
     database: harvestry_dev
     user: harvestry_user
     secureJsonData:
-      password: harvestry_dev_password
+      password: ${GF_DATASOURCES_POSTGRES_PASSWORD}
     editable: false
     jsonData:
       sslmode: prefer

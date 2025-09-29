@@ -8,9 +8,9 @@ This directory contains feature flag definitions for Harvestry ERP. Flags enable
 
 ---
 
-## 🚩 Risky Flags (Require Promotion Checklist)
+## 🚩 Gated Flags (Require Promotion Checklist)
 
-These flags require shadow mode, staged rollout, and VP Product + SRE sign-off:
+These flags require shadow mode, staged rollout, VP Product + SRE sign-off, and full governance artifacts per CI policy:
 
 ### `closed_loop_ecph_enabled`
 **Purpose**: Enable closed-loop EC/pH control  
@@ -40,26 +40,32 @@ These flags require shadow mode, staged rollout, and VP Product + SRE sign-off:
 **Rollback**: Disable returns to setpoint control  
 **Runbook**: `/docs/ops/runbooks/Runbook_Autosteer_MPC.md`
 
+### `slack_mirror_mode`
+**Purpose**: Full two-way Slack synchronization  
+**Risk Level**: GATED (integration reliability)  
+**Promotion**: Shadow 14d → Staged 7d → Enable  
+**Rollback**: Disable returns to notify-only mode  
+**Note**: Requires full promotion checklist and governance artifacts (see CI policy below)
+
+### `sms_critical_enabled`
+**Purpose**: SMS notifications for critical alerts  
+**Risk Level**: GATED (critical alerting channel)  
+**Promotion**: Shadow 14d → Staged 7d → Enable  
+**Rollback**: Disable stops SMS, keeps Slack/email  
+**Note**: Requires full promotion checklist and governance artifacts (see CI policy below)
+
+### `predictive_maintenance_auto_wo`
+**Purpose**: Auto-create work orders from PdM predictions  
+**Risk Level**: GATED (automated operational workflow)  
+**Promotion**: Shadow 14d → Staged 7d → Enable  
+**Rollback**: Disable requires manual work order creation  
+**Note**: Requires full promotion checklist and governance artifacts (see CI policy below)
+
 ---
 
 ## 📋 Standard Flags
 
 These flags can be toggled without extended promotion workflow:
-
-### `slack_mirror_mode`
-**Purpose**: Full two-way Slack synchronization  
-**Risk Level**: LOW (messaging only)  
-**Rollback**: Disable returns to notify-only mode
-
-### `sms_critical_enabled`
-**Purpose**: SMS notifications for critical alerts  
-**Risk Level**: LOW (notification channel)  
-**Rollback**: Disable stops SMS, keeps Slack/email
-
-### `predictive_maintenance_auto_wo`
-**Purpose**: Auto-create work orders from PdM predictions  
-**Risk Level**: MEDIUM (operational workflow)  
-**Rollback**: Disable requires manual work order creation
 
 ### `clickhouse_olap_enabled`
 **Purpose**: Enable ClickHouse for OLAP queries  
@@ -152,10 +158,16 @@ if (variant.Name == "shadow")
 
 ### CI/CD Gate
 
-The `feature-flag-policy.yml` workflow enforces:
-- ✅ Risky flags in production require PDD + Runbook links
+The `feature-flag-policy.yml` workflow (`.github/workflows/feature-flag-policy.yml`) enforces:
+- ✅ Gated flags in production require PDD + Runbook links
 - ✅ PR must reference promotion checklist
 - ✅ Auto-comment with governance requirements
+
+**Authoritative Source**: The CI policy workflow at `.github/workflows/feature-flag-policy.yml` (lines 40-48) defines the complete list of gated flags requiring full promotion artifacts. When enabling any gated flag for production, the CI gate will validate that your PR includes:
+- PDD (Product Design Document) link
+- Operational Runbook link
+- Promotion Checklist (recommended)
+- Shadow Mode Results (recommended)
 
 ### Audit Trail
 

@@ -159,6 +159,9 @@ services:
       GF_SERVER_ROOT_URL: http://localhost:3001
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      # SECURITY: PostgreSQL datasource password (required by provisioning/datasources/datasources.yml)
+      # For production: Load from vault/secret manager, never hardcode
+      GF_DATASOURCES_POSTGRES_PASSWORD: harvestry_dev_password
     volumes:
       - grafana-data:/var/lib/grafana
       - ./src/infrastructure/monitoring/grafana/provisioning:/etc/grafana/provisioning
