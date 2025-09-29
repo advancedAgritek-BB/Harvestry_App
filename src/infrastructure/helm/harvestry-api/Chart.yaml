@@ -1,0 +1,17 @@
+apiVersion: v2
+name: harvestry-api
+description: Harvestry ERP API Gateway Helm Chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - harvestry
+  - erp
+  - agriculture
+  - cannabis
+home: https://harvestry.com
+sources:
+  - https://github.com/harvestry/harvestry-app
+maintainers:
+  - name: DevOps Squad
+    email: devops@harvestry.com
