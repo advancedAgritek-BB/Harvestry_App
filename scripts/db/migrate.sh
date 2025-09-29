@@ -198,7 +198,10 @@ if dotnet ef database update \
     
     # List hypertables
     HYPERTABLES=$(psql -h "$HOST" -p "$PORT" -U "$USERNAME" -d "$DATABASE" -t -c "SELECT COUNT(*) FROM timescaledb_information.hypertables;" 2>/dev/null || echo "0")
-    
+    # Trim whitespace and default to 0 if empty
+    HYPERTABLES=$(echo "$HYPERTABLES" | xargs)
+    HYPERTABLES=${HYPERTABLES:-0}
+
     if [ "$HYPERTABLES" -gt 0 ]; then
         echo -e "${GREEN}✓ Found $HYPERTABLES hypertable(s)${NC}"
         psql -h "$HOST" -p "$PORT" -U "$USERNAME" -d "$DATABASE" -c "SELECT hypertable_name, num_chunks FROM timescaledb_information.hypertables;" 2>/dev/null || true

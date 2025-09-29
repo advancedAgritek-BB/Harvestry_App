@@ -47,10 +47,10 @@ SELECT add_compression_policy('sensor_rollups_1m', INTERVAL '30 days');
 SELECT add_retention_policy('sensor_rollups_1m', INTERVAL '180 days');
 
 -- Create indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_sensor_rollups_1m_site_bucket 
+CREATE INDEX IF NOT EXISTS ix_sensor_rollups_1m_site_bucket
     ON sensor_rollups_1m (site_id, bucket DESC);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_sensor_rollups_1m_stream_bucket 
+CREATE INDEX IF NOT EXISTS ix_sensor_rollups_1m_stream_bucket
     ON sensor_rollups_1m (stream_id, bucket DESC);
 
 COMMENT ON MATERIALIZED VIEW sensor_rollups_1m IS '1-minute sensor data rollups for real-time monitoring';
@@ -99,10 +99,10 @@ SELECT add_compression_policy('sensor_rollups_5m', INTERVAL '60 days');
 SELECT add_retention_policy('sensor_rollups_5m', INTERVAL '365 days');
 
 -- Create indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_sensor_rollups_5m_site_bucket 
+CREATE INDEX IF NOT EXISTS ix_sensor_rollups_5m_site_bucket
     ON sensor_rollups_5m (site_id, bucket DESC);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_sensor_rollups_5m_stream_bucket 
+CREATE INDEX IF NOT EXISTS ix_sensor_rollups_5m_stream_bucket
     ON sensor_rollups_5m (stream_id, bucket DESC);
 
 COMMENT ON MATERIALIZED VIEW sensor_rollups_5m IS '5-minute sensor data rollups for dashboards';
@@ -151,10 +151,10 @@ SELECT add_compression_policy('sensor_rollups_1h', INTERVAL '90 days');
 SELECT add_retention_policy('sensor_rollups_1h', INTERVAL '730 days');
 
 -- Create indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_sensor_rollups_1h_site_bucket 
+CREATE INDEX IF NOT EXISTS ix_sensor_rollups_1h_site_bucket
     ON sensor_rollups_1h (site_id, bucket DESC);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_sensor_rollups_1h_stream_bucket 
+CREATE INDEX IF NOT EXISTS ix_sensor_rollups_1h_stream_bucket
     ON sensor_rollups_1h (stream_id, bucket DESC);
 
 COMMENT ON MATERIALIZED VIEW sensor_rollups_1h IS '1-hour sensor data rollups for historical analysis';
