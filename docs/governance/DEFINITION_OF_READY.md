@@ -36,6 +36,7 @@ If the story involves database schema changes:
 - [ ] **Data volume considered** - Migration tested with production-scale data
 
 **Example**: Adding a column?
+
 - Phase 1 (Expand): Add nullable column
 - Phase 2 (Deploy): Application uses new column
 - Phase 3 (Contract): Backfill data, add NOT NULL constraint
@@ -54,6 +55,7 @@ If the story involves new features or significant logic changes:
 - [ ] **SLO impact assessed** - Will this affect existing SLO targets?
 
 **Questions to answer**:
+
 - What latency is acceptable? (p95, p99)
 - What error rate triggers investigation?
 - What capacity limits exist?
@@ -71,6 +73,7 @@ If the story introduces new behavior that could be risky:
 - [ ] **Promotion checklist** - Required if risky flag (see FEATURE_FLAG_PROMOTION_CHECKLIST.md)
 
 **Risky features requiring flags**:
+
 - Closed-loop control
 - AI auto-apply
 - Bulk operations
@@ -91,6 +94,7 @@ If the story touches sensitive data or regulatory requirements:
 - [ ] **Security review** - Penetration test scope if needed
 
 **Questions to answer**:
+
 - Does this handle PII/PHI?
 - Could this violate METRC/state regulations?
 - Does this enable financial fraud?
@@ -108,6 +112,7 @@ All stories must define test strategy:
 - [ ] **Security tests** - RLS/ABAC validation, injection attack prevention
 
 **Test coverage targets**:
+
 - Unit: 80% coverage
 - Integration: Critical paths covered
 - E2E: MVP user flows automated
@@ -125,6 +130,7 @@ If the story changes API contracts (REST, WebSocket, GraphQL):
 - [ ] **Deprecation plan** - Old endpoints marked deprecated with sunset date
 
 **API versioning**:
+
 - Add new endpoint: `/api/v2/resource`
 - Deprecate old endpoint: `/api/v1/resource` (6-month sunset)
 
@@ -171,6 +177,7 @@ Documentation requirements vary by story type:
 ## ✍️ DoR Checklist by Story Type
 
 ### Feature Story
+
 - [ ] Universal DoR ✅
 - [ ] Feature flag strategy ✅
 - [ ] Observability plan ✅
@@ -178,18 +185,21 @@ Documentation requirements vary by story type:
 - [ ] Security review ✅
 
 ### Bug Fix
+
 - [ ] Universal DoR ✅
 - [ ] Root cause identified ✅
 - [ ] Regression test added ✅
 - [ ] Affected users/sites identified ✅
 
 ### Technical Debt
+
 - [ ] Universal DoR ✅
 - [ ] Business value articulated ✅
 - [ ] Risk of NOT doing work ✅
 - [ ] Refactoring scope limited ✅
 
 ### Database Migration
+
 - [ ] Universal DoR ✅
 - [ ] Database changes DoR ✅
 - [ ] Zero-downtime strategy ✅

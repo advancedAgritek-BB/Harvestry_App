@@ -1,0 +1,186 @@
+{
+  "dashboard": {
+    "title": "Track A - SLO Overview",
+    "uid": "track-a-slo-overview",
+    "tags": ["track-a", "slo", "overview"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "SLO Compliance Summary",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 24, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "(1 - (rate(http_request_errors_total[5m]) / rate(http_requests_total[5m]))) * 100",
+            "legendFormat": "API Availability (%)"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(telemetry_ingest_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "Ingest p95 (ms)"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(realtime_push_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "Push p95 (ms)"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(command_dispatch_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "Command p95 (ms)"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 80, "color": "yellow"},
+                {"value": 90, "color": "red"}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "API Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=\"api-gateway\"}[5m])) by (status)",
+            "legendFormat": "{{status}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "API Latency (p50, p95, p99)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"api-gateway\"}[5m])) * 1000",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"api-gateway\"}[5m])) * 1000",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job=\"api-gateway\"}[5m])) * 1000",
+            "legendFormat": "p99"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Latency"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Telemetry Ingest Latency (p95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(telemetry_ingest_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "Ingest p95 (ms)"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Latency", "max": 1000},
+          {"format": "short"}
+        ],
+        "alert": {
+          "name": "Telemetry Ingest SLO Breach",
+          "conditions": [
+            {
+              "evaluator": {"params": [1000], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "message": "Ingest p95 latency exceeds 1000ms SLO target",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 5,
+        "title": "Realtime Push Latency (p95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(realtime_push_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "Push p95 (ms)"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Latency", "max": 1500},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Outbox Queue Depth by Destination",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(outbox_queue_depth{status=\"pending\"}) by (destination)",
+            "legendFormat": "{{destination}}"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Queue Depth"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Database Connection Pool Utilization",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "(pg_stat_activity_count / pg_settings_max_connections) * 100",
+            "legendFormat": "Connection Pool %"
+          }
+        ],
+        "yaxes": [
+          {"format": "percent", "label": "Utilization %", "max": 100},
+          {"format": "short"}
+        ]
+      }
+    ]
+  }
+}

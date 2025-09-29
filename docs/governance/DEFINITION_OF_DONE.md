@@ -51,6 +51,7 @@ For features that impact system behavior:
 - [ ] **SLOs validated** - Feature meets latency/error rate targets
 
 **SLO Targets (Track A)**:
+
 - Ingest p95 < 1.0s
 - Store→Client p95 < 1.5s
 - Command p95 < 800ms
@@ -86,6 +87,7 @@ Test coverage requirements:
 - [ ] **Manual testing complete** - Feature validated in staging by PO or QA
 
 **Test Pyramid**:
+
 - Many unit tests (fast, isolated)
 - Some integration tests (database, APIs)
 - Few E2E tests (full user flows)
@@ -104,6 +106,7 @@ Security validation required:
 - [ ] **Dependency audit clean** - No vulnerable dependencies
 
 **Security Review Triggers**:
+
 - Authentication/authorization changes
 - PII/PHI data handling
 - Financial transactions
@@ -122,6 +125,7 @@ If feature flag was used:
 - [ ] **Flag documented** - Purpose and rollback procedure in runbook
 
 **Flag Lifecycle**:
+
 - Shadow mode: 14+ days
 - Staged rollout: 7+ days
 - Full enable: After VP Product + SRE sign-off
@@ -139,6 +143,7 @@ If API contracts changed:
 - [ ] **Deprecation scheduled** - Old endpoints marked with sunset date (if replacing)
 
 **Breaking Change Process**:
+
 1. Announce deprecation 6 months in advance
 2. Add new endpoint (v2)
 3. Mark old endpoint deprecated
@@ -160,6 +165,7 @@ Documentation must be current:
 - [ ] **Changelog updated** - Release notes drafted
 
 **Documentation Audience**:
+
 - Code comments: Future developers
 - README: New team members
 - API docs: API consumers
@@ -215,6 +221,7 @@ Before marking story as "Done" in production:
 ## ✍️ DoD Checklist by Story Type
 
 ### Feature Story
+
 - [ ] Universal DoD ✅
 - [ ] Testing DoD ✅
 - [ ] Observability DoD ✅
@@ -224,18 +231,21 @@ Before marking story as "Done" in production:
 - [ ] Production release DoD ✅
 
 ### Bug Fix
+
 - [ ] Universal DoD ✅
 - [ ] Regression test added ✅
 - [ ] Root cause documented ✅
 - [ ] Hot-fixed if P0/P1 ✅
 
 ### Database Migration
+
 - [ ] Universal DoD ✅
 - [ ] Database changes DoD ✅
 - [ ] Zero-downtime validated ✅
 - [ ] Rollback tested ✅
 
 ### Technical Debt
+
 - [ ] Universal DoD ✅
 - [ ] Code quality improved ✅
 - [ ] Tests refactored ✅
