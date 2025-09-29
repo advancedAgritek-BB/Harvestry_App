@@ -1,0 +1,132 @@
+# OpenTelemetry Collector Configuration for Harvestry ERP
+# Track A: Unified observability pipeline
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          allowed_origins:
+            - "http://localhost:3000"
+            - "http://localhost:3001"
+  
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          scrape_interval: 10s
+          static_configs:
+            - targets: ['0.0.0.0:8888']
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+  
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+  
+  resource:
+    attributes:
+      - key: service.cluster
+        value: harvestry-dev
+        action: insert
+      - key: deployment.environment
+        value: development
+        action: insert
+  
+  attributes:
+    actions:
+      - key: http.route
+        action: extract
+        pattern: ^\/api\/v\d+\/(?P<api_version>[^\/]+)\/(?P<resource>[^\/]+)
+      - key: squad
+        action: insert
+        value: ""  # Will be populated by services
+  
+  tail_sampling:
+    policies:
+      # Always sample errors
+      - name: errors
+        type: status_code
+        status_code:
+          status_codes:
+            - ERROR
+      # Always sample slow requests (> 1s)
+      - name: slow_requests
+        type: latency
+        latency:
+          threshold_ms: 1000
+      # Sample 10% of normal traffic
+      - name: normal_traffic
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10
+
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: harvestry
+    send_timestamps: true
+    metric_expiration: 5m
+  
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+    labels:
+      resource:
+        service.name: "service_name"
+        service.namespace: "service_namespace"
+      attributes:
+        http.status_code: "http_status_code"
+        log.level: "severity"
+  
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+  
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  
+  pprof:
+    endpoint: 0.0.0.0:1777
+  
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, pprof, zpages]
+  
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource, attributes, tail_sampling]
+      exporters: [otlp/tempo, logging]
+    
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, batch, resource]
+      exporters: [prometheus, logging]
+    
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource, attributes]
+      exporters: [loki, logging]
+  
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888

@@ -1,0 +1,151 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  conventional-commits:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install commitlint
+        run: npm install -g @commitlint/cli @commitlint/config-conventional
+
+      - name: Validate commits
+        run: |
+          npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  pr-size:
+    name: Check PR Size
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR size
+        run: |
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | wc -l)
+          CHANGED_LINES=$(git diff --shortstat ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | awk '{print $4+$6}')
+          
+          echo "Files changed: $CHANGED_FILES"
+          echo "Lines changed: $CHANGED_LINES"
+          
+          if [ "$CHANGED_FILES" -gt 100 ]; then
+            echo "⚠️ Warning: PR changes more than 100 files"
+          fi
+          
+          if [ "$CHANGED_LINES" -gt 1000 ]; then
+            echo "⚠️ Warning: PR changes more than 1000 lines"
+          fi
+
+  file-size-check:
+    name: Check File Sizes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for large files
+        run: |
+          find . -type f -size +500k -not -path "./.git/*" -not -path "./node_modules/*" -not -path "./.next/*" -not -path "./bin/*" -not -path "./obj/*" | while read file; do
+            echo "⚠️ Large file detected: $file ($(du -h "$file" | cut -f1))"
+          done
+
+      - name: Check line counts per file
+        run: |
+          find src -type f \( -name "*.cs" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) | while read file; do
+            LINES=$(wc -l < "$file")
+            if [ "$LINES" -gt 500 ]; then
+              echo "⚠️ File exceeds 500 lines: $file ($LINES lines)"
+            fi
+          done
+
+  pr-description:
+    name: Check PR Description
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR description
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            
+            if (body.length < 50) {
+              core.setFailed('PR description is too short. Please provide a detailed description.');
+            }
+            
+            // Check for required sections
+            const requiredSections = ['## Changes', '## Testing', '## Related Issues'];
+            const missingSections = requiredSections.filter(section => !body.includes(section));
+            
+            if (missingSections.length > 0) {
+              core.warning(`PR description is missing sections: ${missingSections.join(', ')}`);
+            }
+
+  db-migration-check:
+    name: Check DB Migrations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for migration files
+        run: |
+          MIGRATION_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -E "migrations/|Migrations/" || true)
+          
+          if [ -n "$MIGRATION_FILES" ]; then
+            echo "✅ Migration files detected:"
+            echo "$MIGRATION_FILES"
+            echo "Ensure migrations are tested and documented"
+          fi
+
+  summary:
+    name: PR Checks Summary
+    runs-on: ubuntu-latest
+    needs: [conventional-commits, pr-size, file-size-check, pr-description, db-migration-check]
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          echo "PR checks completed"
+          
+          # Check all job dependencies
+          FAILED_JOBS=""
+          if [ "${{ needs.conventional-commits.result }}" != "success" ]; then
+            FAILED_JOBS="$FAILED_JOBS conventional-commits"
+          fi
+          if [ "${{ needs.pr-size.result }}" != "success" ]; then
+            FAILED_JOBS="$FAILED_JOBS pr-size"
+          fi
+          if [ "${{ needs.file-size-check.result }}" != "success" ]; then
+            FAILED_JOBS="$FAILED_JOBS file-size-check"
+          fi
+          if [ "${{ needs.pr-description.result }}" != "success" ]; then
+            FAILED_JOBS="$FAILED_JOBS pr-description"
+          fi
+          if [ "${{ needs.db-migration-check.result }}" != "success" ]; then
+            FAILED_JOBS="$FAILED_JOBS db-migration-check"
+          fi
+          
+          if [ -n "$FAILED_JOBS" ]; then
+            echo "⚠️ The following PR checks failed: $FAILED_JOBS"
+            exit 1
+          fi
+          
+          echo "✅ All PR checks passed"

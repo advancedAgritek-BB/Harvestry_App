@@ -1,6 +1,7 @@
 # RACI & Squad Structure
 
 ## Squads
+
 1) **Core Platform** — Auth/RLS/Orgs/Sites/Inventory/Processing
 2) **Telemetry & Controls** — Sensors, Rollups, Irrigation/Fertigation, Interlocks
 3) **Workflow & Messaging** — Lifecycle, Tasks, Slack bridge
@@ -9,6 +10,7 @@
 6) **DevOps/SRE/Security** — Observability, CI/CD, DR, Security
 
 ## RACI (excerpts)
+
 | Area | R | A | C | I |
 | --- | --- | --- | --- | --- |
 | Identity/RLS/ABAC | Core Platform Eng Lead | VP Product | Security, SRE | Execs |
