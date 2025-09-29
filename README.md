@@ -137,6 +137,7 @@ cd Harvestry_App
 ## 🧱 Microservices
 
 ### Core Platform Squad
+
 - **Identity** - Authentication, authorization, RLS, ABAC, badges
 - **Organizations** - Orgs, sites, roles, teams
 - **Spatial** - Sites, rooms, zones, racks, bins, equipment
@@ -144,6 +145,7 @@ cd Harvestry_App
 - **Processing** - Manufacturing, labor, waste tracking
 
 ### Telemetry & Controls Squad
+
 - **Sensors** - Telemetry ingest, sensor streams, rollups
 - **Irrigation-Fertigation** - Programs, schedules, recipes, mix tanks
 - **Environment** - Air, canopy, substrate monitoring, alerts
@@ -151,18 +153,21 @@ cd Harvestry_App
 - **Closed-Loop** - EC/pH control, autosteer MPC, crop steering
 
 ### Workflow & Messaging Squad
+
 - **Lifecycle** - Batch lifecycle, state transitions, blueprints
 - **Tasks** - Task management, dependencies, approvals
 - **Messaging** - In-app notifications, escalations
 - **Slack-Bridge** - Slack integration, mirroring, slash commands
 
 ### Integrations Squad
+
 - **Compliance-METRC** - METRC state compliance integration
 - **Compliance-BioTrack** - BioTrack state compliance integration
 - **QuickBooks** - QBO item-level and GL summary sync
 - **Labeling** - GS1, UDI, jurisdiction-specific labels
 
 ### Data & AI Squad
+
 - **Analytics** - KPIs, rollups, reports, dashboards
 - **AI-Models** - Anomaly detection, yield prediction, ET0, Copilot
 - **Sustainability** - WUE, NUE, kWh/gram, ESG reporting
@@ -337,6 +342,7 @@ harvestry import --source metrc --file data.csv
 ## 📅 Release Roadmap
 
 ### MVP (Q1 2026)
+
 - Identity/RLS, Spatial model, Genetics/Propagation
 - Batch lifecycle, Tasks, Messaging (Slack notify-only)
 - Telemetry ingest, Environment monitoring
@@ -347,6 +353,7 @@ harvestry import --source metrc --file data.csv
 - Reporting, Observability, DR
 
 ### Phase 2 (Q2 2026)
+
 - Closed-loop EC/pH control
 - Dryback auto-shots
 - Slack two-way integration
@@ -356,6 +363,7 @@ harvestry import --source metrc --file data.csv
 - ET0 recommendations
 
 ### Phase 3 (Q3 2026)
+
 - Autosteer MPC (climate + lighting)
 - Copilot Ask-to-Act
 - Vision baseline
@@ -369,14 +377,17 @@ harvestry import --source metrc --file data.csv
 ## 📞 Support
 
 ### For Development Issues
+
 - **Slack**: #dev-help
 - **Email**: [dev-support@harvestry.com](mailto:dev-support@harvestry.com)
 
 ### For Architecture Questions
+
 - **Slack**: #arch-council
 - **Email**: [architecture@harvestry.com](mailto:architecture@harvestry.com)
 
 ### For Operations/SRE
+
 - **Slack**: #sre
 - **PagerDuty**: On-call rotation
 - **Email**: [sre@harvestry.com](mailto:sre@harvestry.com)

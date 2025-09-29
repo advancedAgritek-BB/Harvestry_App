@@ -1,0 +1,199 @@
+name: Feature Flag Policy Gate
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'config/feature-flags/**'
+      - 'infra/feature-flags/**'
+      - '**/feature-flags/**'
+
+jobs:
+  validate-flag-changes:
+    name: Validate Feature Flag Changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed flag files
+        id: changed-files
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E 'feature-flags|feature_flags' || true)
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for risky flag enablement
+        if: steps.changed-files.outputs.has_changes == 'true'
+        id: risky-flags
+        run: |
+          # Define risky flags that require special approval
+          RISKY_FLAGS=(
+            "closed_loop_ecph_enabled"
+            "ai_auto_apply_enabled"
+            "et0_steering_enabled"
+            "sms_critical_enabled"
+            "slack_mirror_mode"
+            "autosteer_mpc_enabled"
+            "predictive_maintenance_auto_wo"
+          )
+          
+          RISKY_FOUND=false
+          RISKY_DETAILS=""
+          
+          # Check each changed file
+          while IFS= read -r file; do
+            if [ -z "$file" ]; then
+              continue
+            fi
+            
+            echo "Checking file: $file"
+            
+            # Check if file contains production environment
+            if grep -q '"environment":\s*"prod\|"env":\s*"production"' "$file" 2>/dev/null; then
+              # Check if any risky flag is being enabled
+              for flag in "${RISKY_FLAGS[@]}"; do
+                if grep -q "\"$flag\".*:\s*true\|\"enabled\":\s*true.*\"name\":\s*\"$flag\"" "$file" 2>/dev/null; then
+                  RISKY_FOUND=true
+                  RISKY_DETAILS="${RISKY_DETAILS}\n- 🚨 **$flag** enabled for production in $file"
+                  echo "⚠️  Found risky flag enablement: $flag in $file"
+                fi
+              done
+            fi
+          done <<< "${{ steps.changed-files.outputs.changed_files }}"
+          
+          if [ "$RISKY_FOUND" = true ]; then
+            echo "risky_found=true" >> $GITHUB_OUTPUT
+            echo "risky_details<<EOF" >> $GITHUB_OUTPUT
+            echo -e "$RISKY_DETAILS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "risky_found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate governance requirements
+        if: steps.risky-flags.outputs.risky_found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prBody = context.payload.pull_request.body || '';
+            const riskyDetails = `${{ steps.risky-flags.outputs.risky_details }}`;
+            
+            // Check for required governance artifacts
+            const hasPDD = /PDD:\s*https?:\/\//i.test(prBody);
+            const hasRunbook = /Runbook:\s*https?:\/\//i.test(prBody);
+            const hasPromotionChecklist = /promotion.*checklist|checklist.*promotion/i.test(prBody);
+            const hasShadowModeResults = /shadow.*mode|shadow.*test/i.test(prBody);
+            
+            let errors = [];
+            let warnings = [];
+            
+            if (!hasPDD) {
+              errors.push('❌ **Missing PDD Link** - Product Design Document required for risky flag enablement');
+            }
+            
+            if (!hasRunbook) {
+              errors.push('❌ **Missing Runbook Link** - Operational runbook required for risky flag enablement');
+            }
+            
+            if (!hasPromotionChecklist) {
+              warnings.push('⚠️  **Missing Promotion Checklist** - Consider linking completed promotion checklist');
+            }
+            
+            if (!hasShadowModeResults) {
+              warnings.push('⚠️  **Missing Shadow Mode Results** - Consider documenting shadow mode testing results');
+            }
+            
+            // Post comment with validation results
+            let commentBody = `## 🚩 Feature Flag Policy Validation
+            
+            This PR modifies **risky feature flags** for production:
+            
+            ${riskyDetails}
+            
+            ### Required Governance Artifacts
+            
+            Per Track A policy, production enablement of risky flags requires:
+            
+            1. ✅ **Product Design Document (PDD)** ${hasPDD ? '- Found' : '- **MISSING**'}
+            2. ✅ **Operational Runbook** ${hasRunbook ? '- Found' : '- **MISSING**'}
+            3. ⚙️  **Promotion Checklist** ${hasPromotionChecklist ? '- Found' : '- Recommended'}
+            4. ⚙️  **Shadow Mode Results** ${hasShadowModeResults ? '- Found' : '- Recommended'}
+            
+            `;
+            
+            if (errors.length > 0) {
+              commentBody += `\n### ❌ Blocking Issues\n\n`;
+              errors.forEach(error => {
+                commentBody += `${error}\n`;
+              });
+              commentBody += `\n**Action Required:** Add the following to your PR description:\n\n`;
+              commentBody += `\`\`\`markdown\n`;
+              commentBody += `PDD: https://docs.harvestry.com/pdd/[document-id]\n`;
+              commentBody += `Runbook: https://docs.harvestry.com/runbooks/[runbook-name]\n`;
+              commentBody += `\`\`\`\n\n`;
+            }
+            
+            if (warnings.length > 0) {
+              commentBody += `\n### ⚠️  Warnings\n\n`;
+              warnings.forEach(warning => {
+                commentBody += `${warning}\n`;
+              });
+            }
+            
+            commentBody += `\n### 📋 Risky Flag Promotion Checklist
+            
+            Before enabling in production, ensure:
+            
+            - [ ] **Shadow Mode** - Flag tested in shadow mode for ≥14 days
+            - [ ] **Median Correction Delta** - ≤5% deviation (for control flags)
+            - [ ] **Interlocks Validated** - Safety interlocks tested and documented
+            - [ ] **Rollback Plan** - One-click revert to open-loop documented
+            - [ ] **On-Call Briefed** - SRE team notified and runbook reviewed
+            - [ ] **VP Product Sign-off** - Executive approval obtained
+            - [ ] **SRE Sign-off** - Operations team approval obtained
+            
+            ### 📚 Reference Documents
+            
+            - [Feature Flag Governance Policy](https://docs.harvestry.com/governance/feature-flags)
+            - [Promotion Checklist Template](https://docs.harvestry.com/templates/promotion-checklist)
+            - [Runbook Template](https://docs.harvestry.com/templates/runbook)
+            
+            ---
+            
+            *This check is enforced by Track A CI/CD governance policies.*
+            `;
+            
+            // Post comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: commentBody
+            });
+            
+            // Fail if required artifacts are missing
+            if (errors.length > 0) {
+              core.setFailed(`Feature flag policy gate failed: ${errors.length} blocking issue(s). See PR comment for details.`);
+            } else {
+              core.info('✅ Feature flag policy gate passed');
+            }
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ steps.risky-flags.outputs.risky_found }}" = "true" ]; then
+            echo "⚠️  Risky feature flag changes detected"
+            echo "📋 Governance validation performed"
+          else
+            echo "✅ No risky feature flag changes detected"
+          fi

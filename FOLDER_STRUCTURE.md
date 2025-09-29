@@ -9,6 +9,7 @@
 ## Overview
 
 This folder structure is designed to support:
+
 - **Microservices Architecture** with bounded contexts aligned to squad ownership
 - **Clean Architecture** principles (separation of concerns, dependency inversion)
 - **SOLID principles** with modularity and single responsibility
@@ -644,7 +645,9 @@ config/
 ## Design Principles Applied
 
 ### 1. **Bounded Contexts & Squad Alignment**
+
 Services are organized by domain and aligned with squad ownership:
+
 - **Core Platform** → identity, orgs, spatial, inventory, processing
 - **Telemetry & Controls** → sensors, irrigation, environment, interlocks, closed-loop
 - **Workflow & Messaging** → lifecycle, tasks, messaging, Slack
@@ -652,39 +655,47 @@ Services are organized by domain and aligned with squad ownership:
 - **Data & AI** → analytics, AI models, sustainability, PdM
 
 ### 2. **Clean Architecture (Onion Architecture)**
+
 Each service follows clean architecture layers:
+
 - **API** (presentation) → Controllers, middleware, validators
 - **Application** → Commands, queries, services, DTOs
 - **Domain** (core) → Entities, value objects, domain events
 - **Infrastructure** → Persistence, external APIs, messaging
 
 ### 3. **Single Responsibility Principle**
+
 - Each folder has one clear purpose
 - Services are small and focused (not "god services")
 - Files are kept under 500 lines per coding rules
 
 ### 4. **Dependency Inversion**
+
 - Domain layer has no external dependencies
 - Application layer depends on domain abstractions
 - Infrastructure implements interfaces defined in application layer
 
 ### 5. **Testability**
+
 - Tests are organized by type (unit, integration, e2e, performance, security)
 - Each service has its own test folder
 - Shared test fixtures, helpers, and mocks
 
 ### 6. **Observability First**
+
 - Dedicated observability folders for tracing, metrics, logging
 - Structured logs and distributed tracing built into shared libraries
 - Health checks and SLO monitoring
 
 ### 7. **Security by Design**
+
 - RLS and ABAC policies in database layer
 - Security utilities in shared library
 - Security testing folder
 - Secrets management infrastructure
 
 ### 8. **Scalability**
+
 - Microservices architecture allows independent scaling
 - Database partitioning and indexing strategies
 - Caching and read replicas (analytics/reporting)

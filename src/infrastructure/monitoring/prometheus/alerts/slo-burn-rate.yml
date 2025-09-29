@@ -1,0 +1,143 @@
+# SLO Burn Rate Alerts for Harvestry ERP
+# Track A: Enterprise SLO monitoring with dual-window burn rate
+
+groups:
+  - name: slo_burn_rate
+    interval: 30s
+    rules:
+      # =======================================================================
+      # API GATEWAY SLO - 99.9% Availability
+      # =======================================================================
+      
+      - record: job:slo_error_ratio:1h
+        expr: |
+          sum(rate(http_request_errors_total{job="api-gateway"}[1h]))
+          /
+          sum(rate(http_requests_total{job="api-gateway"}[1h]))
+
+      - record: job:slo_error_ratio:6h
+        expr: |
+          sum(rate(http_request_errors_total{job="api-gateway"}[6h]))
+          /
+          sum(rate(http_requests_total{job="api-gateway"}[6h]))
+
+      - alert: APIGatewayFastBurn
+        expr: job:slo_error_ratio:1h > (14 * (1 - 0.999))
+        for: 5m
+        labels:
+          severity: page
+          squad: devops-sre-security
+          slo: availability
+          window: fast
+        annotations:
+          summary: "API Gateway fast burn on availability SLO"
+          description: "Error rate {{ $value | humanizePercentage }} exceeds SLO budget burn rate (1h window)"
+          runbook_url: "https://docs.harvestry.com/runbooks/slo-fast-burn"
+
+      - alert: APIGatewaySlowBurn
+        expr: job:slo_error_ratio:6h > (6 * (1 - 0.999))
+        for: 2h
+        labels:
+          severity: ticket
+          squad: devops-sre-security
+          slo: availability
+          window: slow
+        annotations:
+          summary: "API Gateway slow burn on availability SLO"
+          description: "Error rate {{ $value | humanizePercentage }} consistently exceeds SLO budget (6h window)"
+          runbook_url: "https://docs.harvestry.com/runbooks/slo-slow-burn"
+
+      # =======================================================================
+      # TELEMETRY INGEST SLO - p95 < 1.0s
+      # =======================================================================
+      
+      - record: telemetry_ingest:latency_p95:5m
+        expr: histogram_quantile(0.95, sum(rate(telemetry_ingest_duration_seconds_bucket[5m])) by (le))
+
+      - alert: TelemetryIngestLatencyBreach
+        expr: telemetry_ingest:latency_p95:5m > 1.0
+        for: 10m
+        labels:
+          severity: warning
+          squad: telemetry-controls
+          slo: latency
+        annotations:
+          summary: "Telemetry ingest p95 latency exceeds 1.0s"
+          description: "p95 latency is {{ $value }}s (SLO: < 1.0s)"
+          runbook_url: "https://docs.harvestry.com/runbooks/telemetry-ingest-slow"
+
+      # =======================================================================
+      # REALTIME PUSH SLO - p95 < 1.5s (store→client)
+      # =======================================================================
+      
+      - record: realtime_push:latency_p95:5m
+        expr: histogram_quantile(0.95, sum(rate(realtime_push_duration_seconds_bucket[5m])) by (le))
+
+      - alert: RealtimePushLatencyBreach
+        expr: realtime_push:latency_p95:5m > 1.5
+        for: 10m
+        labels:
+          severity: warning
+          squad: devops-sre-security
+          slo: latency
+        annotations:
+          summary: "Realtime push p95 latency exceeds 1.5s"
+          description: "p95 latency is {{ $value }}s (SLO: < 1.5s)"
+          runbook_url: "https://docs.harvestry.com/runbooks/realtime-push-slow"
+
+      # =======================================================================
+      # COMMAND DISPATCH SLO - p95 < 800ms
+      # =======================================================================
+      
+      - record: command_dispatch:latency_p95:5m
+        expr: histogram_quantile(0.95, sum(rate(command_dispatch_duration_seconds_bucket[5m])) by (le))
+
+      - alert: CommandDispatchLatencyBreach
+        expr: command_dispatch:latency_p95:5m > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          squad: telemetry-controls
+          slo: latency
+        annotations:
+          summary: "Command dispatch p95 latency exceeds 800ms"
+          description: "p95 latency is {{ $value }}s (SLO: < 800ms)"
+          runbook_url: "https://docs.harvestry.com/runbooks/command-dispatch-slow"
+
+      # =======================================================================
+      # TASK MESSAGING SLO - p95 < 300ms
+      # =======================================================================
+      
+      - record: task_messaging:latency_p95:5m
+        expr: histogram_quantile(0.95, sum(rate(task_messaging_duration_seconds_bucket[5m])) by (le))
+
+      - alert: TaskMessagingLatencyBreach
+        expr: task_messaging:latency_p95:5m > 0.3
+        for: 10m
+        labels:
+          severity: warning
+          squad: workflow-messaging
+          slo: latency
+        annotations:
+          summary: "Task messaging p95 latency exceeds 300ms"
+          description: "p95 latency is {{ $value }}s (SLO: < 300ms)"
+          runbook_url: "https://docs.harvestry.com/runbooks/task-messaging-slow"
+
+      # =======================================================================
+      # REPORT GENERATION SLO - p95 < 90s (site-day report)
+      # =======================================================================
+      
+      - record: report_generation:latency_p95:5m
+        expr: histogram_quantile(0.95, sum(rate(report_generation_duration_seconds_bucket[5m])) by (le))
+
+      - alert: ReportGenerationLatencyBreach
+        expr: report_generation:latency_p95:5m > 90
+        for: 15m
+        labels:
+          severity: warning
+          squad: data-ai
+          slo: latency
+        annotations:
+          summary: "Report generation p95 latency exceeds 90s"
+          description: "p95 latency is {{ $value }}s (SLO: < 90s)"
+          runbook_url: "https://docs.harvestry.com/runbooks/report-generation-slow"

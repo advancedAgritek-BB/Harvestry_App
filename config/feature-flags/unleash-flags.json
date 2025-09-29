@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "features": [
+    {
+      "name": "closed_loop_ecph_enabled",
+      "description": "Enable closed-loop EC/pH control for precision fertigation",
+      "type": "release",
+      "project": "default",
+      "stale": false,
+      "impressionData": true,
+      "enabled": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "groupId": "closed_loop_ecph_enabled",
+            "rollout": "0",
+            "stickiness": "default"
+          },
+          "constraints": [
+            {
+              "contextName": "environment",
+              "operator": "IN",
+              "values": ["development"]
+            }
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "name": "shadow",
+          "weight": 1000,
+          "stickiness": "default",
+          "payload": {
+            "type": "json",
+            "value": "{\"mode\":\"shadow\",\"log_decisions\":true}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ai_auto_apply_enabled",
+      "description": "Enable AI auto-apply for anomaly detection and yield predictions",
+      "type": "release",
+      "project": "default",
+      "stale": false,
+      "impressionData": true,
+      "enabled": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "groupId": "ai_auto_apply_enabled",
+            "rollout": "0",
+            "stickiness": "default"
+          },
+          "constraints": [
+            {
+              "contextName": "environment",
+              "operator": "IN",
+              "values": ["development"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "et0_steering_enabled",
+      "description": "Enable ET₀-based irrigation recommendations",
+      "type": "release",
+      "project": "default",
+      "stale": false,
+      "impressionData": true,
+      "enabled": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "groupId": "et0_steering_enabled",
+            "rollout": "0",
+            "stickiness": "default"
+          },
+          "constraints": [
+            {
+              "contextName": "environment",
+              "operator": "IN",
+              "values": ["development"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sms_critical_enabled",
+      "description": "Enable SMS notifications for critical alerts (per site policy)",
+      "type": "release",
+      "project": "default",
+      "stale": false,
+      "impressionData": true,
+      "enabled": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "groupId": "sms_critical_enabled",
+            "rollout": "0",
+            "stickiness": "default"
+          },
+          "constraints": [
+            {
+              "contextName": "siteId",
+              "operator": "IN",
+              "values": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "slack_mirror_mode",
+      "description": "Enable full Slack two-way mirroring (edits, deletes, thread sync)",
+      "type": "release",
+      "project": "default",
+      "stale": false,
+      "impressionData": true,
+      "enabled": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "groupId": "slack_mirror_mode",
+            "rollout": "0",
+            "stickiness": "default"
+          }
+        }
+      ]
+    },
+    {
+      "name": "autosteer_mpc_enabled",
+      "description": "Enable Model Predictive Control for climate and lighting autosteer",
+      "type": "release",
+      "project": "default",
+      "stale": false,
+      "impressionData": true,
+      "enabled": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "groupId": "autosteer_mpc_enabled",
+            "rollout": "0",
+            "stickiness": "default"
+          },
+          "constraints": [
+            {
+              "contextName": "environment",
+              "operator": "IN",
+              "values": ["development"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "predictive_maintenance_auto_wo",
+      "description": "Automatically create work orders from predictive maintenance alerts",
+      "type": "release",
+      "project": "default",
+      "stale": false,
+      "impressionData": true,
+      "enabled": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "groupId": "predictive_maintenance_auto_wo",
+            "rollout": "0",
+            "stickiness": "default"
+          }
+        }
+      ]
+    },
+    {
+      "name": "clickhouse_olap_enabled",
+      "description": "Enable ClickHouse sidecar for OLAP queries when triggers trip",
+      "type": "operational",
+      "project": "default",
+      "stale": false,
+      "impressionData": false,
+      "enabled": false,
+      "strategies": [
+        {
+          "name": "default",
+          "parameters": {}
+        }
+      ]
+    }
+  ]
+}

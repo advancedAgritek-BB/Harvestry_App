@@ -1,0 +1,407 @@
+name: PR Container Build
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/backend/**'
+      - 'src/frontend/**'
+      - 'Dockerfile*'
+      - '.github/workflows/pr-container-build.yml'
+
+permissions:
+  contents: read
+  pull-requests: write
+  packages: write
+
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      backend_changed: ${{ steps.filter.outputs.backend }}
+      frontend_changed: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'src/backend/**'
+              - 'Dockerfile.backend'
+            frontend:
+              - 'src/frontend/**'
+              - 'Dockerfile.frontend'
+
+  build-backend:
+    name: Build Backend Container
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend_changed == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event.pull_request.head.repo.fork == false
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/backend
+          tags: |
+            type=ref,event=pr
+            type=sha,prefix=pr-${{ github.event.pull_request.number }}-
+
+      - name: Build and push to GHCR
+        if: github.event.pull_request.head.repo.fork == false
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.pull_request.updated_at }}
+            VCS_REF=${{ github.sha }}
+            VERSION=pr-${{ github.event.pull_request.number }}
+
+      - name: Build locally for forks
+        if: github.event.pull_request.head.repo.fork == true
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.backend
+          push: false
+          tags: local-backend:pr-${{ github.event.pull_request.number }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.pull_request.updated_at }}
+            VCS_REF=${{ github.sha }}
+            VERSION=pr-${{ github.event.pull_request.number }}
+
+      - name: Run container health check
+        run: |
+          if [ "${{ github.event.pull_request.head.repo.fork }}" == "false" ]; then
+            IMAGE_TAG="ghcr.io/${{ github.repository }}/backend:pr-${{ github.event.pull_request.number }}-${{ github.sha }}"
+          else
+            IMAGE_TAG="local-backend:pr-${{ github.event.pull_request.number }}"
+          fi
+
+          echo "Starting container for health check..."
+          CONTAINER_ID=$(docker run -d \
+            -p 8080:8080 \
+            -e ASPNETCORE_ENVIRONMENT=Development \
+            -e SKIP_MIGRATIONS=true \
+            -e USE_INMEMORY_DB=true \
+            -e ConnectionStrings__PostgreSQL="Host=localhost;Database=test;Username=test;Password=test" \
+            "$IMAGE_TAG")
+
+          echo "Container ID: $CONTAINER_ID"
+          
+          # Determine which HTTP client to use (prefer curl, fallback to wget)
+          if command -v curl &> /dev/null; then
+            HTTP_CLIENT="curl"
+            HTTP_CMD="curl -f -s -o /dev/null -w %{http_code}"
+          elif command -v wget &> /dev/null; then
+            HTTP_CLIENT="wget"
+            HTTP_CMD="wget -q -O /dev/null --server-response"
+          else
+            echo "❌ Neither curl nor wget available on runner"
+            docker stop "$CONTAINER_ID"
+            docker rm "$CONTAINER_ID"
+            exit 1
+          fi
+          
+          echo "Using $HTTP_CLIENT for health check"
+          
+          # Retry health check with timeout
+          MAX_RETRIES=30
+          RETRY_INTERVAL=2
+          TIMEOUT=60
+          ELAPSED=0
+          RETRY_COUNT=0
+          
+          echo "Polling http://localhost:8080/health/live..."
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ $ELAPSED -lt $TIMEOUT ]; do
+            if [ "$HTTP_CLIENT" == "curl" ]; then
+              HTTP_CODE=$(curl -f -s -o /dev/null -w "%{http_code}" http://localhost:8080/health/live 2>/dev/null || echo "000")
+              if [ "$HTTP_CODE" == "200" ]; then
+                echo "✅ Health check passed (HTTP $HTTP_CODE) after ${ELAPSED}s"
+                docker stop "$CONTAINER_ID"
+                docker rm "$CONTAINER_ID"
+                exit 0
+              fi
+            else
+              if wget -q -O /dev/null http://localhost:8080/health/live 2>/dev/null; then
+                echo "✅ Health check passed after ${ELAPSED}s"
+                docker stop "$CONTAINER_ID"
+                docker rm "$CONTAINER_ID"
+                exit 0
+              fi
+            fi
+            
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            ELAPSED=$((ELAPSED + RETRY_INTERVAL))
+            
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Attempt $RETRY_COUNT/$MAX_RETRIES failed, retrying in ${RETRY_INTERVAL}s..."
+              sleep $RETRY_INTERVAL
+            fi
+          done
+          
+          echo "❌ Health check failed after ${ELAPSED}s and $RETRY_COUNT attempts"
+          echo "Container logs:"
+          docker logs "$CONTAINER_ID"
+          docker stop "$CONTAINER_ID"
+          docker rm "$CONTAINER_ID"
+          exit 1
+
+      - name: Scan image for vulnerabilities
+        if: github.event.pull_request.head.repo.fork == false
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/backend:pr-${{ github.event.pull_request.number }}-${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always() && github.event.pull_request.head.repo.fork == false
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Comment PR with build info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const imageTags = `${{ steps.meta.outputs.tags }}`.split('\n');
+            const comment = `## 🐳 Backend Container Build
+            
+            **Status**: ✅ Build Successful
+            **SHA**: \`${{ github.sha }}\`
+            **PR**: #${{ github.event.pull_request.number }}
+            
+            ### Image Tags
+            \`\`\`
+            ${imageTags.join('\n')}
+            \`\`\`
+            
+            ### Pull Command
+            \`\`\`bash
+            docker pull ${imageTags[0]}
+            \`\`\`
+            
+            ### Health Check
+            ✅ Container health check passed
+            
+            ### Security Scan
+            See [Security tab](/${{ github.repository }}/security/code-scanning) for vulnerability scan results.
+            
+            ---
+            *Build completed in ${{ job.status }}*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  build-frontend:
+    name: Build Frontend Container
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend_changed == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event.pull_request.head.repo.fork == false
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/frontend
+          tags: |
+            type=ref,event=pr
+            type=sha,prefix=pr-${{ github.event.pull_request.number }}-
+
+      - name: Build and push to GHCR
+        if: github.event.pull_request.head.repo.fork == false
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.pull_request.updated_at }}
+            VCS_REF=${{ github.sha }}
+            VERSION=pr-${{ github.event.pull_request.number }}
+            NEXT_PUBLIC_API_URL=https://staging-api.harvestry.com
+
+      - name: Build locally for forks
+        if: github.event.pull_request.head.repo.fork == true
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.frontend
+          push: false
+          tags: local-frontend:pr-${{ github.event.pull_request.number }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.pull_request.updated_at }}
+            VCS_REF=${{ github.sha }}
+            VERSION=pr-${{ github.event.pull_request.number }}
+            NEXT_PUBLIC_API_URL=https://staging-api.harvestry.com
+
+      - name: Run container health check
+        run: |
+          if [ "${{ github.event.pull_request.head.repo.fork }}" == "false" ]; then
+            IMAGE_TAG="ghcr.io/${{ github.repository }}/frontend:pr-${{ github.event.pull_request.number }}-${{ github.sha }}"
+          else
+            IMAGE_TAG="local-frontend:pr-${{ github.event.pull_request.number }}"
+          fi
+
+          echo "Starting container for health check..."
+          CONTAINER_ID=$(docker run -d -p 3000:3000 "$IMAGE_TAG")
+
+          echo "Waiting for container to start..."
+          sleep 15
+
+          echo "Checking container health..."
+          if curl -f http://localhost:3000 > /dev/null 2>&1; then
+            echo "✅ Health check passed"
+            docker stop "$CONTAINER_ID"
+            docker rm "$CONTAINER_ID"
+            exit 0
+          else
+            echo "❌ Health check failed"
+            docker logs "$CONTAINER_ID"
+            docker stop "$CONTAINER_ID"
+            docker rm "$CONTAINER_ID"
+            exit 1
+          fi
+
+      - name: Scan image for vulnerabilities
+        if: github.event.pull_request.head.repo.fork == false
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/frontend:pr-${{ github.event.pull_request.number }}-${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always() && github.event.pull_request.head.repo.fork == false
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Comment PR with build info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const imageTags = `${{ steps.meta.outputs.tags }}`.split('\n');
+            const comment = `## 🎨 Frontend Container Build
+            
+            **Status**: ✅ Build Successful
+            **SHA**: \`${{ github.sha }}\`
+            **PR**: #${{ github.event.pull_request.number }}
+            
+            ### Image Tags
+            \`\`\`
+            ${imageTags.join('\n')}
+            \`\`\`
+            
+            ### Pull Command
+            \`\`\`bash
+            docker pull ${imageTags[0]}
+            \`\`\`
+            
+            ### Health Check
+            ✅ Container health check passed
+            
+            ### Security Scan
+            See [Security tab](/${{ github.repository }}/security/code-scanning) for vulnerability scan results.
+            
+            ---
+            *Build completed in ${{ job.status }}*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  cleanup-on-close:
+    name: Cleanup PR Images
+    runs-on: ubuntu-latest
+    if: github.event.action == 'closed'
+    steps:
+      - name: Delete PR container images
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            
+            // Delete backend images
+            try {
+              await github.rest.packages.deletePackageVersion({
+                package_type: 'container',
+                package_name: `${context.repo.repo}/backend`,
+                username: context.repo.owner,
+                version: `pr-${prNumber}`
+              });
+              console.log(`Deleted backend image for PR #${prNumber}`);
+            } catch (error) {
+              console.log(`No backend image to delete for PR #${prNumber}`);
+            }
+            
+            // Delete frontend images
+            try {
+              await github.rest.packages.deletePackageVersion({
+                package_type: 'container',
+                package_name: `${context.repo.repo}/frontend`,
+                username: context.repo.owner,
+                version: `pr-${prNumber}`
+              });
+              console.log(`Deleted frontend image for PR #${prNumber}`);
+            } catch (error) {
+              console.log(`No frontend image to delete for PR #${prNumber}`);
+            }

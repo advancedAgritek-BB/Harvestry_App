@@ -1,0 +1,159 @@
+{
+  "dashboard": {
+    "title": "Track A - Database Performance",
+    "uid": "track-a-database",
+    "tags": ["track-a", "database", "timescaledb"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Rollup Freshness (1m/5m/1h)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "(time() - timescale_continuous_aggregate_last_refresh_time{view_name=\"sensor_rollups_1m\"}) / 60",
+            "legendFormat": "1m Rollup Age (minutes)"
+          },
+          {
+            "expr": "(time() - timescale_continuous_aggregate_last_refresh_time{view_name=\"sensor_rollups_5m\"}) / 60",
+            "legendFormat": "5m Rollup Age (minutes)"
+          },
+          {
+            "expr": "(time() - timescale_continuous_aggregate_last_refresh_time{view_name=\"sensor_rollups_1h\"}) / 60",
+            "legendFormat": "1h Rollup Age (minutes)"
+          }
+        ],
+        "yaxes": [
+          {"format": "m", "label": "Age (minutes)", "max": 60},
+          {"format": "short"}
+        ],
+        "thresholds": [
+          {"value": 1, "colorMode": "critical", "op": "gt", "fill": true, "line": true}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Replication Lag",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "pg_replication_lag_seconds",
+            "legendFormat": "Replication Lag ({{client_addr}})"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Lag (seconds)", "max": 5},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Query Performance (p95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(pg_stat_statements_mean_exec_time_seconds_bucket[5m])) * 1000",
+            "legendFormat": "p95 Query Time (ms)"
+          }
+        ],
+        "yaxes": [
+          {"format": "ms", "label": "Query Time"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Active Connections",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(pg_stat_activity_count) by (state)",
+            "legendFormat": "{{state}}"
+          },
+          {
+            "expr": "pg_settings_max_connections",
+            "legendFormat": "Max Connections"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Connections"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Database Size & Growth",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "pg_database_size_bytes{datname=\"harvestry_dev\"}",
+            "legendFormat": "Database Size"
+          }
+        ],
+        "yaxes": [
+          {"format": "bytes", "label": "Size"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "WAL Generation Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(pg_stat_wal_bytes[5m])",
+            "legendFormat": "WAL Bytes/sec"
+          }
+        ],
+        "yaxes": [
+          {"format": "Bps", "label": "Bytes/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Hypertable Chunk Count",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 24, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "timescaledb_hypertable_num_chunks{hypertable_name=\"sensor_readings\"}",
+            "legendFormat": "sensor_readings"
+          },
+          {
+            "expr": "timescaledb_hypertable_num_chunks{hypertable_name=\"irrigation_step_runs\"}",
+            "legendFormat": "irrigation_step_runs"
+          },
+          {
+            "expr": "timescaledb_hypertable_num_chunks{hypertable_name=\"alerts\"}",
+            "legendFormat": "alerts"
+          },
+          {
+            "expr": "timescaledb_hypertable_num_chunks{hypertable_name=\"task_events\"}",
+            "legendFormat": "task_events"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "orientation": "horizontal"
+        }
+      }
+    ]
+  }
+}

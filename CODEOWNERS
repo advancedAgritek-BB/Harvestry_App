@@ -1,0 +1,164 @@
+# CODEOWNERS - Squad ownership mapping for Harvestry ERP
+# 
+# This file defines code ownership by squad per the RACI matrix.
+# All PRs to these paths require review from the designated squad.
+# Minimum 2 approvals required for merge to main.
+#
+# Format: path/to/code @team-name
+# More specific patterns take precedence over less specific ones.
+
+# =============================================================================
+# GLOBAL OWNERS (require approval for any changes)
+# =============================================================================
+* @harvestry/devops-sre-security @harvestry/engineering-leads
+
+# =============================================================================
+# CORE PLATFORM SQUAD
+# Auth/RLS/Orgs/Sites/Inventory/Processing
+# =============================================================================
+/src/backend/services/core-platform/identity/ @harvestry/core-platform @harvestry/security
+/src/backend/services/core-platform/organizations/ @harvestry/core-platform
+/src/backend/services/core-platform/spatial/ @harvestry/core-platform
+/src/backend/services/core-platform/inventory/ @harvestry/core-platform
+/src/backend/services/core-platform/processing/ @harvestry/core-platform
+
+# Frontend features
+/src/frontend/features/identity/ @harvestry/core-platform
+/src/frontend/features/spatial/ @harvestry/core-platform
+
+# Security-critical components
+/src/shared/security/ @harvestry/security @harvestry/core-platform
+/src/database/RLS-policies/ @harvestry/security @harvestry/core-platform
+/src/database/schemas/identity/ @harvestry/security @harvestry/core-platform
+
+# =============================================================================
+# TELEMETRY & CONTROLS SQUAD
+# Sensors, Rollups, Irrigation/Fertigation, Interlocks
+# =============================================================================
+/src/backend/services/telemetry-controls/sensors/ @harvestry/telemetry-controls
+/src/backend/services/telemetry-controls/irrigation-fertigation/ @harvestry/telemetry-controls
+/src/backend/services/telemetry-controls/environment/ @harvestry/telemetry-controls
+/src/backend/services/telemetry-controls/interlocks/ @harvestry/telemetry-controls @harvestry/firmware-ee
+/src/backend/services/telemetry-controls/closed-loop/ @harvestry/telemetry-controls @harvestry/devops-sre-security
+
+# Frontend features
+/src/frontend/features/irrigation/ @harvestry/telemetry-controls
+/src/frontend/features/telemetry/ @harvestry/telemetry-controls
+
+# Edge controllers and firmware
+/src/edge/ @harvestry/telemetry-controls @harvestry/firmware-ee
+
+# Database schemas
+/src/database/schemas/environment/ @harvestry/telemetry-controls
+/src/database/schemas/irrigation/ @harvestry/telemetry-controls
+/src/database/schemas/equipment/ @harvestry/telemetry-controls
+
+# =============================================================================
+# WORKFLOW & MESSAGING SQUAD
+# Lifecycle, Tasks, Slack bridge
+# =============================================================================
+/src/backend/services/workflow-messaging/lifecycle/ @harvestry/workflow-messaging
+/src/backend/services/workflow-messaging/tasks/ @harvestry/workflow-messaging
+/src/backend/services/workflow-messaging/messaging/ @harvestry/workflow-messaging
+/src/backend/services/workflow-messaging/slack-bridge/ @harvestry/workflow-messaging @harvestry/devops-sre-security
+
+# Frontend features
+/src/frontend/features/tasks/ @harvestry/workflow-messaging
+/src/frontend/features/messaging/ @harvestry/workflow-messaging
+
+# Database schemas
+/src/database/schemas/cultivation/ @harvestry/workflow-messaging
+/src/database/schemas/tasking/ @harvestry/workflow-messaging
+
+# =============================================================================
+# INTEGRATIONS SQUAD
+# Compliance (METRC/BioTrack), QBO, Labeling
+# =============================================================================
+/src/backend/services/integrations/compliance-metrc/ @harvestry/integrations @harvestry/compliance
+/src/backend/services/integrations/compliance-biotrack/ @harvestry/integrations @harvestry/compliance
+/src/backend/services/integrations/quickbooks/ @harvestry/integrations @harvestry/finance
+/src/backend/services/integrations/labeling/ @harvestry/integrations @harvestry/compliance
+
+# Frontend features
+/src/frontend/features/compliance/ @harvestry/integrations @harvestry/compliance
+/src/frontend/features/quickbooks/ @harvestry/integrations @harvestry/finance
+
+# Database schemas
+/src/database/schemas/compliance/ @harvestry/integrations @harvestry/compliance
+/src/database/schemas/accounting/ @harvestry/integrations @harvestry/finance
+
+# =============================================================================
+# DATA & AI SQUAD
+# Timescale/ClickHouse, Analytics, AI, Sustainability
+# =============================================================================
+/src/backend/services/data-ai/ @harvestry/data-ai
+/src/frontend/features/ai/ @harvestry/data-ai
+/src/frontend/features/sustainability/ @harvestry/data-ai
+
+# Database schemas
+/src/database/schemas/ai/ @harvestry/data-ai
+/src/database/migrations/timescale/ @harvestry/data-ai @harvestry/devops-sre-security
+/src/database/migrations/clickhouse/ @harvestry/data-ai @harvestry/devops-sre-security
+/src/database/views/ @harvestry/data-ai
+
+# =============================================================================
+# DEVOPS/SRE/SECURITY SQUAD
+# Observability, CI/CD, DR, Security
+# =============================================================================
+/.github/ @harvestry/devops-sre-security
+/src/infrastructure/ @harvestry/devops-sre-security
+/src/shared/observability/ @harvestry/devops-sre-security
+/scripts/ @harvestry/devops-sre-security
+/tools/ @harvestry/devops-sre-security
+
+# Database infrastructure
+/src/database/migrations/ @harvestry/devops-sre-security @harvestry/data-ai
+/src/database/scripts/ @harvestry/devops-sre-security
+
+# Configuration and secrets
+/config/ @harvestry/devops-sre-security @harvestry/security
+*.env.example @harvestry/devops-sre-security
+
+# =============================================================================
+# GATEWAY (API Gateway)
+# =============================================================================
+/src/backend/services/gateway/ @harvestry/devops-sre-security @harvestry/engineering-leads
+
+# =============================================================================
+# SHARED LIBRARIES
+# =============================================================================
+/src/shared/kernel/ @harvestry/engineering-leads
+/src/shared/messaging/ @harvestry/devops-sre-security @harvestry/engineering-leads
+/src/shared/data-access/ @harvestry/data-ai @harvestry/engineering-leads
+/src/shared/validation/ @harvestry/engineering-leads
+
+# =============================================================================
+# DOCUMENTATION
+# =============================================================================
+/docs/ @harvestry/engineering-leads @harvestry/product
+/documents/ @harvestry/product @harvestry/engineering-leads
+README.md @harvestry/engineering-leads
+/*.md @harvestry/engineering-leads
+
+# Architecture Decision Records
+/documents/*ADR* @harvestry/engineering-leads @harvestry/chief-architect
+
+# Runbooks
+/documents/*Runbook* @harvestry/devops-sre-security
+/docs/ops/runbooks/ @harvestry/devops-sre-security
+
+# =============================================================================
+# TESTING
+# =============================================================================
+/tests/ @harvestry/devops-sre-security @harvestry/qa
+/tests/e2e/ @harvestry/qa
+/tests/security/ @harvestry/security
+/tests/performance/ @harvestry/devops-sre-security @harvestry/data-ai
+
+# =============================================================================
+# CRITICAL PATHS (require additional VP approval)
+# =============================================================================
+/src/backend/services/telemetry-controls/closed-loop/ @harvestry/telemetry-controls @harvestry/vp-product
+/src/backend/services/data-ai/ai-models/ @harvestry/data-ai @harvestry/vp-product
+/src/database/RLS-policies/ABAC/ @harvestry/security @harvestry/vp-product
+/config/feature-flags/ @harvestry/devops-sre-security @harvestry/vp-product

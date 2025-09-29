@@ -1,0 +1,79 @@
+# Grafana Datasource Provisioning
+# Track A: Automated datasource configuration
+#
+# SECURITY NOTE: All credentials use environment variable interpolation.
+# Passwords are loaded from ${VARIABLE_NAME} at runtime and must never be hardcoded.
+# Exposed credentials must be rotated immediately via your secret management system.
+
+apiVersion: 1
+
+datasources:
+  # Prometheus - Metrics
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: "15s"
+      httpMethod: POST
+    version: 1
+
+  # Loki - Logs
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: "trace_id=(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"
+    version: 1
+
+  # Tempo - Traces
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false
+    jsonData:
+      tracesToLogs:
+        datasourceUid: loki
+        tags: ['service_name', 'span_id']
+        mappedTags: [{ key: 'service.name', value: 'service_name' }]
+        mapTagNamesEnabled: true
+        filterByTraceID: true
+        filterBySpanID: false
+      tracesToMetrics:
+        datasourceUid: prometheus
+        tags: [{ key: 'service.name', value: 'service_name' }]
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+    version: 1
+
+  # PostgreSQL - Direct database queries (for analytics)
+  # SECURITY: Password loaded from GF_DATASOURCES_POSTGRES_PASSWORD environment variable
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: harvestry_dev
+    user: harvestry_user
+    secureJsonData:
+      password: ${GF_DATASOURCES_POSTGRES_PASSWORD}
+    editable: false
+    jsonData:
+      sslmode: prefer
+      maxOpenConns: 10
+      maxIdleConns: 5
+      connMaxLifetime: 14400
+      postgresVersion: 1500
+      timescaledb: true
+    version: 1

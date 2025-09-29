@@ -1,0 +1,156 @@
+{
+  "dashboard": {
+    "title": "Track A - Burn Rate Monitoring",
+    "uid": "track-a-burn-rate",
+    "tags": ["track-a", "slo", "burn-rate"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "SLO Error Budget Remaining",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "100 - ((rate(http_request_errors_total{job=\"api-gateway\"}[1h]) / rate(http_requests_total{job=\"api-gateway\"}[1h])) / 0.001) * 100",
+            "legendFormat": "Error Budget %"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 20, "color": "yellow"},
+                {"value": 50, "color": "green"}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Fast Burn Rate (1h window)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(http_request_errors_total{job=\"api-gateway\"}[1h]) / rate(http_requests_total{job=\"api-gateway\"}[1h])",
+            "legendFormat": "1h Error Rate"
+          },
+          {
+            "expr": "14 * (1 - 0.999)",
+            "legendFormat": "Fast Burn Threshold"
+          }
+        ],
+        "yaxes": [
+          {"format": "percentunit", "label": "Error Rate"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Slow Burn Rate (6h window)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(http_request_errors_total{job=\"api-gateway\"}[6h]) / rate(http_requests_total{job=\"api-gateway\"}[6h])",
+            "legendFormat": "6h Error Rate"
+          },
+          {
+            "expr": "6 * (1 - 0.999)",
+            "legendFormat": "Slow Burn Threshold"
+          }
+        ],
+        "yaxes": [
+          {"format": "percentunit", "label": "Error Rate"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Active Burn Rate Alerts",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "ALERTS{alertname=~\".*Burn.*\"}",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "alertname": "Alert",
+                "alertstate": "State",
+                "severity": "Severity",
+                "description": "Description"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Error Budget Burn Rate Over Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "1 - ((rate(http_request_errors_total{job=\"api-gateway\"}[5m]) / rate(http_requests_total{job=\"api-gateway\"}[5m])) / 0.001)",
+            "legendFormat": "Error Budget Remaining"
+          }
+        ],
+        "yaxes": [
+          {"format": "percentunit", "label": "Budget", "min": 0, "max": 1},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Request Success vs Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=\"api-gateway\",status=~\"2..\"}[5m]))",
+            "legendFormat": "2xx Success"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{job=\"api-gateway\",status=~\"4..\"}[5m]))",
+            "legendFormat": "4xx Client Error"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{job=\"api-gateway\",status=~\"5..\"}[5m]))",
+            "legendFormat": "5xx Server Error"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      }
+    ]
+  }
+}

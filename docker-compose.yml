@@ -1,0 +1,265 @@
+version: '3.9'
+
+# Harvestry ERP - Local Development Environment
+# Track A: Foundation infrastructure for development
+# 
+# Services:
+# - PostgreSQL 15 + TimescaleDB (primary datastore)
+# - Redis (caching, session store)
+# - Unleash (feature flags)
+# - Prometheus (metrics)
+# - Grafana (dashboards)
+# - Loki (log aggregation)
+# - Tempo (distributed tracing)
+# - Jaeger (trace visualization)
+
+networks:
+  harvestry-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+  loki-data:
+  tempo-data:
+  unleash-data:
+
+services:
+  # =============================================================================
+  # DATABASE TIER
+  # =============================================================================
+  
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: harvestry-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: harvestry_dev
+      POSTGRES_USER: harvestry_user
+      POSTGRES_PASSWORD: harvestry_dev_password
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.utf8"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./src/database/scripts:/docker-entrypoint-initdb.d
+    networks:
+      - harvestry-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U harvestry_user -d harvestry_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=512MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=128MB"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=5"
+      - "-c"
+      - "max_replication_slots=5"
+
+  redis:
+    image: redis:7-alpine
+    container_name: harvestry-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - harvestry-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # =============================================================================
+  # FEATURE FLAGS
+  # =============================================================================
+  
+  unleash:
+    image: unleashorg/unleash-server:latest
+    container_name: harvestry-unleash
+    restart: unless-stopped
+    ports:
+      - "4242:4242"
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_NAME: unleash_dev
+      DATABASE_USERNAME: harvestry_user
+      DATABASE_PASSWORD: harvestry_dev_password
+      DATABASE_SSL: "false"
+      LOG_LEVEL: "info"
+      INIT_ADMIN_API_TOKENS: "*:*.unleash-insecure-api-token"
+      INIT_CLIENT_API_TOKENS: "*:development.unleash-insecure-frontend-api-token"
+    networks:
+      - harvestry-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:4242/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================================================
+  # OBSERVABILITY TIER
+  # =============================================================================
+  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: harvestry-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./src/infrastructure/monitoring/prometheus:/etc/prometheus
+    networks:
+      - harvestry-net
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: harvestry-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+      GF_SERVER_ROOT_URL: http://localhost:3001
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      # SECURITY: PostgreSQL datasource password (required by provisioning/datasources/datasources.yml)
+      # For production: Load from vault/secret manager, never hardcode
+      GF_DATASOURCES_POSTGRES_PASSWORD: harvestry_dev_password
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./src/infrastructure/monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./src/infrastructure/monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - harvestry-net
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  loki:
+    image: grafana/loki:latest
+    container_name: harvestry-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+      - ./src/infrastructure/logging/loki:/etc/loki
+    networks:
+      - harvestry-net
+    command: -config.file=/etc/loki/loki-config.yml
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: harvestry-tempo
+    restart: unless-stopped
+    ports:
+      - "3200:3200"   # tempo
+      - "4317:4317"   # otlp grpc
+      - "4318:4318"   # otlp http
+      - "9411:9411"   # zipkin
+    volumes:
+      - tempo-data:/var/tempo
+      - ./src/infrastructure/tracing/tempo:/etc/tempo
+    networks:
+      - harvestry-net
+    command: -config.file=/etc/tempo/tempo-config.yml
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: harvestry-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"  # UI
+      - "14268:14268"  # collector http
+      - "14250:14250"  # collector grpc
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    networks:
+      - harvestry-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:14269/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================================================
+  # OPTIONAL: OTEL COLLECTOR
+  # =============================================================================
+  
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: harvestry-otel-collector
+    restart: unless-stopped
+    ports:
+      - "4319:4317"   # OTLP gRPC receiver
+      - "4320:4318"   # OTLP HTTP receiver
+      - "8888:8888"   # Prometheus metrics exposed by the collector
+      - "8889:8889"   # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+    volumes:
+      - ./src/infrastructure/observability/otel-collector-config.yml:/etc/otel-collector-config.yml
+    networks:
+      - harvestry-net
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    command: ["--config=/etc/otel-collector-config.yml"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:13133/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

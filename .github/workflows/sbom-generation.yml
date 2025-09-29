@@ -1,0 +1,119 @@
+name: SBOM Generation
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  generate-sbom-dotnet:
+    name: Generate SBOM - .NET Services
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Install CycloneDX .NET tool
+        run: |
+          dotnet tool install --global CycloneDX
+          export PATH="$PATH:$HOME/.dotnet/tools"
+
+      - name: Publish backend artifacts
+        run: dotnet publish -c Release -o ./artifacts/backend
+
+      - name: Generate SBOM with CycloneDX
+        run: dotnet CycloneDX --json --output ./sbom
+
+      - name: Install SBOM tool
+        run: |
+          curl -Lo sbom-tool https://github.com/microsoft/sbom-tool/releases/latest/download/sbom-tool-linux-x64
+          chmod +x sbom-tool
+
+      - name: Generate Microsoft SBOM
+        run: |
+          ./sbom-tool generate -b ./artifacts/backend -bc ./src/backend -pn "Harvestry-Backend" -pv "1.0.0" -ps "Harvestry" -nsb https://harvestry.com
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-dotnet
+          path: sbom/
+          retention-days: 90
+
+  generate-sbom-frontend:
+    name: Generate SBOM - Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate SBOM with CycloneDX
+        run: npx @cyclonedx/cyclonedx-npm --output-file ../../sbom/frontend-sbom.json
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-frontend
+          path: sbom/
+          retention-days: 90
+
+  sign-sbom:
+    name: Sign SBOM
+    runs-on: ubuntu-latest
+    needs: [generate-sbom-dotnet, generate-sbom-frontend]
+    if: github.event_name == 'release'
+    steps:
+      - name: Download all SBOMs
+        uses: actions/download-artifact@v4
+        with:
+          path: sbom/
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign SBOMs
+        run: |
+          for file in sbom/**/*.json; do
+            cosign sign-blob --yes "$file" --output-signature "${file}.sig"
+          done
+        env:
+          COSIGN_EXPERIMENTAL: 1
+
+      - name: Upload signed SBOMs
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-signed
+          path: sbom/
+          retention-days: 365
+
+  summary:
+    name: SBOM Summary
+    runs-on: ubuntu-latest
+    needs: [generate-sbom-dotnet, generate-sbom-frontend]
+    steps:
+      - name: Summary
+        run: |
+          echo "✅ SBOM generation completed successfully"
+          echo "- .NET Backend SBOM: Generated"
+          echo "- Frontend SBOM: Generated"

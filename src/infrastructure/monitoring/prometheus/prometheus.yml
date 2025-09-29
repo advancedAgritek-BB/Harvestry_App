@@ -1,0 +1,160 @@
+# Prometheus Configuration for Harvestry ERP
+# Track A: SLO monitoring and burn-rate alerting
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'harvestry-dev'
+    environment: 'development'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - 'alertmanager:9093'
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - 'alerts/*.yml'
+  - 'recording-rules/*.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # API Gateway
+  - job_name: 'api-gateway'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['gateway:5000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - target_label: squad
+        replacement: 'devops-sre-security'
+
+  # Core Platform Services
+  - job_name: 'identity-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['identity:5001']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'core-platform'
+      - target_label: service
+        replacement: 'identity'
+
+  - job_name: 'organizations-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['organizations:5002']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'core-platform'
+
+  - job_name: 'spatial-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['spatial:5003']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'core-platform'
+
+  - job_name: 'inventory-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['inventory:5004']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'core-platform'
+
+  # Telemetry & Controls Services
+  - job_name: 'sensors-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['sensors:5010']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'telemetry-controls'
+
+  - job_name: 'irrigation-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['irrigation:5011']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'telemetry-controls'
+
+  # Workflow & Messaging Services
+  - job_name: 'tasks-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['tasks:5020']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'workflow-messaging'
+
+  - job_name: 'slack-bridge-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['slack-bridge:5021']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'workflow-messaging'
+
+  # Integration Services
+  - job_name: 'metrc-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['compliance-metrc:5030']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'integrations'
+
+  - job_name: 'qbo-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['quickbooks:5031']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'integrations'
+
+  # Data & AI Services
+  - job_name: 'analytics-service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['analytics:5040']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'data-ai'
+
+  # PostgreSQL + TimescaleDB
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'data-ai'
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    relabel_configs:
+      - target_label: squad
+        replacement: 'devops-sre-security'
+
+  # Node Exporter (system metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # OpenTelemetry Collector
+  - job_name: 'otel-collector'
+    static_configs:
+      - targets: ['otel-collector:8888']
