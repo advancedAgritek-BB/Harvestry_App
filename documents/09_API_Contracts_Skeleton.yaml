@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info:
+  title: Harvestry Public API (MVP Skeleton)
+  version: 0.1.0
+servers:
+  - url: https://api.harvestry.example.com
+paths:
+  /auth/login:
+    post:
+      summary: Login
+      requestBody: { content: { application/json: { schema: { type: object, properties: { email: {type: string}, password: {type: string} } } } } }
+      responses: { '200': { description: OK } }
+  /sites:
+    get:
+      summary: List sites (RLS-scoped)
+      responses: { '200': { description: OK } }
+  /sites/{siteId}/sensor-streams:
+    get:
+      summary: List sensor streams for site
+      parameters: [{ name: siteId, in: path, required: true, schema: { type: string } }]
+      responses: { '200': { description: OK } }
+  /sites/{siteId}/irrigation/programs:
+    post:
+      summary: Create irrigation program (open-loop)
+      responses: { '201': { description: Created } }
+  /inventory/lots:
+    get:
+      summary: Query lots with balances and QA status
+      responses: { '200': { description: OK } }
+  /compliance/metrc/queue:
+    post:
+      summary: Enqueue METRC event
+      responses: { '202': { description: Accepted } }
+  /qbo/webhooks:
+    post:
+      summary: Receive QBO webhook (HMAC-verified)
+      responses: { '200': { description: OK } }
+  /slack/interactive:
+    post:
+      summary: Slack interactive callback
+      responses: { '200': { description: OK } }
+components: {}

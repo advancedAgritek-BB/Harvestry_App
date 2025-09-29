@@ -1,0 +1,6 @@
+ID,Area,Description,Likelihood,Impact,Owner,Mitigation,Status
+R-01,Closed-loop control,Enablement without sufficient shadow data,M,H,PM Controls,14-day shadow; median correction delta ≤5%; revert path; interlock tests,Open
+R-02,Compliance APIs,Rate limits & long-running queues,M,M,Integrations Lead,Adaptive concurrency; DLQ + replay; reconciliation views; alerting,Open
+R-03,Telemetry scale,Ingest spikes increase storage and query latency,M,M,Data Platform,Retention controller; continuous aggregates; ClickHouse triggers; dashboards,Open
+R-04,Security,RLS gaps or token leakage,L,H,Security Lead,RLS fuzz tests; secrets rotation; SAST/secret scanning; least privilege,Open
+R-05,Hardware,Valve concurrency exceeds transformer VA,L,H,Firmware Lead,"Firmware concurrency caps, INT/EXT selector, installer checklist",Open
