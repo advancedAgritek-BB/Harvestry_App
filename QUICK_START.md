@@ -95,10 +95,13 @@ Environment configs, data files, and application logs
 ## 🏗️ Architecture Principles
 
 ### 1. **Microservices by Bounded Context**
+
 Each service owns a specific domain and is independently deployable.
 
 ### 2. **Clean Architecture (Layers)**
+
 Every service follows this structure:
+
 ```
 service-name/
 ├── API/            # Controllers, middleware (presentation)
@@ -108,9 +111,11 @@ service-name/
 ```
 
 ### 3. **Squad Alignment**
+
 Services are organized by squad ownership (see `documents/02_RACI_and_Squad_Structure.md`)
 
 ### 4. **SOLID & DRY**
+
 - Single Responsibility: Each file/class does one thing
 - Files < 500 lines (rule enforced)
 - Shared logic in `src/shared/`
@@ -205,6 +210,7 @@ src/frontend/
 ```
 
 Example: Working on the cultivation dashboard:
+
 - Page: `src/frontend/app/cultivation/page.tsx`
 - Components: `src/frontend/components/charts/`, `src/frontend/components/tables/`
 - Feature logic: `src/frontend/features/telemetry/`, `src/frontend/features/irrigation/`
@@ -236,6 +242,7 @@ npm run test:performance
 - **E2E tests**: Test full user flows (Playwright/Cypress)
 
 Test files live in:
+
 - Service-specific: `src/backend/services/<service>/Tests/`
 - Cross-service: `tests/integration/`
 - User flows: `tests/e2e/`
@@ -257,6 +264,7 @@ Dashboards and configs: `src/infrastructure/monitoring/`
 ### Health Checks
 
 Every service exposes:
+
 - `/health` - Liveness probe
 - `/health/ready` - Readiness probe
 - `/metrics` - Prometheus metrics
@@ -319,13 +327,17 @@ cd scripts/deploy
 ## 📖 Key Concepts
 
 ### Outbox Pattern
+
 All side effects (messages, external API calls) go through the transactional outbox to ensure exactly-once delivery. See `src/shared/messaging/Outbox/`
 
 ### Sagas
+
 Multi-step operations (e.g., compliance sync + inventory update) use sagas for orchestration. See `src/shared/messaging/Sagas/`
 
 ### Feature Flags
+
 High-risk features are gated by site-level feature flags:
+
 - `closed_loop_ecph_enabled`
 - `autosteer_mpc_enabled`
 - `ai_auto_apply_enabled`
@@ -333,7 +345,9 @@ High-risk features are gated by site-level feature flags:
 Configuration: `config/feature-flags/`
 
 ### Telemetry Ingest
+
 Device telemetry flows:
+
 1. Device → MQTT/HTTP Adapter
 2. Adapter → Normalizer
 3. Normalizer → Queue (NATS/Kafka)

@@ -19,9 +19,9 @@ This register tracks technical debt items that were intentionally deferred or di
 | Priority | Count | Est. Effort |
 |----------|-------|-------------|
 | 🔴 High | 2 | 5 days |
-| 🟡 Medium | 3 | 8 days |
+| 🟡 Medium | 5 | 10 days |
 | 🟢 Low | 0 | 0 days |
-| **Total** | **5** | **13 days** |
+| **Total** | **7** | **15 days** |
 
 ---
 
@@ -233,6 +233,80 @@ Per service:
 
 ---
 
+### DEBT-006: Structured Logging for Identity Service
+**Category**: Observability  
+**Created**: 2025-09-29  
+**Squad**: Core Platform Squad  
+**Effort**: 1 day  
+
+**Context**:
+`Program.cs` currently ships with comments referencing Serilog, but no structured logging is configured. Identity service logs are limited to default console output which lacks correlation IDs and JSON formatting expected by the central logging stack.
+
+**Why Deferred**:
+- Serilog package references and configuration were deferred while repository wiring was prioritized.
+- Awaiting confirmation on shared logging package layout across services.
+
+**Impact if Not Fixed**:
+- Logs won't include structured fields for correlation or ingestion by Loki/Splunk.
+- Harder to trace badge authentication and policy evaluation issues.
+- Inconsistent logging patterns across microservices.
+
+**Action Required**:
+1. Add Serilog dependencies (core, console, Seq/Elasticsearch sinks as required) to the identity service project.
+2. Configure `builder.Host.UseSerilog(...)` in `Program.cs`, reading from configuration/environment.
+3. Ensure request/response logging and enrichers (trace/span IDs, correlation IDs) are registered.
+4. Update service configuration files with logging settings and document rollout.
+
+**Code Locations**:
+- `src/backend/services/core-platform/identity/API/Program.cs`
+- `config/identity/appsettings.*.json` (create/update logging sections)
+
+**Acceptance Criteria**:
+- [ ] Identity service emits structured JSON logs with correlation IDs.
+- [ ] Logs ingested successfully by centralized logging stack.
+- [ ] Logging configuration documented for other Track B services.
+
+**Related**:
+- Track B Checklist item: FRP-01 Dependency Injection – Serilog task
+
+---
+
+### DEBT-007: Database Health Check Endpoint
+**Category**: Reliability  
+**Created**: 2025-09-29  
+**Squad**: Core Platform Squad  
+**Effort**: 1 day  
+
+**Context**:
+Identity service currently exposes `/healthz` returning a static payload. No connectivity test is performed against PostgreSQL, so Kubernetes/ingress probes cannot detect database outages or RLS misconfiguration.
+
+**Why Deferred**:
+- Basic endpoint was added to unblock smoke testing; full health check requires additional packages and configuration.
+
+**Impact if Not Fixed**:
+- Service may report healthy while database connections fail, leading to runtime errors for clients.
+- Deployment rollouts cannot rely on health probes to gate traffic.
+
+**Action Required**:
+1. Add ASP.NET Core health checks (e.g., `Microsoft.Extensions.Diagnostics.HealthChecks.Npgsql`).
+2. Register a DB health check that executes a lightweight query via `IdentityDbContext` with RLS context.
+3. Expose `/healthz` (or `/health/ready`) wired to the health check pipeline and update Kubernetes probe definitions.
+4. Add unit/integration coverage ensuring health endpoint fails when DB is unreachable.
+
+**Code Locations**:
+- `src/backend/services/core-platform/identity/API/Program.cs`
+- `deploy/k8s/identity/*.yaml` (update readiness/liveness probes)
+
+**Acceptance Criteria**:
+- [ ] Health endpoint returns unhealthy when PostgreSQL connectivity or RLS setup fails.
+- [ ] Kubernetes readiness probe uses the new endpoint.
+- [ ] Documentation updated for operations runbook.
+
+**Related**:
+- Track B Checklist item: FRP-01 Dependency Injection – DB health check
+
+---
+
 ## 🟢 Low Priority Debt
 
 _(No items currently)_
@@ -310,7 +384,7 @@ Track these metrics over time:
 
 | Month | Total Items | High Priority | Effort (days) | Items Resolved |
 |-------|-------------|---------------|---------------|----------------|
-| Sep 2025 | 5 | 2 | 13 | 0 |
+| Sep 2025 | 7 | 2 | 15 | 0 |
 | Oct 2025 | - | - | - | - |
 | Nov 2025 | - | - | - | - |
 

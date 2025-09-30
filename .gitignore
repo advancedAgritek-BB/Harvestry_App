@@ -1,0 +1,36 @@
+# Environment files with credentials
+.env
+.env.local
+.env.*.local
+.env.local.backup
+*.backup
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+bin/
+obj/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
