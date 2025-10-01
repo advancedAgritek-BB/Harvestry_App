@@ -101,7 +101,7 @@ public enum BadgeType
 
 /// <summary>
 /// Login method used for authentication
-    /// </summary>
+/// </summary>
 public enum LoginMethod
 {
     /// <summary>

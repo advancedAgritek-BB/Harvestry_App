@@ -145,7 +145,7 @@ public sealed partial class Badge : Entity<Guid>
 
         Status = BadgeStatus.Revoked;
         RevokedAt = DateTime.UtcNow;
-        RevokedBy = revokedBy;
+        RevokedBy = revokedBy == Guid.Empty ? null : revokedBy;
         RevokeReason = reason;
         UpdatedAt = DateTime.UtcNow;
     }

@@ -2,7 +2,7 @@
 
 ## Step 1: Go to Supabase Dashboard
 
-1. Go to: https://app.supabase.com
+1. Go to: <https://app.supabase.com>
 2. Click on your project: **[YOUR-PROJECT-REF]** (find this in your Supabase dashboard)
 
 ## Step 2: Get Connection String
@@ -21,7 +21,7 @@ Look for: **"URI" or "Connection string"**
 
 It will look like:
 ```bash
-postgresql://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres
+postgres://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres
 ```
 
 But we need the DIRECT connection, which is:
@@ -33,7 +33,7 @@ postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/pos
 
 Look for: **"Transaction" mode**
 ```bash
-postgresql://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres
+postgres://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres
 ```
 
 ## Step 4: Get Your Password
@@ -42,10 +42,12 @@ postgresql://postgres.[YOUR-PROJECT-REF]:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.
 
 To get the actual password:
 
-**Option 1: If you saved it during project creation**
+### Option 1: If you saved it during project creation
+
 - Use that password
 
-**Option 2: Reset password**
+### Option 2: Reset password
+
 1. In **Settings → Database**
 2. Click **"Reset database password"** button
 3. Copy the NEW password shown

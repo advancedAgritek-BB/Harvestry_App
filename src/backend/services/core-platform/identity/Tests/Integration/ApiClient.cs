@@ -12,11 +12,11 @@ internal sealed class ApiClient : IAsyncDisposable
     private readonly WebApplicationFactory<Program> _factory;
     public HttpClient Client { get; }
 
-    public static async Task<ApiClient> CreateAsync()
+    public static Task<ApiClient> CreateAsync()
     {
         var factory = new WebApplicationFactory<Program>();
         var client = factory.CreateClient();
-        return new ApiClient(factory, client);
+        return Task.FromResult(new ApiClient(factory, client));
     }
 
     private ApiClient(WebApplicationFactory<Program> factory, HttpClient client)

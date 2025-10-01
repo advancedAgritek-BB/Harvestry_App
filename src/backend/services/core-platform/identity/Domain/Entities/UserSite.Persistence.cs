@@ -2,9 +2,9 @@ using System;
 
 namespace Harvestry.Identity.Domain.Entities;
 
-internal sealed partial class UserSite
+public sealed partial class UserSite
 {
-    internal static UserSite Restore(
+public static UserSite Restore(
         Guid id,
         Guid userId,
         Guid siteId,

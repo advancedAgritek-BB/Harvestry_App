@@ -107,6 +107,11 @@ public sealed class TaskGatingRequirement
         Guid? requirementId,
         string reason)
     {
+        if (string.IsNullOrWhiteSpace(requirementType))
+            throw new ArgumentException("RequirementType cannot be null or whitespace", nameof(requirementType));
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("Reason cannot be null or whitespace", nameof(reason));
+
         RequirementType = requirementType;
         RequirementId = requirementId;
         Reason = reason;
@@ -143,6 +148,19 @@ public sealed class TwoPersonApprovalRequest
         string? attestation = null,
         Dictionary<string, object>? context = null)
     {
+        if (string.IsNullOrWhiteSpace(action))
+            throw new ArgumentException("Action cannot be null or whitespace", nameof(action));
+        if (string.IsNullOrWhiteSpace(resourceType))
+            throw new ArgumentException("ResourceType cannot be null or whitespace", nameof(resourceType));
+        if (resourceId == Guid.Empty)
+            throw new ArgumentException("ResourceId cannot be empty GUID", nameof(resourceId));
+        if (siteId == Guid.Empty)
+            throw new ArgumentException("SiteId cannot be empty GUID", nameof(siteId));
+        if (initiatorUserId == Guid.Empty)
+            throw new ArgumentException("InitiatorUserId cannot be empty GUID", nameof(initiatorUserId));
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("Reason cannot be null or whitespace", nameof(reason));
+
         Action = action;
         ResourceType = resourceType;
         ResourceId = resourceId;
@@ -174,15 +192,43 @@ public sealed class TwoPersonApprovalResponse
     public TwoPersonApprovalResponse(
         Guid approvalId,
         string status,
-        DateTime expiresAt)
+        DateTime expiresAt,
+        DateTime initiatedAt,
+        string action,
+        string resourceType,
+        Guid resourceId,
+        Guid siteId,
+        Guid initiatorUserId)
     {
+        if (approvalId == Guid.Empty)
+            throw new ArgumentException("ApprovalId cannot be empty GUID", nameof(approvalId));
+        if (string.IsNullOrWhiteSpace(status))
+            throw new ArgumentException("Status cannot be null or whitespace", nameof(status));
+        if (expiresAt == default)
+            throw new ArgumentException("ExpiresAt must be a valid date", nameof(expiresAt));
+        if (string.IsNullOrWhiteSpace(action))
+            throw new ArgumentException("Action cannot be null or whitespace", nameof(action));
+        if (string.IsNullOrWhiteSpace(resourceType))
+            throw new ArgumentException("ResourceType cannot be null or whitespace", nameof(resourceType));
+
         ApprovalId = approvalId;
         Status = status;
         ExpiresAt = expiresAt;
+        InitiatedAt = initiatedAt;
+        Action = action;
+        ResourceType = resourceType;
+        ResourceId = resourceId;
+        SiteId = siteId;
+        InitiatorUserId = initiatorUserId;
     }
 
     public Guid ApprovalId { get; }
     public string Status { get; }
     public DateTime ExpiresAt { get; }
-    public DateTime? InitiatedAt { get; init; }
+    public DateTime InitiatedAt { get; }
+    public string Action { get; }
+    public string ResourceType { get; }
+    public Guid ResourceId { get; }
+    public Guid SiteId { get; }
+    public Guid InitiatorUserId { get; }
 }

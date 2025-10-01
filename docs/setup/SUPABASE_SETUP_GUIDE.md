@@ -27,7 +27,9 @@ if [ -f .env.local ]; then
             value="${value%\"}"
             value="${value#\'}"
             value="${value%\'}"
-            export "$key=$value"
+            # Use printf -v for safe literal assignment
+            printf -v "$key" '%s' "$value"
+            export "$key"
         fi
     done < .env.local
 else
@@ -54,10 +56,14 @@ run_migration() {
     
     echo -e "${YELLOW}Running: ${name}${NC}"
     
-    if psql "$DATABASE_URL" -f "$file" > /dev/null 2>&1; then
+    # Capture output for error reporting
+    local output
+    if output=$(psql "$DATABASE_URL" -f "$file" 2>&1); then
         echo -e "${GREEN}✓ Success: ${name}${NC}"
     else
         echo -e "${RED}✗ Failed: ${name}${NC}"
+        echo -e "${RED}Error details:${NC}"
+        echo "$output"
         exit 1
     fi
 }

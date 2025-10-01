@@ -76,7 +76,7 @@ public sealed class AuthController : ControllerBase
         }
 
         var activeSessions = await _badgeAuthService.GetActiveSessionsAsync(userId, cancellationToken);
-        if (!activeSessions.Any(s => s.Id == request.SessionId))
+        if (!activeSessions.Any(s => s.SessionId == request.SessionId))
         {
             return NotFound();
         }
@@ -111,17 +111,13 @@ public sealed class AuthController : ControllerBase
 
     public sealed class BadgeLoginRequest
     {
-        [Required]
-        [StringLength(128, MinimumLength = 4)]
         public string BadgeCode { get; init; } = null!;
 
-        [Required]
         public Guid SiteId { get; init; }
     }
 
     public sealed class LogoutRequest
     {
-        [Required]
         public Guid SessionId { get; init; }
 
         public string? Reason { get; init; }

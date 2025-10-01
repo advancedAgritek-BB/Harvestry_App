@@ -9,18 +9,22 @@ public sealed class PermissionCheckRequestValidator : AbstractValidator<Permissi
     public PermissionCheckRequestValidator()
     {
         RuleFor(request => request.UserId)
-            .NotEmpty();
+            .NotEmpty()
+            .Must(id => id != Guid.Empty)
+            .WithMessage("UserId cannot be empty GUID");
 
         RuleFor(request => request.SiteId)
-            .NotEmpty();
+            .NotEmpty()
+            .Must(id => id != Guid.Empty)
+            .WithMessage("SiteId cannot be empty GUID");
 
         RuleFor(request => request.Action)
             .NotEmpty()
-            .MaximumLength(128);
+            .Length(1, 128);
 
         RuleFor(request => request.ResourceType)
             .NotEmpty()
-            .MaximumLength(128);
+            .Length(1, 128);
     }
 }
 
@@ -37,13 +41,19 @@ public sealed class InitiateApprovalRequestValidator : AbstractValidator<Permiss
             .Length(1, 128);
 
         RuleFor(request => request.ResourceId)
-            .NotEmpty();
+            .NotEmpty()
+            .Must(id => id != Guid.Empty)
+            .WithMessage("ResourceId cannot be empty GUID");
 
         RuleFor(request => request.SiteId)
-            .NotEmpty();
+            .NotEmpty()
+            .Must(id => id != Guid.Empty)
+            .WithMessage("SiteId cannot be empty GUID");
 
         RuleFor(request => request.InitiatorUserId)
-            .NotEmpty();
+            .NotEmpty()
+            .Must(id => id != Guid.Empty)
+            .WithMessage("InitiatorUserId cannot be empty GUID");
 
         RuleFor(request => request.Reason)
             .NotEmpty()
@@ -60,7 +70,9 @@ public sealed class ApproveRequestValidator : AbstractValidator<PermissionsContr
     public ApproveRequestValidator()
     {
         RuleFor(request => request.ApproverUserId)
-            .NotEmpty();
+            .NotEmpty()
+            .Must(id => id != Guid.Empty)
+            .WithMessage("ApproverUserId cannot be empty GUID");
 
         RuleFor(request => request.Reason)
             .NotEmpty()
@@ -77,7 +89,9 @@ public sealed class RejectRequestValidator : AbstractValidator<PermissionsContro
     public RejectRequestValidator()
     {
         RuleFor(request => request.ApproverUserId)
-            .NotEmpty();
+            .NotEmpty()
+            .Must(id => id != Guid.Empty)
+            .WithMessage("ApproverUserId cannot be empty GUID");
 
         RuleFor(request => request.Reason)
             .NotEmpty()

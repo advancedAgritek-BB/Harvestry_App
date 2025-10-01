@@ -35,7 +35,7 @@ COMMENT ON COLUMN abac_permissions.requires_two_person IS 'If true, two differen
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS authorization_audit (
     audit_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(user_id) ON DELETE SET NULL,
     site_id UUID REFERENCES sites(site_id) ON DELETE SET NULL,
     action VARCHAR(100) NOT NULL,
     resource_type VARCHAR(100) NOT NULL,
@@ -66,11 +66,11 @@ CREATE TABLE IF NOT EXISTS two_person_approvals (
     resource_type VARCHAR(100) NOT NULL,
     resource_id UUID NOT NULL,
     site_id UUID NOT NULL REFERENCES sites(site_id) ON DELETE CASCADE,
-    initiator_user_id UUID NOT NULL REFERENCES users(user_id),
+    initiator_user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE SET NULL,
     initiator_reason TEXT NOT NULL,
     initiator_attestation TEXT,
     initiated_at TIMESTAMPTZ DEFAULT NOW(),
-    approver_user_id UUID REFERENCES users(user_id),
+    approver_user_id UUID REFERENCES users(user_id) ON DELETE SET NULL,
     approver_reason TEXT,
     approver_attestation TEXT,
     approved_at TIMESTAMPTZ,
@@ -99,7 +99,8 @@ CREATE OR REPLACE FUNCTION check_abac_permission(
     p_resource_type VARCHAR,
     p_site_id UUID,
     p_context JSONB DEFAULT '{}'::JSONB,
-    p_log_check BOOLEAN DEFAULT TRUE
+    p_log_check BOOLEAN DEFAULT TRUE,
+    p_resource_id UUID DEFAULT NULL
 )
 RETURNS TABLE (
     granted BOOLEAN,
@@ -128,10 +129,10 @@ BEGIN
         -- Log the failed check
         IF p_log_check THEN
             INSERT INTO authorization_audit (
-                user_id, site_id, action, resource_type, 
+                user_id, site_id, action, resource_type, resource_id,
                 granted, deny_reason, context
             ) VALUES (
-                p_user_id, p_site_id, p_action, p_resource_type,
+                p_user_id, p_site_id, p_action, p_resource_type, p_resource_id,
                 FALSE, v_deny_reason, p_context
             );
         END IF;
@@ -141,12 +142,15 @@ BEGIN
     END IF;
     
     -- Check if permission exists for this role/action/resource
+    -- NOTE: Condition evaluation is simplified (uses JSONB @> containment).
+    -- For complex operators (_lte, _gte, etc.), implement a dedicated PL/pgSQL
+    -- function or move evaluation to application code.
     SELECT 
         TRUE,
         ap.requires_two_person,
         CASE 
             WHEN ap.conditions IS NOT NULL AND ap.conditions != '{}'::JSONB 
-            THEN p_context @> ap.conditions -- Check if context contains required conditions
+            THEN p_context @> ap.conditions -- Simplified: checks if context contains conditions
             ELSE TRUE
         END
     INTO v_permission_exists, v_requires_two_person, v_conditions_met
@@ -168,10 +172,10 @@ BEGIN
     -- Log the authorization check
     IF p_log_check THEN
         INSERT INTO authorization_audit (
-            user_id, site_id, action, resource_type,
+            user_id, site_id, action, resource_type, resource_id,
             granted, deny_reason, context
         ) VALUES (
-            p_user_id, p_site_id, p_action, p_resource_type,
+            p_user_id, p_site_id, p_action, p_resource_type, p_resource_id,
             (v_permission_exists AND v_conditions_met), v_deny_reason, p_context
         );
     END IF;
@@ -210,11 +214,19 @@ USING (
     OR current_setting('app.user_role', TRUE) IN ('admin', 'service_account')
 );
 
--- No INSERT/UPDATE/DELETE policies - only function can write
-CREATE POLICY authz_audit_no_modify ON authorization_audit
-FOR INSERT, UPDATE, DELETE
+-- INSERT allowed for service_account/admin only, no direct updates/deletes
+CREATE POLICY authz_audit_service_insert ON authorization_audit
+FOR INSERT
+WITH CHECK (current_setting('app.user_role', TRUE) IN ('service_account', 'admin'));
+
+CREATE POLICY authz_audit_no_update ON authorization_audit
+FOR UPDATE
 USING (FALSE)
 WITH CHECK (FALSE);
+
+CREATE POLICY authz_audit_no_delete ON authorization_audit
+FOR DELETE
+USING (FALSE);
 
 -- TWO_PERSON_APPROVALS: Site-scoped
 ALTER TABLE two_person_approvals ENABLE ROW LEVEL SECURITY;
@@ -227,8 +239,12 @@ USING (
         WHERE user_id = current_setting('app.current_user_id', TRUE)::UUID
         AND revoked_at IS NULL
     )
-    OR current_setting('app.user_role', TRUE) = 'service_account'
+    OR current_setting('app.user_role', TRUE) IN ('service_account', 'admin')
 );
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON abac_permissions TO harvestry_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON authorization_audit TO harvestry_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON two_person_approvals TO harvestry_app;
 
 -- ============================================================================
 -- SEED DEFAULT ABAC PERMISSIONS

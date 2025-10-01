@@ -6,9 +6,9 @@ using Harvestry.Identity.Domain.ValueObjects;
 
 namespace Harvestry.Identity.Domain.Entities;
 
-internal sealed partial class User
+public sealed partial class User
 {
-    internal static User Restore(
+    public static User Restore(
         Guid id,
         Email email,
         bool emailVerified,

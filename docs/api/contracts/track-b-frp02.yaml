@@ -1,0 +1,646 @@
+openapi: 3.0.3
+info:
+  title: Harvestry Spatial & Equipment API
+  version: 1.0.0
+  description: >-
+    Track B FRP-02 endpoints covering spatial hierarchy, equipment registry,
+    calibration management, and valve-zone mapping.
+servers:
+  - url: https://api.harvestry.local
+    description: Production
+  - url: https://staging.harvestry.local
+    description: Staging
+security:
+  - bearerAuth: []
+  - headerUserContext: []
+paths:
+  /api/sites/{siteId}/rooms:
+    post:
+      summary: Create a room
+      tags: [Rooms]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomRequest'
+      responses:
+        '201':
+          description: Room created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomResponse'
+    get:
+      summary: List rooms for a site
+      tags: [Rooms]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      responses:
+        '200':
+          description: Rooms for the site
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoomResponse'
+  /api/sites/{siteId}/rooms/{roomId}:
+    put:
+      summary: Update room details
+      tags: [Rooms]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoomRequest'
+      responses:
+        '200':
+          description: Updated room
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomResponse'
+    delete:
+      summary: Delete room
+      tags: [Rooms]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/RoomId'
+      responses:
+        '204':
+          description: Deleted
+  /api/sites/{siteId}/locations:
+    post:
+      summary: Create a location
+      tags: [Locations]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLocationRequest'
+      responses:
+        '201':
+          description: Created location
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryLocationNodeResponse'
+  /api/sites/{siteId}/locations/{locationId}/valve-mappings:
+    get:
+      summary: List valve mappings for a location
+      tags: [ValveMappings]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/LocationId'
+      responses:
+        '200':
+          description: Valve mappings for location
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ValveZoneMappingResponse'
+  /api/sites/{siteId}/equipment:
+    post:
+      summary: Create equipment
+      tags: [Equipment]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEquipmentRequest'
+      responses:
+        '201':
+          description: Created equipment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EquipmentResponse'
+    get:
+      summary: List equipment
+      tags: [Equipment]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+      responses:
+        '200':
+          description: Equipment list with pagination
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EquipmentListResponse'
+  /api/sites/{siteId}/equipment/{equipmentId}:
+    get:
+      summary: Get equipment by ID
+      tags: [Equipment]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/EquipmentId'
+      responses:
+        '200':
+          description: Equipment response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EquipmentResponse'
+  /api/sites/{siteId}/equipment/{equipmentId}/heartbeat:
+    post:
+      summary: Record equipment heartbeat
+      tags: [Equipment]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/EquipmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordHeartbeatRequest'
+      responses:
+        '204':
+          description: Heartbeat recorded
+  /api/sites/{siteId}/equipment/{equipmentId}/calibrations:
+    post:
+      summary: Record calibration event
+      tags: [Calibrations]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/EquipmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCalibrationRequest'
+      responses:
+        '201':
+          description: Calibration recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalibrationResponse'
+    get:
+      summary: Get calibration history for equipment
+      tags: [Calibrations]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/EquipmentId'
+      responses:
+        '200':
+          description: Calibration history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalibrationResponse'
+  /api/sites/{siteId}/calibrations/overdue:
+    get:
+      summary: Get overdue calibrations for a site
+      tags: [Calibrations]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - in: query
+          name: dueBeforeUtc
+          schema:
+            type: string
+            format: date-time
+          description: Optional upper bound
+      responses:
+        '200':
+          description: Overdue calibrations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalibrationResponse'
+  /api/sites/{siteId}/equipment/{equipmentId}/valve-mappings:
+    post:
+      summary: Create valve mapping for equipment
+      tags: [ValveMappings]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/EquipmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateValveZoneMappingRequest'
+      responses:
+        '201':
+          description: Created valve mapping
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValveZoneMappingResponse'
+    get:
+      summary: List valve mappings for equipment
+      tags: [ValveMappings]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/EquipmentId'
+      responses:
+        '200':
+          description: Valve mappings for equipment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ValveZoneMappingResponse'
+  /api/sites/{siteId}/valve-mappings/{mappingId}:
+    put:
+      summary: Update valve mapping
+      tags: [ValveMappings]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/MappingId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateValveZoneMappingRequest'
+      responses:
+        '200':
+          description: Updated mapping
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValveZoneMappingResponse'
+    delete:
+      summary: Delete valve mapping
+      tags: [ValveMappings]
+      parameters:
+        - $ref: '#/components/parameters/SiteId'
+        - $ref: '#/components/parameters/MappingId'
+      responses:
+        '204':
+          description: Mapping deleted
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+    headerUserContext:
+      type: apiKey
+      in: header
+      name: X-User-Id
+      description: User context header required for auditing
+  parameters:
+    SiteId:
+      name: siteId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RoomId:
+      name: roomId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    LocationId:
+      name: locationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EquipmentId:
+      name: equipmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    MappingId:
+      name: mappingId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    CreateRoomRequest:
+      type: object
+      required: [code, name, roomType, requestedByUserId]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        roomType:
+          type: string
+          enum: [Veg, Flower, Mother, Clone, Dry, Cure, Extraction, Manufacturing, Vault, Custom]
+        customRoomType:
+          type: string
+        description:
+          type: string
+        requestedByUserId:
+          type: string
+          format: uuid
+    UpdateRoomRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        floorLevel:
+          type: integer
+        areaSqft:
+          type: number
+        heightFt:
+          type: number
+        targetTempF:
+          type: number
+        targetHumidityPct:
+          type: number
+        targetCo2Ppm:
+          type: integer
+    RoomResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        siteId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        roomType:
+          type: string
+        status:
+          type: string
+        description:
+          type: string
+        floorLevel:
+          type: integer
+        areaSqft:
+          type: number
+        heightFt:
+          type: number
+    CreateLocationRequest:
+      type: object
+      required: [siteId, parentLocationId, locationType, requestedByUserId]
+      properties:
+        siteId:
+          type: string
+          format: uuid
+        parentLocationId:
+          type: string
+          format: uuid
+        locationType:
+          type: string
+          enum: [Room, Zone, SubZone, Row, Position, Rack, Shelf, Bin]
+        code:
+          type: string
+        name:
+          type: string
+        requestedByUserId:
+          type: string
+          format: uuid
+    InventoryLocationNodeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        locationType:
+          type: string
+        name:
+          type: string
+        depth:
+          type: integer
+        path:
+          type: string
+    CreateEquipmentRequest:
+      type: object
+      required: [siteId, locationId, requestedByUserId, code, typeCode, coreType]
+      properties:
+        siteId:
+          type: string
+          format: uuid
+        locationId:
+          type: string
+          format: uuid
+        requestedByUserId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        typeCode:
+          type: string
+        coreType:
+          type: string
+          enum: [controller, sensor, actuator, injector, pump, valve, meter, ec_ph_controller, mix_tank]
+        manufacturer:
+          type: string
+        model:
+          type: string
+        serialNumber:
+          type: string
+        notes:
+          type: string
+    EquipmentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        siteId:
+          type: string
+          format: uuid
+        locationId:
+          type: string
+          format: uuid
+        code:
+          type: string
+        status:
+          type: string
+        lastHeartbeatAt:
+          type: string
+          format: date-time
+        online:
+          type: boolean
+        channels:
+          type: array
+          items:
+            $ref: '#/components/schemas/EquipmentChannelResponse'
+    EquipmentListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EquipmentResponse'
+        totalCount:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+    EquipmentChannelResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        channelCode:
+          type: string
+        role:
+          type: string
+    RecordHeartbeatRequest:
+      type: object
+      required: [heartbeatAt]
+      properties:
+        heartbeatAt:
+          type: string
+          format: date-time
+        signalStrengthDbm:
+          type: integer
+        batteryPercent:
+          type: integer
+        uptimeSeconds:
+          type: integer
+    CreateCalibrationRequest:
+      type: object
+      required: [siteId, equipmentId, performedByUserId, method, referenceValue, measuredValue, result]
+      properties:
+        siteId:
+          type: string
+          format: uuid
+        equipmentId:
+          type: string
+          format: uuid
+        performedByUserId:
+          type: string
+          format: uuid
+        method:
+          type: string
+          enum: [Single, TwoPoint, MultiPoint]
+        referenceValue:
+          type: number
+        measuredValue:
+          type: number
+        result:
+          type: string
+          enum: [Pass, Fail, WithinTolerance, OutOfTolerance]
+        intervalDaysOverride:
+          type: integer
+        notes:
+          type: string
+    CalibrationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        equipmentId:
+          type: string
+          format: uuid
+        method:
+          type: string
+        result:
+          type: string
+        deviation:
+          type: number
+        deviationPct:
+          type: number
+        nextDueAt:
+          type: string
+          format: date-time
+    CreateValveZoneMappingRequest:
+      type: object
+      required: [siteId, equipmentId, zoneLocationId, requestedByUserId]
+      properties:
+        siteId:
+          type: string
+          format: uuid
+        equipmentId:
+          type: string
+          format: uuid
+        zoneLocationId:
+          type: string
+          format: uuid
+        requestedByUserId:
+          type: string
+          format: uuid
+        priority:
+          type: integer
+        normallyOpen:
+          type: boolean
+        interlockGroup:
+          type: string
+        notes:
+          type: string
+    UpdateValveZoneMappingRequest:
+      type: object
+      required: [requestedByUserId, priority]
+      properties:
+        requestedByUserId:
+          type: string
+          format: uuid
+        priority:
+          type: integer
+        normallyOpen:
+          type: boolean
+        interlockGroup:
+          type: string
+        notes:
+          type: string
+        enabled:
+          type: boolean
+        zoneLocationId:
+          type: string
+          format: uuid
+        valveChannelCode:
+          type: string
+    ValveZoneMappingResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        siteId:
+          type: string
+          format: uuid
+        valveEquipmentId:
+          type: string
+          format: uuid
+        valveChannelCode:
+          type: string
+        zoneLocationId:
+          type: string
+          format: uuid
+        priority:
+          type: integer
+        normallyOpen:
+          type: boolean
+        interlockGroup:
+          type: string
+        enabled:
+          type: boolean
+        notes:
+          type: string

@@ -69,7 +69,40 @@ echo ""
 # Step 3: Test connection
 echo -e "${BLUE}Step 3: Testing database connection...${NC}"
 
-source .env.local
+# Load .env.local safely
+if [ -f .env.local ] && [ -r .env.local ]; then
+    # Check file permissions (not world-writable)
+    if [ "$(stat -f '%A' .env.local 2>/dev/null || stat -c '%a' .env.local 2>/dev/null)" -gt 644 ]; then
+        echo -e "${YELLOW}⚠ Warning: .env.local has unsafe permissions${NC}"
+    fi
+    
+    # Parse file line-by-line
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Skip comments and empty lines
+        [[ "$line" =~ ^[[:space:]]*# ]] && continue
+        [[ -z "${line// }" ]] && continue
+        
+        # Only accept simple KEY=VALUE pairs
+        if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+            key="${BASH_REMATCH[1]}"
+            value="${BASH_REMATCH[2]}"
+            # Reject lines with shell metacharacters or command substitution
+            if [[ "$value" =~ [\$\`\;] ]]; then
+                echo -e "${YELLOW}⚠ Skipping suspicious line with metacharacters: $key${NC}" >&2
+                continue
+            fi
+            # Strip optional surrounding quotes
+            value="${value#\"}"
+            value="${value%\"}"
+            value="${value#\'}"
+            value="${value%\'}"
+            export "$key=$value"
+        fi
+    done < .env.local
+else
+    echo -e "${YELLOW}⚠ .env.local not found or not readable${NC}"
+    exit 1
+fi
 
 if [ -z "$DATABASE_URL_DIRECT" ]; then
     echo -e "${YELLOW}⚠ DATABASE_URL_DIRECT not set in .env.local${NC}"

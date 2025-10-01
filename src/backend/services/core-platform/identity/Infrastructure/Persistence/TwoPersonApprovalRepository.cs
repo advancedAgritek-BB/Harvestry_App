@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Harvestry.Identity.Application.DTOs;
@@ -66,7 +67,9 @@ public sealed class TwoPersonApprovalRepository : ITwoPersonApprovalRepository
         command.Parameters.Add("initiator_user_id", NpgsqlDbType.Uuid).Value = request.InitiatorUserId;
         command.Parameters.Add("initiator_reason", NpgsqlDbType.Text).Value = request.Reason;
         command.Parameters.Add("initiator_attestation", NpgsqlDbType.Text).Value = (object?)request.Attestation ?? DBNull.Value;
-        command.Parameters.Add("context", NpgsqlDbType.Jsonb).Value = JsonUtilities.SerializeDictionary(request.Context);
+        var contextPayload = request.Context?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+            ?? new Dictionary<string, object>();
+        command.Parameters.Add("context", NpgsqlDbType.Jsonb).Value = JsonUtilities.SerializeDictionary(contextPayload);
         command.Parameters.Add("expires_at", NpgsqlDbType.TimestampTz).Value = expiresAt;
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -79,10 +82,16 @@ public sealed class TwoPersonApprovalRepository : ITwoPersonApprovalRepository
         var initiatedAt = reader.GetDateTime(reader.GetOrdinal("initiated_at"));
         var status = reader.GetString(reader.GetOrdinal("status"));
 
-        return new TwoPersonApprovalResponse(approvalId, status, expiresAt)
-        {
-            InitiatedAt = initiatedAt
-        };
+        return new TwoPersonApprovalResponse(
+            approvalId,
+            status,
+            expiresAt,
+            initiatedAt,
+            request.Action,
+            request.ResourceType,
+            request.ResourceId,
+            request.SiteId,
+            request.InitiatorUserId);
     }
 
     public async Task<TwoPersonApprovalRecord?> GetByIdAsync(Guid approvalId, CancellationToken cancellationToken = default)
@@ -193,7 +202,8 @@ public sealed class TwoPersonApprovalRepository : ITwoPersonApprovalRepository
         var connection = await PrepareConnectionAsync(siteId, cancellationToken).ConfigureAwait(false);
 
         const string sql = @"
-            SELECT approval_id, status, expires_at, initiated_at
+            SELECT approval_id, action, resource_type, resource_id, site_id,
+                   initiator_user_id, status, expires_at, initiated_at
             FROM two_person_approvals
             WHERE site_id = @site_id
               AND status = 'pending'
@@ -212,10 +222,13 @@ public sealed class TwoPersonApprovalRepository : ITwoPersonApprovalRepository
             var approval = new TwoPersonApprovalResponse(
                 reader.GetGuid(reader.GetOrdinal("approval_id")),
                 reader.GetString(reader.GetOrdinal("status")),
-                reader.GetDateTime(reader.GetOrdinal("expires_at")))
-            {
-                InitiatedAt = reader.GetDateTime(reader.GetOrdinal("initiated_at"))
-            };
+                reader.GetDateTime(reader.GetOrdinal("expires_at")),
+                reader.GetDateTime(reader.GetOrdinal("initiated_at")),
+                reader.GetString(reader.GetOrdinal("action")),
+                reader.GetString(reader.GetOrdinal("resource_type")),
+                reader.GetGuid(reader.GetOrdinal("resource_id")),
+                reader.GetGuid(reader.GetOrdinal("site_id")),
+                reader.GetGuid(reader.GetOrdinal("initiator_user_id")));
             approvals.Add(approval);
         }
 

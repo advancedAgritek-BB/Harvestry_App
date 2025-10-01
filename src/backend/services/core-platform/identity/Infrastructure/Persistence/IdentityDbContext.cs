@@ -80,7 +80,7 @@ public sealed class IdentityDbContext : IAsyncDisposable, IDisposable
     /// <summary>
     /// Sets the PostgreSQL session variables used by RLS policies.
     /// </summary>
-    public async Task SetRlsContextAsync(Guid userId, string userRole, Guid siteId, CancellationToken cancellationToken = default)
+    public async Task SetRlsContextAsync(Guid userId, string userRole, Guid? siteId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(userRole))
         {
@@ -89,6 +89,7 @@ public sealed class IdentityDbContext : IAsyncDisposable, IDisposable
 
         var normalizedRole = userRole.Trim().ToLowerInvariant();
         var connection = await GetOpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await EnsureApplicationRoleAsync(connection, cancellationToken).ConfigureAwait(false);
 
         await using var command = connection.CreateCommand();
         command.CommandText = $@"
@@ -100,7 +101,7 @@ public sealed class IdentityDbContext : IAsyncDisposable, IDisposable
 
         command.Parameters.Add("userId", NpgsqlDbType.Uuid).Value = userId;
         command.Parameters.Add("userRole", NpgsqlDbType.Text).Value = normalizedRole;
-        command.Parameters.Add("siteId", NpgsqlDbType.Uuid).Value = siteId;
+        command.Parameters.Add("siteId", NpgsqlDbType.Uuid).Value = siteId ?? Guid.Empty;
 
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
@@ -150,6 +151,7 @@ public sealed class IdentityDbContext : IAsyncDisposable, IDisposable
             try
             {
                 var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+                await EnsureApplicationRoleAsync(connection, cancellationToken).ConfigureAwait(false);
                 _logger.LogDebug("Opened PostgreSQL connection on attempt {Attempt}", attempt);
                 return connection;
             }
@@ -165,6 +167,30 @@ public sealed class IdentityDbContext : IAsyncDisposable, IDisposable
 
                 await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
             }
+        }
+    }
+
+    private async Task EnsureApplicationRoleAsync(NpgsqlConnection connection, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+
+        try
+        {
+            await using var setRoleCommand = connection.CreateCommand();
+            setRoleCommand.CommandText = "SET ROLE harvestry_app;";
+            await setRoleCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+
+            await using var enforceRlsCommand = connection.CreateCommand();
+            enforceRlsCommand.CommandText = "SET row_security = on;";
+            await enforceRlsCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (PostgresException ex) when (ex.SqlState is PostgresErrorCodes.UndefinedObject or PostgresErrorCodes.InvalidAuthorizationSpecification)
+        {
+            _logger.LogWarning(ex, "Unable to set PostgreSQL role to harvestry_app. RLS enforcement may be bypassed for this connection.");
+        }
+        catch (PostgresException ex)
+        {
+            _logger.LogWarning(ex, "Unable to enable row level security enforcement for this connection.");
         }
     }
 

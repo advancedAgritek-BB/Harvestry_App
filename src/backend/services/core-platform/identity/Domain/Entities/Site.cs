@@ -56,10 +56,42 @@ public sealed partial class Site : AggregateRoot<Guid>
 
     /// <summary>
     /// Is the compliance license valid?
+    /// Note: LicenseExpiration is assumed to be stored in UTC
     /// </summary>
-    public bool IsLicenseValid =>
-        !string.IsNullOrEmpty(LicenseNumber) &&
-        (!LicenseExpiration.HasValue || LicenseExpiration.Value > DateTime.UtcNow);
+    public bool IsLicenseValid
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(LicenseNumber))
+                return false;
+
+            if (!LicenseExpiration.HasValue)
+                return true;
+
+            // Convert current UTC time to site's timezone for comparison
+            try
+            {
+                var siteTimeZone = string.IsNullOrWhiteSpace(Timezone)
+                    ? TimeZoneInfo.Utc
+                    : TimeZoneInfo.FindSystemTimeZoneById(Timezone);
+
+                var nowInSiteTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, siteTimeZone);
+                var expirationInSiteTime = TimeZoneInfo.ConvertTimeFromUtc(LicenseExpiration.Value, siteTimeZone);
+
+                return expirationInSiteTime > nowInSiteTime;
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                // Fall back to UTC comparison if timezone is invalid
+                return LicenseExpiration.Value > DateTime.UtcNow;
+            }
+            catch (InvalidTimeZoneException)
+            {
+                // Fall back to UTC comparison if timezone is invalid
+                return LicenseExpiration.Value > DateTime.UtcNow;
+            }
+        }
+    }
 
     /// <summary>
     /// Factory method to create a site

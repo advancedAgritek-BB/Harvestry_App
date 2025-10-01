@@ -92,6 +92,10 @@ public sealed class AuthorizationAuditRepository : IAuthorizationAuditRepository
         return connection;
     }
 
+    /// <summary>
+    /// Serializes context dictionary to canonical JSON for audit logging.
+    /// Uses canonical serialization to ensure deterministic hashing.
+    /// </summary>
     private static string SerializeContext(IReadOnlyDictionary<string, object?>? context)
     {
         if (context is null || context.Count == 0)
@@ -108,6 +112,7 @@ public sealed class AuthorizationAuditRepository : IAuthorizationAuditRepository
             return "{}";
         }
 
-        return JsonUtilities.SerializeDictionary(filtered);
+        // Use canonical serialization for deterministic audit hashing
+        return JsonUtilities.SerializeDictionaryCanonical(filtered);
     }
 }

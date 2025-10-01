@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Harvestry.Identity.Application.Interfaces;
 using Harvestry.Identity.Domain.Entities;
 using Harvestry.Identity.Domain.ValueObjects;
+using DomainUser = Harvestry.Identity.Domain.Entities.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -36,15 +37,10 @@ public sealed class UsersController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetUser(Guid id, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
-        if (user == null)
-        {
-            return NotFound();
-        }
-
+        // Check authorization before revealing user existence
         if (!IsCurrentUser(id))
         {
-            var siteId = ResolveSiteId() ?? user.UserSites.FirstOrDefault()?.SiteId;
+            var siteId = ResolveSiteId();
             if (!siteId.HasValue)
             {
                 return BadRequest(new { error = "Site context required" });
@@ -55,6 +51,13 @@ public sealed class UsersController : ControllerBase
             {
                 return authorization;
             }
+        }
+
+        var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+        if (user == null)
+        {
+            // Return Forbid instead of NotFound to prevent information leakage
+            return StatusCode(StatusCodes.Status403Forbidden);
         }
 
         return Ok(UserResponse.From(user));
@@ -81,10 +84,11 @@ public sealed class UsersController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = "Invalid email or phone number", details = ex.Message });
+            _logger.LogError(ex, "Failed to validate user contact info for email {Email}", request.Email);
+            return BadRequest(new { error = "Invalid email or phone number" });
         }
 
-        var user = User.Create(email, request.FirstName, request.LastName, phoneNumber);
+        var user = DomainUser.Create(email, request.FirstName, request.LastName, phoneNumber);
 
         var siteId = request.SiteAssignments?.FirstOrDefault()?.SiteId ?? ResolveSiteId();
         if (!siteId.HasValue)
@@ -100,6 +104,13 @@ public sealed class UsersController : ControllerBase
 
         if (request.SiteAssignments != null)
         {
+            // Validate at most one primary site assignment
+            var primaryCount = request.SiteAssignments.Count(a => a.IsPrimarySite);
+            if (primaryCount > 1)
+            {
+                return BadRequest(new { error = "At most one primary site assignment is allowed" });
+            }
+
             foreach (var assignment in request.SiteAssignments)
             {
                 user.AssignToSite(assignment.SiteId, assignment.RoleId, assignment.IsPrimarySite, assignment.AssignedBy);
@@ -150,7 +161,8 @@ public sealed class UsersController : ControllerBase
             }
             catch (Exception ex)
             {
-                return BadRequest(new { error = "Invalid phone number", details = ex.Message });
+                _logger.LogError(ex, "Invalid phone number while updating user {UserId}", id);
+                return BadRequest(new { error = "Invalid phone number" });
             }
         }
 

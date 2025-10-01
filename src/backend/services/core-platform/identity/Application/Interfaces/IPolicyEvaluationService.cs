@@ -19,7 +19,7 @@ public interface IPolicyEvaluationService
         string action,
         string resourceType,
         Guid siteId,
-        Dictionary<string, object>? context = null,
+        IReadOnlyDictionary<string, object>? context = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

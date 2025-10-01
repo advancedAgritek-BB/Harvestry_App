@@ -21,6 +21,22 @@ public sealed class SessionCleanupJob : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Run cleanup immediately on startup
+        try
+        {
+            await CleanupAsync(stoppingToken);
+        }
+        catch (TaskCanceledException)
+        {
+            // Shutdown during initial cleanup
+            return;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Initial session cleanup failed");
+        }
+
+        // Then run on hourly schedule
         while (!stoppingToken.IsCancellationRequested)
         {
             try

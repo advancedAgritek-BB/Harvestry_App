@@ -4,9 +4,9 @@ using Harvestry.Identity.Domain.Enums;
 
 namespace Harvestry.Identity.Domain.Entities;
 
-internal sealed partial class Site
+public sealed partial class Site
 {
-    internal static Site Restore(
+public static Site Restore(
         Guid id,
         Guid orgId,
         string siteName,

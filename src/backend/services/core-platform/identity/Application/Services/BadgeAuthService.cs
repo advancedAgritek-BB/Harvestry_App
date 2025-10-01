@@ -145,7 +145,7 @@ public sealed class BadgeAuthService : IBadgeAuthService
                 return new BadgeLoginResult
                 {
                     Success = false,
-                    ErrorMessage = $"Account is locked until {user.LockedUntil:HH:mm}"
+                    ErrorMessage = "Account is temporarily locked"
                 };
             }
 
@@ -253,8 +253,8 @@ public sealed class BadgeAuthService : IBadgeAuthService
         {
             var sessions = await _sessionRepository.GetActiveByUserIdAsync(userId, cancellationToken);
 
+            // Note: GetActiveByUserIdAsync already filters by IsActive
             return sessions
-                .Where(s => s.IsActive)
                 .Select(s => new SessionInfo
             {
                 SessionId = s.Id,

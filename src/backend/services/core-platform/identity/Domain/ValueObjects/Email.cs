@@ -10,8 +10,9 @@ namespace Harvestry.Identity.Domain.ValueObjects;
 /// </summary>
 public sealed class Email : ValueObject
 {
+    // Stricter email regex that disallows consecutive dots, leading/trailing dots, and requires 2+ char TLD
     private static readonly Regex EmailRegex = new(
-        @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        @"^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private Email(string value)
@@ -35,7 +36,7 @@ public sealed class Email : ValueObject
             throw new ArgumentException("Email cannot exceed 255 characters", nameof(email));
 
         if (!EmailRegex.IsMatch(normalized))
-            throw new ArgumentException($"Invalid email format: {email}", nameof(email));
+            throw new ArgumentException("Invalid email format", nameof(email));
 
         return new Email(normalized);
     }

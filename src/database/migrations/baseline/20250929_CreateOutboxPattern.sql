@@ -56,17 +56,8 @@ CREATE INDEX IF NOT EXISTS ix_outbox_messages_aggregate
 CREATE INDEX IF NOT EXISTS ix_outbox_messages_payload 
     ON outbox_messages USING GIN (payload);
 
--- Add RLS
+-- Add RLS (site isolation will be tightened once user_sites table exists in FRP-01)
 ALTER TABLE outbox_messages ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY outbox_messages_site_isolation ON outbox_messages
-FOR ALL
-USING (
-    site_id IN (
-        SELECT site_id FROM user_sites
-        WHERE user_id = current_setting('app.current_user_id', TRUE)::UUID
-    )
-);
 
 CREATE POLICY outbox_messages_service_account ON outbox_messages
 FOR ALL
@@ -129,15 +120,6 @@ CREATE INDEX IF NOT EXISTS ix_dlq_unprocessed
 
 -- Add RLS
 ALTER TABLE dead_letter_queue ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY dlq_site_isolation ON dead_letter_queue
-FOR ALL
-USING (
-    site_id IN (
-        SELECT site_id FROM user_sites
-        WHERE user_id = current_setting('app.current_user_id', TRUE)::UUID
-    )
-);
 
 CREATE POLICY dlq_service_account ON dead_letter_queue
 FOR ALL
@@ -371,14 +353,12 @@ DROP FUNCTION IF EXISTS enqueue_outbox_message(UUID, VARCHAR, UUID, VARCHAR, VAR
 DROP TABLE IF EXISTS outbox_processing_metrics CASCADE;
 
 -- Drop DLQ
-DROP POLICY IF EXISTS dlq_site_isolation ON dead_letter_queue;
 DROP POLICY IF EXISTS dlq_service_account ON dead_letter_queue;
 DROP TABLE IF EXISTS dead_letter_queue CASCADE;
 
 -- Drop outbox
 DROP TRIGGER IF EXISTS trg_outbox_messages_updated_at ON outbox_messages;
 DROP FUNCTION IF EXISTS update_outbox_messages_updated_at();
-DROP POLICY IF EXISTS outbox_messages_site_isolation ON outbox_messages;
 DROP POLICY IF EXISTS outbox_messages_service_account ON outbox_messages;
 DROP TABLE IF EXISTS outbox_messages CASCADE;
 

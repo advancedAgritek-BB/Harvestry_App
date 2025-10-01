@@ -53,16 +53,16 @@ public sealed class PolicyEvaluationServiceTests
         _siteRepository.Setup(repo => repo.GetByIdAsync(site.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(site);
 
-        Dictionary<string, object>? capturedContext = null;
+        IReadOnlyDictionary<string, object>? capturedContext = null;
         _databaseRepository
             .Setup(repo => repo.CheckAbacPermissionAsync(
                 user.Id,
                 "tasks:start",
                 "task",
                 site.Id,
-                It.IsAny<Dictionary<string, object>>(),
+                It.IsAny<IReadOnlyDictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<Guid, string, string, Guid, Dictionary<string, object>?, CancellationToken>((_, _, _, _, ctx, _) =>
+            .Callback<Guid, string, string, Guid, IReadOnlyDictionary<string, object>?, CancellationToken>((_, _, _, _, ctx, _) =>
             {
                 capturedContext = ctx;
             })
@@ -91,7 +91,7 @@ public sealed class PolicyEvaluationServiceTests
             "tasks:start",
             "task",
             site.Id,
-            It.IsAny<Dictionary<string, object>>(),
+            It.IsAny<IReadOnlyDictionary<string, object>>(),
             It.IsAny<CancellationToken>()), Times.Once);
 
         Assert.NotNull(capturedContext);
@@ -126,7 +126,7 @@ public sealed class PolicyEvaluationServiceTests
             It.IsAny<string>(),
             It.IsAny<string>(),
             It.IsAny<Guid>(),
-            It.IsAny<Dictionary<string, object>>(),
+            It.IsAny<IReadOnlyDictionary<string, object>>(),
             It.IsAny<CancellationToken>()), Times.Never);
 
         VerifyLog(_logger, LogLevel.Warning, "Permission denied: User");
@@ -155,7 +155,7 @@ public sealed class PolicyEvaluationServiceTests
             It.IsAny<string>(),
             It.IsAny<string>(),
             It.IsAny<Guid>(),
-            It.IsAny<Dictionary<string, object>>(),
+            It.IsAny<IReadOnlyDictionary<string, object>>(),
             It.IsAny<CancellationToken>()), Times.Never);
 
         VerifyLog(_logger, LogLevel.Warning, "Permission denied: Site");
@@ -177,7 +177,7 @@ public sealed class PolicyEvaluationServiceTests
                 "tasks:start",
                 "task",
                 site.Id,
-                It.IsAny<Dictionary<string, object>>(),
+                It.IsAny<IReadOnlyDictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((false, false, "Policy rule blocked"));
 
@@ -210,12 +210,21 @@ public sealed class PolicyEvaluationServiceTests
                 "tasks:destroy",
                 "task",
                 site.Id,
-                It.IsAny<Dictionary<string, object>>(),
+                It.IsAny<IReadOnlyDictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((true, true, (string?)null));
 
         _twoPersonApprovalRepository.Setup(repo => repo.CreateAsync(It.IsAny<TwoPersonApprovalRequest>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TwoPersonApprovalResponse(Guid.NewGuid(), "pending", DateTime.UtcNow.AddHours(24)));
+            .ReturnsAsync(new TwoPersonApprovalResponse(
+                Guid.NewGuid(),
+                "pending",
+                DateTime.UtcNow.AddHours(24),
+                DateTime.UtcNow,
+                "tasks:start",
+                "task",
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid()));
 
         var service = CreateService();
         var result = await service.EvaluatePermissionAsync(
@@ -245,12 +254,21 @@ public sealed class PolicyEvaluationServiceTests
                 "tasks:destroy",
                 "task",
                 site.Id,
-                It.IsAny<Dictionary<string, object>>(),
+                It.IsAny<IReadOnlyDictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((false, false, "Denied"));
 
         _twoPersonApprovalRepository.Setup(repo => repo.CreateAsync(It.IsAny<TwoPersonApprovalRequest>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TwoPersonApprovalResponse(Guid.NewGuid(), "pending", DateTime.UtcNow.AddHours(24)));
+            .ReturnsAsync(new TwoPersonApprovalResponse(
+                Guid.NewGuid(),
+                "pending",
+                DateTime.UtcNow.AddHours(24),
+                DateTime.UtcNow,
+                "tasks:start",
+                "task",
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid()));
 
         var service = CreateService();
         var request = new TwoPersonApprovalRequest(
@@ -282,12 +300,21 @@ public sealed class PolicyEvaluationServiceTests
                 "tasks:update",
                 "task",
                 site.Id,
-                It.IsAny<Dictionary<string, object>>(),
+                It.IsAny<IReadOnlyDictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((true, false, (string?)null));
 
         _twoPersonApprovalRepository.Setup(repo => repo.CreateAsync(It.IsAny<TwoPersonApprovalRequest>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TwoPersonApprovalResponse(Guid.NewGuid(), "pending", DateTime.UtcNow.AddHours(24)));
+            .ReturnsAsync(new TwoPersonApprovalResponse(
+                Guid.NewGuid(),
+                "pending",
+                DateTime.UtcNow.AddHours(24),
+                DateTime.UtcNow,
+                "tasks:start",
+                "task",
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid()));
 
         var service = CreateService();
         var request = new TwoPersonApprovalRequest(
@@ -320,7 +347,7 @@ public sealed class PolicyEvaluationServiceTests
                 "tasks:start",
                 "task",
                 site.Id,
-                It.IsAny<Dictionary<string, object>>(),
+                It.IsAny<IReadOnlyDictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((false, false, "Denied"));
 
@@ -345,11 +372,20 @@ public sealed class PolicyEvaluationServiceTests
                 "tasks:destroy",
                 "task",
                 site.Id,
-                It.IsAny<Dictionary<string, object>>(),
+                It.IsAny<IReadOnlyDictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((true, true, (string?)null));
 
-        var approvalResponse = new TwoPersonApprovalResponse(Guid.NewGuid(), "pending", DateTime.UtcNow.AddHours(24));
+        var approvalResponse = new TwoPersonApprovalResponse(
+            Guid.NewGuid(),
+            "pending",
+            DateTime.UtcNow.AddHours(24),
+            DateTime.UtcNow,
+            "tasks:start",
+            "task",
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid());
         _twoPersonApprovalRepository.Setup(repo => repo.CreateAsync(It.IsAny<TwoPersonApprovalRequest>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(approvalResponse);
 
@@ -395,7 +431,7 @@ public sealed class PolicyEvaluationServiceTests
                 record.Action,
                 record.ResourceType,
                 record.SiteId,
-                It.IsAny<Dictionary<string, object>>(),
+                It.IsAny<IReadOnlyDictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((true, false, (string?)null));
 
@@ -447,13 +483,16 @@ public sealed class PolicyEvaluationServiceTests
     [Fact]
     public async Task RejectTwoPersonRequestAsync_Succeeds_WhenValid()
     {
+        var approvalId = Guid.NewGuid();
+        var siteId = Guid.NewGuid();
+        var initiatorId = Guid.NewGuid();
         var record = new TwoPersonApprovalRecord(
-            Guid.NewGuid(),
+            approvalId,
             "tasks:destroy",
             "task",
             Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            siteId,
+            initiatorId,
             "Reason",
             null,
             DateTime.UtcNow.AddMinutes(-5),
@@ -467,11 +506,25 @@ public sealed class PolicyEvaluationServiceTests
         _twoPersonApprovalRepository.Setup(repo => repo.RejectAsync(record.ApprovalId, It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
+        var approver = User.Create(Email.Create("approver@example.com"), "Approver", "User");
+        _userRepository.Setup(repo => repo.GetByIdAsync(approver.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(approver);
+        _siteRepository.Setup(repo => repo.GetByIdAsync(siteId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Site.Create(Guid.NewGuid(), "Site", "SITE-001"));
+        _databaseRepository.Setup(repo => repo.CheckAbacPermissionAsync(
+                approver.Id,
+                record.Action,
+                record.ResourceType,
+                record.SiteId,
+                It.IsAny<IReadOnlyDictionary<string, object>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((true, false, (string?)null));
+
         var service = CreateService();
-        var success = await service.RejectTwoPersonRequestAsync(record.ApprovalId, Guid.NewGuid(), "Not valid");
+        var success = await service.RejectTwoPersonRequestAsync(record.ApprovalId, approver.Id, "Not valid");
 
         Assert.True(success);
-        _twoPersonApprovalRepository.Verify(repo => repo.RejectAsync(record.ApprovalId, It.IsAny<Guid>(), "Not valid", It.IsAny<CancellationToken>()), Times.Once);
+        _twoPersonApprovalRepository.Verify(repo => repo.RejectAsync(record.ApprovalId, approver.Id, "Not valid", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

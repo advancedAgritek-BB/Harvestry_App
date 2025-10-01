@@ -131,7 +131,7 @@ public sealed class BadgeExpirationNotificationJob : BackgroundService
                     userName,
                     badgeCode,
                     expiresAt,
-                    IsManagerNotification: false);
+                    isManagerNotification: false);
 
                 try
                 {

@@ -322,9 +322,15 @@ CREATE POLICY audit_trail_readonly ON audit_trail
 FOR SELECT
 USING (TRUE);
 
--- No updates or deletes allowed (immutable)
-CREATE POLICY audit_trail_no_modify ON audit_trail
-FOR UPDATE, DELETE
+
+-- Prevent updates (immutable rows)
+CREATE POLICY audit_trail_no_update ON audit_trail
+FOR UPDATE
+USING (FALSE);
+
+-- Prevent deletes (immutable rows)
+CREATE POLICY audit_trail_no_delete ON audit_trail
+FOR DELETE
 USING (FALSE);
 
 -- Inserts only through log_audit_event function (security definer)

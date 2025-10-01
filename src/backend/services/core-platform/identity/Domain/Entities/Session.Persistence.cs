@@ -4,9 +4,9 @@ using Harvestry.Identity.Domain.Enums;
 
 namespace Harvestry.Identity.Domain.Entities;
 
-internal sealed partial class Session
+public sealed partial class Session
 {
-    internal static Session Restore(
+public static Session Restore(
         Guid id,
         Guid userId,
         Guid? siteId,

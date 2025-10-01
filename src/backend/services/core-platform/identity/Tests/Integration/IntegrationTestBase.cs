@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using System.Data;
 using Xunit;
 
 namespace Harvestry.Identity.Tests.Integration;
@@ -27,7 +28,12 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         ConfigureServices(configuration);
         ServiceProvider = _services.BuildServiceProvider();
 
-        await TestDataSeeder.SeedAsync(ServiceProvider, CancellationToken.None);
+        var dbContext = ServiceProvider.GetRequiredService<IdentityDbContext>();
+        await using (var seedTransaction = await dbContext.BeginTransactionAsync(IsolationLevel.ReadCommitted, CancellationToken.None))
+        {
+            await TestDataSeeder.SeedAsync(ServiceProvider, seedTransaction, CancellationToken.None).ConfigureAwait(false);
+            await seedTransaction.CommitAsync().ConfigureAwait(false);
+        }
     }
 
     public virtual async Task DisposeAsync()
@@ -60,10 +66,10 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 
         _services.AddSingleton<IConfiguration>(configuration);
 
-        var connectionString = configuration.GetConnectionString("Identity")
-            ?? configuration["Identity:ConnectionString"]
-            ?? Environment.GetEnvironmentVariable("IDENTITY_DB_CONNECTION")
-            ?? throw new InvalidOperationException("Integration test connection string not configured.");
+        if (!IntegrationTestEnvironment.TryGetConnectionString(configuration, out var connectionString))
+        {
+            throw new InvalidOperationException("Integration test connection string not configured.");
+        }
 
         var dataSource = IdentityDataSourceFactory.Create(connectionString);
         _services.AddSingleton(dataSource);
@@ -103,9 +109,35 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 
     protected async Task ExecuteSqlAsync(string sql, CancellationToken cancellationToken = default)
     {
-        await using var connection = await GetOpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        var dbContext = ServiceProvider.GetRequiredService<IdentityDbContext>();
+        await dbContext.SetRlsContextAsync(Guid.Empty, "service_account", null, cancellationToken).ConfigureAwait(false);
+        await using var connection = await dbContext.GetOpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    protected async Task<Guid> GetSiteIdAsync(string siteCode, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(siteCode))
+        {
+            throw new ArgumentException("Site code cannot be empty", nameof(siteCode));
+        }
+
+        var dbContext = ServiceProvider.GetRequiredService<IdentityDbContext>();
+        await dbContext.SetRlsContextAsync(Guid.Empty, "service_account", null, cancellationToken).ConfigureAwait(false);
+
+        await using var connection = await dbContext.GetOpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT site_id FROM sites WHERE site_code = @code LIMIT 1;";
+        command.Parameters.AddWithValue("@code", siteCode);
+
+        var result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        if (result is Guid siteId)
+        {
+            return siteId;
+        }
+
+        throw new InvalidOperationException($"Site with code '{siteCode}' was not found in test database.");
     }
 }

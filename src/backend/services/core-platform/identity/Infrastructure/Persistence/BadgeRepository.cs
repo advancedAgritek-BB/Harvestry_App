@@ -31,7 +31,7 @@ public sealed class BadgeRepository : IBadgeRepository
 
     public async Task<Badge?> GetByIdAsync(Guid badgeId, CancellationToken cancellationToken = default)
     {
-        var connection = await PrepareConnectionAsync(null, cancellationToken).ConfigureAwait(false);
+        await using var connection = await PrepareConnectionAsync(null, cancellationToken).ConfigureAwait(false);
 
         const string sql = @"
             SELECT
@@ -275,22 +275,23 @@ public sealed class BadgeRepository : IBadgeRepository
     private async Task<NpgsqlConnection> PrepareConnectionAsync(Guid? siteId, CancellationToken cancellationToken)
     {
         var context = _rlsContextAccessor.Current;
-        
-        // Validate required RLS context
-        if (context.UserId == Guid.Empty || string.IsNullOrWhiteSpace(context.Role))
-        {
-            if (siteId == null && context.SiteId == null)
-            {
-                throw new InvalidOperationException("RLS context is incomplete: valid UserId, Role, and SiteId are required");
-            }
-        }
-        
+        var role = string.IsNullOrWhiteSpace(context.Role) ? "service_account" : context.Role.Trim();
+        var isServiceAccount = string.Equals(role, "service_account", StringComparison.OrdinalIgnoreCase);
+
         var userId = context.UserId;
-        var role = context.Role ?? throw new InvalidOperationException("RLS context Role cannot be null");
+        if (!isServiceAccount && userId == Guid.Empty)
+        {
+            throw new InvalidOperationException("RLS context UserId is required for non-service accounts.");
+        }
+
         var effectiveSite = siteId ?? context.SiteId;
+        if (!isServiceAccount && effectiveSite is null)
+        {
+            throw new InvalidOperationException("RLS context SiteId is required for non-service accounts.");
+        }
 
         var connection = await _dbContext.GetOpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-        await _dbContext.SetRlsContextAsync(userId, role, effectiveSite, cancellationToken).ConfigureAwait(false);
+        await _dbContext.SetRlsContextAsync(isServiceAccount ? Guid.Empty : userId, role, effectiveSite, cancellationToken).ConfigureAwait(false);
         return connection;
     }
 
@@ -308,7 +309,9 @@ public sealed class BadgeRepository : IBadgeRepository
         command.Parameters.Add("revoked_at", NpgsqlDbType.TimestampTz).Value = (object?)badge.RevokedAt ?? DBNull.Value;
         command.Parameters.Add("revoked_by", NpgsqlDbType.Uuid).Value = (object?)badge.RevokedBy ?? DBNull.Value;
         command.Parameters.Add("revoke_reason", NpgsqlDbType.Text).Value = (object?)badge.RevokeReason ?? DBNull.Value;
-        command.Parameters.Add("metadata", NpgsqlDbType.Jsonb).Value = JsonUtilities.SerializeDictionary(badge.Metadata);
+        var metadataPayload = badge.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+            ?? new Dictionary<string, object>();
+        command.Parameters.Add("metadata", NpgsqlDbType.Jsonb).Value = JsonUtilities.SerializeDictionary(metadataPayload);
         command.Parameters.Add("created_at", NpgsqlDbType.TimestampTz).Value = badge.CreatedAt;
         command.Parameters.Add("updated_at", NpgsqlDbType.TimestampTz).Value = badge.UpdatedAt;
     }

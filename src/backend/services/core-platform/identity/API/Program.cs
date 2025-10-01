@@ -161,12 +161,6 @@ builder.Services.AddScoped(sp =>
     return new IdentityDbContext(dataSource, logger);
 });
 
-builder.Services.AddScoped<NpgsqlConnection>(sp =>
-{
-    var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
-    return dataSource.CreateConnection();
-});
-
 // Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBadgeRepository, BadgeRepository>();
@@ -260,3 +254,6 @@ static (string[] AllowedOrigins, bool AllowCredentials) ResolveCorsSettings(ICon
 
     return (allowedOrigins, allowCredentials);
 }
+
+public partial class Program
+{ }

@@ -16,6 +16,9 @@ public sealed record AuthorizationAuditEntry(
     string? UserAgent = null,
     DateTime? OccurredAt = null)
 {
+    // Ensure OccurredAt is always set
+    public DateTime OccurredAtValue => OccurredAt ?? DateTime.UtcNow;
+
     public static AuthorizationAuditEntry Denied(
         Guid userId,
         Guid siteId,

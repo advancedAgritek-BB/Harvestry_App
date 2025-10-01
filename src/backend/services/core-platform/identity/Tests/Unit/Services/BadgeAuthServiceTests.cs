@@ -163,7 +163,7 @@ public sealed class BadgeAuthServiceTests
         var result = await service.LoginWithBadgeAsync("ABCD1234", badge.SiteId);
 
         Assert.False(result.Success);
-        Assert.Contains("Account is locked", result.ErrorMessage);
+        Assert.Contains("Account is temporarily locked", result.ErrorMessage);
     }
 
     [Fact]
@@ -266,11 +266,9 @@ public sealed class BadgeAuthServiceTests
     {
         var userId = Guid.NewGuid();
         var activeSession = Session.Create(userId, "token", LoginMethod.Badge, TimeSpan.FromHours(1));
-        var expiredSession = Session.Create(userId, "token2", LoginMethod.Badge, TimeSpan.FromHours(1));
-        SetPrivateProperty(expiredSession, nameof(Session.ExpiresAt), DateTime.UtcNow.AddMinutes(-1));
 
         _sessionRepository.Setup(repo => repo.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Session> { activeSession, expiredSession });
+            .ReturnsAsync(new List<Session> { activeSession });
 
         var service = CreateService();
         var sessions = await service.GetActiveSessionsAsync(userId);

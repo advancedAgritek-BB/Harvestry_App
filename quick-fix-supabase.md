@@ -11,7 +11,7 @@ This usually means your Supabase project is **PAUSED** (very common on free tier
 
 ### Step 1: Resume Your Project
 
-1. Open: https://app.supabase.com/project/twijnllcaxathttwgugp
+1. Open: `https://app.supabase.com/project/{SUPABASE_PROJECT_REF}` (replace `{SUPABASE_PROJECT_REF}` with your project identifier)
 
 2. Look at the top of the page for the project status
 

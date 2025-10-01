@@ -37,7 +37,13 @@ public sealed class HeaderAuthenticationHandler : AuthenticationHandler<Authenti
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
-        var role = string.IsNullOrWhiteSpace(roleHeader) ? "service_account" : roleHeader;
+        if (string.IsNullOrWhiteSpace(roleHeader))
+        {
+            Logger.LogWarning("Missing X-User-Role header for user {UserId}", userId);
+            return Task.FromResult(AuthenticateResult.Fail("Missing X-User-Role header"));
+        }
+
+        var role = roleHeader;
         Guid? siteId = null;
         if (!string.IsNullOrWhiteSpace(siteHeader) && Guid.TryParse(siteHeader, out var parsedSite))
         {

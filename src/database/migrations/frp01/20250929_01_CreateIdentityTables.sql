@@ -63,11 +63,33 @@ COMMENT ON TABLE roles IS 'Role definitions with associated permissions';
 COMMENT ON COLUMN roles.permissions IS 'JSON array of permission strings, e.g., ["users:read", "tasks:write"]';
 
 -- ============================================================================
+-- ORGANIZATIONS TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS organizations (
+    organization_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(200) NOT NULL,
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    status VARCHAR(20) DEFAULT 'active'
+        CHECK (status IN ('active', 'inactive', 'pending', 'suspended')),
+    metadata JSONB DEFAULT '{}'::JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by UUID,
+    updated_by UUID
+);
+
+CREATE INDEX ix_organizations_slug ON organizations (slug);
+CREATE INDEX ix_organizations_status ON organizations (status) WHERE status = 'active';
+
+COMMENT ON TABLE organizations IS 'Top-level business entities that own one or more sites/brands';
+COMMENT ON COLUMN organizations.slug IS 'URL-friendly identifier (unique per organization)';
+
+-- ============================================================================
 -- SITES TABLE
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS sites (
     site_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    org_id UUID NOT NULL,
+    org_id UUID NOT NULL REFERENCES organizations(organization_id) ON DELETE CASCADE,
     site_name VARCHAR(200) NOT NULL,
     site_code VARCHAR(50) UNIQUE NOT NULL, -- e.g., "DGC-DEN-01"
     address_line1 VARCHAR(255),
@@ -111,6 +133,10 @@ CREATE TABLE IF NOT EXISTS user_sites (
     revoked_at TIMESTAMPTZ,
     revoked_by UUID REFERENCES users(user_id),
     revoke_reason TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    created_by UUID,
+    updated_by UUID,
     UNIQUE (user_id, site_id) -- User can be assigned to a site only once
 );
 
@@ -204,10 +230,18 @@ CREATE POLICY roles_read_all ON roles
 FOR SELECT
 USING (TRUE); -- Anyone can read roles
 
-CREATE POLICY roles_admin_modify ON roles
-FOR INSERT, UPDATE, DELETE
-USING (current_setting('app.user_role', TRUE) = 'admin')
-WITH CHECK (current_setting('app.user_role', TRUE) = 'admin');
+CREATE POLICY roles_admin_delete ON roles
+FOR DELETE
+USING (current_setting('app.user_role', TRUE) IN ('admin', 'service_account'));
+
+CREATE POLICY roles_admin_insert ON roles
+FOR INSERT
+WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'service_account'));
+
+CREATE POLICY roles_admin_update ON roles
+FOR UPDATE
+USING (current_setting('app.user_role', TRUE) IN ('admin', 'service_account'))
+WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'service_account'));
 
 -- SITES: Site-scoped access
 ALTER TABLE sites ENABLE ROW LEVEL SECURITY;
@@ -233,10 +267,18 @@ USING (
     OR current_setting('app.user_role', TRUE) IN ('admin', 'service_account')
 );
 
-CREATE POLICY user_sites_admin_modify ON user_sites
-FOR INSERT, UPDATE, DELETE
-USING (current_setting('app.user_role', TRUE) IN ('admin', 'manager'))
-WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
+CREATE POLICY user_sites_admin_insert ON user_sites
+FOR INSERT
+WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'manager', 'service_account'));
+
+CREATE POLICY user_sites_admin_update ON user_sites
+FOR UPDATE
+USING (current_setting('app.user_role', TRUE) IN ('admin', 'manager', 'service_account'))
+WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'manager', 'service_account'));
+
+CREATE POLICY user_sites_admin_delete ON user_sites
+FOR DELETE
+USING (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
 
 -- BADGES: Site-scoped (can see badges for sites they're assigned to)
 ALTER TABLE badges ENABLE ROW LEVEL SECURITY;
@@ -256,11 +298,75 @@ USING (
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY sessions_self_access ON sessions
-FOR ALL
+FOR SELECT
 USING (
     user_id = current_setting('app.current_user_id', TRUE)::UUID
     OR current_setting('app.user_role', TRUE) IN ('admin', 'service_account')
 );
+
+CREATE POLICY sessions_service_insert ON sessions
+FOR INSERT
+WITH CHECK (current_setting('app.user_role', TRUE) IN ('service_account', 'admin'));
+
+CREATE POLICY sessions_service_update ON sessions
+FOR UPDATE
+USING (current_setting('app.user_role', TRUE) IN ('service_account', 'admin'))
+WITH CHECK (current_setting('app.user_role', TRUE) IN ('service_account', 'admin'));
+
+CREATE POLICY sessions_service_delete ON sessions
+FOR DELETE
+USING (current_setting('app.user_role', TRUE) IN ('service_account', 'admin'));
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'harvestry_app') THEN
+        CREATE ROLE harvestry_app;
+    END IF;
+END $$;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON users TO harvestry_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON user_sites TO harvestry_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON badges TO harvestry_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON sessions TO harvestry_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON roles TO harvestry_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON sites TO harvestry_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON organizations TO harvestry_app;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO harvestry_app;
+
+-- Update outbox / dead-letter RLS now that user_sites exists
+DO $$
+BEGIN
+    IF to_regclass('public.outbox_messages') IS NOT NULL THEN
+        EXECUTE 'DROP POLICY IF EXISTS outbox_messages_site_isolation ON outbox_messages';
+        EXECUTE '
+            CREATE POLICY outbox_messages_site_isolation ON outbox_messages
+            FOR ALL
+            USING (
+                site_id IN (
+                    SELECT site_id FROM user_sites
+                    WHERE user_id = current_setting(''app.current_user_id'', TRUE)::UUID
+                )
+                OR current_setting(''app.user_role'', TRUE) = ''service_account''
+            )
+        ';
+    END IF;
+
+    IF to_regclass('public.dead_letter_queue') IS NOT NULL THEN
+        EXECUTE 'DROP POLICY IF EXISTS dlq_site_isolation ON dead_letter_queue';
+        EXECUTE '
+            CREATE POLICY dlq_site_isolation ON dead_letter_queue
+            FOR ALL
+            USING (
+                site_id IN (
+                    SELECT site_id FROM user_sites
+                    WHERE user_id = current_setting(''app.current_user_id'', TRUE)::UUID
+                )
+                OR current_setting(''app.user_role'', TRUE) = ''service_account''
+            )
+        ';
+    END IF;
+END;
+$$;
 
 -- ============================================================================
 -- SEED DEFAULT ROLES
@@ -303,6 +409,11 @@ CREATE TRIGGER roles_updated_at BEFORE UPDATE ON roles
 
 CREATE TRIGGER badges_updated_at BEFORE UPDATE ON badges
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER user_sites_updated_at BEFORE UPDATE ON user_sites
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Note: sessions table uses last_activity instead of updated_at, so no trigger needed
 
 -- ============================================================================
 -- COMPLETION

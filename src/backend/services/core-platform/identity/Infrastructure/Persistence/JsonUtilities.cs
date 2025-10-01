@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Harvestry.Shared.Kernel.Serialization;
 
 namespace Harvestry.Identity.Infrastructure.Persistence;
 
@@ -32,13 +33,24 @@ internal static class JsonUtilities
             return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         }
 
-        using var document = JsonDocument.Parse(json);
-        if (document.RootElement.ValueKind != JsonValueKind.Object)
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            }
+
+            return ParseObject(document.RootElement);
+        }
+        catch (JsonException)
         {
             return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         }
-
-        return ParseObject(document.RootElement);
+        catch (ArgumentException)
+        {
+            return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        }
     }
 
     internal static IReadOnlyList<string> ToStringList(object? value)
@@ -72,6 +84,10 @@ internal static class JsonUtilities
         }
     }
 
+    /// <summary>
+    /// Serializes dictionary to JSON (preserves insertion order).
+    /// For audit hashing, use SerializeDictionaryCanonical() instead.
+    /// </summary>
     internal static string SerializeDictionary(IDictionary<string, object> dictionary)
     {
         if (dictionary == null || dictionary.Count == 0)
@@ -80,6 +96,20 @@ internal static class JsonUtilities
         }
 
         return JsonSerializer.Serialize(dictionary, SerializerOptions);
+    }
+
+    /// <summary>
+    /// Serializes dictionary to canonical JSON with sorted keys.
+    /// Use this for audit hashing to ensure deterministic output.
+    /// </summary>
+    internal static string SerializeDictionaryCanonical(IDictionary<string, object> dictionary)
+    {
+        if (dictionary == null || dictionary.Count == 0)
+        {
+            return "{}";
+        }
+
+        return CanonicalJsonSerializer.SerializeDictionary(dictionary);
     }
 
     internal static string SerializeStringCollection(IEnumerable<string> values)

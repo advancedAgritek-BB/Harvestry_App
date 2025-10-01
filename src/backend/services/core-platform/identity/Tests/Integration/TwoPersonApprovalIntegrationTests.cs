@@ -12,55 +12,58 @@ namespace Harvestry.Identity.Tests.Integration;
 [Collection("IntegrationTests")]
 public sealed class TwoPersonApprovalIntegrationTests : IntegrationTestBase
 {
-    private static readonly Guid DenverSite = Guid.Parse("00000000-0000-0000-0000-000000000a01");
     private static readonly Guid DenverManager = Guid.Parse("00000000-0000-0000-0000-000000000102");
     private static readonly Guid DenverAdmin = Guid.Parse("00000000-0000-0000-0000-000000000103");
 
-    [Fact]
+    [IntegrationFact]
     public async Task TwoPersonApprovalLifecycle_Works()
     {
         var policyService = ServiceProvider.GetRequiredService<IPolicyEvaluationService>();
 
-        SetUserContext(Guid.Empty, "service_account", DenverSite);
+        var denverSite = await GetSiteIdAsync("DEN-001");
+
+        SetUserContext(Guid.Empty, "service_account", denverSite);
         var request = new TwoPersonApprovalRequest(
             "inventory:destroy",
             "lot",
             Guid.NewGuid(),
-            DenverSite,
+            denverSite,
             DenverManager,
             "Destroy expired lot");
 
         var approval = await policyService.InitiateTwoPersonApprovalAsync(request);
         Assert.Equal("pending", approval.Status);
 
-        SetUserContext(Guid.Empty, "service_account", DenverSite);
+        SetUserContext(Guid.Empty, "service_account", denverSite);
         var approved = await policyService.ApproveTwoPersonRequestAsync(
             approval.ApprovalId,
             DenverAdmin,
             "Reviewed and approved");
 
         Assert.True(approved);
-        var pending = await policyService.GetPendingApprovalsAsync(DenverSite);
+        var pending = await policyService.GetPendingApprovalsAsync(denverSite);
         Assert.Empty(pending);
     }
 
-    [Fact]
+    [IntegrationFact]
     public async Task TwoPersonApproval_RejectFlow_Works()
     {
         var policyService = ServiceProvider.GetRequiredService<IPolicyEvaluationService>();
 
-        SetUserContext(Guid.Empty, "service_account", DenverSite);
+        var denverSite = await GetSiteIdAsync("DEN-001");
+
+        SetUserContext(Guid.Empty, "service_account", denverSite);
         var request = new TwoPersonApprovalRequest(
             "inventory:destroy",
             "lot",
             Guid.NewGuid(),
-            DenverSite,
+            denverSite,
             DenverManager,
             "Destroy damaged lot");
 
         var approval = await policyService.InitiateTwoPersonApprovalAsync(request);
 
-        SetUserContext(Guid.Empty, "service_account", DenverSite);
+        SetUserContext(Guid.Empty, "service_account", denverSite);
         var rejected = await policyService.RejectTwoPersonRequestAsync(
             approval.ApprovalId,
             DenverAdmin,
@@ -69,17 +72,19 @@ public sealed class TwoPersonApprovalIntegrationTests : IntegrationTestBase
         Assert.True(rejected);
     }
 
-    [Fact]
+    [IntegrationFact]
     public async Task TwoPersonApproval_SameUserApprove_Throws()
     {
         var policyService = ServiceProvider.GetRequiredService<IPolicyEvaluationService>();
 
-        SetUserContext(Guid.Empty, "service_account", DenverSite);
+        var denverSite = await GetSiteIdAsync("DEN-001");
+
+        SetUserContext(Guid.Empty, "service_account", denverSite);
         var request = new TwoPersonApprovalRequest(
             "inventory:destroy",
             "lot",
             Guid.NewGuid(),
-            DenverSite,
+            denverSite,
             DenverManager,
             "Destroy damaged lot");
 
@@ -89,30 +94,33 @@ public sealed class TwoPersonApprovalIntegrationTests : IntegrationTestBase
             policyService.ApproveTwoPersonRequestAsync(approval.ApprovalId, DenverManager, "Self approval"));
     }
 
-    [Fact]
+    [IntegrationFact]
     public async Task TwoPersonApproval_Expired_Fails()
     {
         var policyService = ServiceProvider.GetRequiredService<IPolicyEvaluationService>();
 
-        SetUserContext(Guid.Empty, "service_account", DenverSite);
+        var denverSite = await GetSiteIdAsync("DEN-001");
+
+        SetUserContext(Guid.Empty, "service_account", denverSite);
         var request = new TwoPersonApprovalRequest(
             "inventory:destroy",
             "lot",
             Guid.NewGuid(),
-            DenverSite,
+            denverSite,
             DenverManager,
             "Destroy damaged lot");
 
         var approval = await policyService.InitiateTwoPersonApprovalAsync(request);
 
-        await ExecuteSqlAsync($"UPDATE two_person_approvals SET expires_at = NOW() - INTERVAL '1 minute' WHERE approval_id = '{approval.ApprovalId}'");
+        await ExecuteSqlAsync(
+            $"UPDATE two_person_approvals SET expires_at = NOW() - INTERVAL '1 minute' WHERE approval_id = '{approval.ApprovalId}'");
 
         var approved = await policyService.ApproveTwoPersonRequestAsync(approval.ApprovalId, DenverAdmin, "Late approval");
 
         Assert.False(approved);
 
         var dbContext = ServiceProvider.GetRequiredService<IdentityDbContext>();
-        await dbContext.SetRlsContextAsync(Guid.Empty, "service_account", DenverSite);
+        await dbContext.SetRlsContextAsync(Guid.Empty, "service_account", denverSite);
         await using var connection = await dbContext.GetOpenConnectionAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = @"

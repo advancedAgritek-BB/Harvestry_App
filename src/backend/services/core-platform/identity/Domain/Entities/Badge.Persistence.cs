@@ -5,9 +5,9 @@ using Harvestry.Identity.Domain.ValueObjects;
 
 namespace Harvestry.Identity.Domain.Entities;
 
-internal sealed partial class Badge
+public sealed partial class Badge
 {
-    internal static Badge Restore(
+public static Badge Restore(
         Guid id,
         Guid userId,
         Guid siteId,

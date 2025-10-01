@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Harvestry.Identity.Application.DTOs;
 using Harvestry.Identity.Domain.Entities;
 using Harvestry.Identity.Domain.ValueObjects;
 
@@ -83,7 +84,7 @@ public interface IDatabaseRepository
         string action,
         string resourceType,
         Guid siteId,
-        Dictionary<string, object>? context = null,
+        IReadOnlyDictionary<string, object>? context = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

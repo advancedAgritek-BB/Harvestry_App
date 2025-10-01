@@ -52,6 +52,15 @@ public sealed partial class UserSite : Entity<Guid>
         bool isPrimarySite,
         Guid assignedBy)
     {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("UserId cannot be empty GUID", nameof(userId));
+        if (siteId == Guid.Empty)
+            throw new ArgumentException("SiteId cannot be empty GUID", nameof(siteId));
+        if (roleId == Guid.Empty)
+            throw new ArgumentException("RoleId cannot be empty GUID", nameof(roleId));
+        if (assignedBy == Guid.Empty)
+            throw new ArgumentException("AssignedBy cannot be empty GUID", nameof(assignedBy));
+
         return new UserSite(
             Guid.NewGuid(),
             userId,
@@ -103,6 +112,9 @@ public sealed partial class UserSite : Entity<Guid>
     {
         if (!IsActive)
             throw new InvalidOperationException("Cannot change role on revoked assignment");
+
+        if (newRoleId == Guid.Empty)
+            throw new ArgumentException("RoleId cannot be empty GUID", nameof(newRoleId));
 
         RoleId = newRoleId;
     }

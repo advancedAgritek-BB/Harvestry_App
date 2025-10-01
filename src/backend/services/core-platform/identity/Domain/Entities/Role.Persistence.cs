@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace Harvestry.Identity.Domain.Entities;
 
-internal sealed partial class Role
+public sealed partial class Role
 {
-    internal static Role Restore(
+public static Role Restore(
         Guid id,
         string roleName,
         string displayName,

@@ -26,10 +26,10 @@ public sealed class BadgeLoginFlowTests : IntegrationTestBase
         await base.DisposeAsync();
     }
 
-    [Fact]
+    [IntegrationFact]
     public async Task BadgeLogin_ApiEndpoint_ReturnsSessionToken()
     {
-        using var apiClient = await ApiClient.CreateAsync();
+        await using var apiClient = await ApiClient.CreateAsync();
 
         var response = await apiClient.Client.PostAsJsonAsync("api/auth/badge-login", new
         {
@@ -40,7 +40,8 @@ public sealed class BadgeLoginFlowTests : IntegrationTestBase
         response.EnsureSuccessStatusCode();
 
         var payload = await response.Content.ReadFromJsonAsync<BadgeLoginResponse>();
-        var loginResponse = Assert.NotNull(payload);
+        Assert.NotNull(payload);
+        var loginResponse = payload!;
         Assert.NotEqual(Guid.Empty, loginResponse.SessionId);
         Assert.Equal(DenverOperator, loginResponse.UserId);
         Assert.False(string.IsNullOrWhiteSpace(loginResponse.SessionToken));
@@ -49,10 +50,10 @@ public sealed class BadgeLoginFlowTests : IntegrationTestBase
         var badgeService = ServiceProvider.GetRequiredService<IBadgeAuthService>();
         var sessions = await badgeService.GetActiveSessionsAsync(DenverOperator);
 
-        Assert.Contains(sessions, s => s.Id == loginResponse.SessionId);
+        Assert.Contains(sessions, s => s.SessionId == loginResponse.SessionId);
     }
 
-    [Fact]
+    [IntegrationFact]
     public async Task BadgeLogin_EndToEnd_Works()
     {
         SetUserContext(Guid.Empty, "service_account", DenverSite);
@@ -68,7 +69,7 @@ public sealed class BadgeLoginFlowTests : IntegrationTestBase
         Assert.Single(sessions);
     }
 
-    [Fact]
+    [IntegrationFact]
     public async Task BadgeLogin_LockoutAfterFailedAttempts()
     {
         SetUserContext(Guid.Empty, "service_account", DenverSite);
@@ -86,10 +87,10 @@ public sealed class BadgeLoginFlowTests : IntegrationTestBase
         var result = await badgeService.LoginWithBadgeAsync("DEN-OP-001", DenverSite);
 
         Assert.False(result.Success);
-        Assert.Contains("Account is locked", result.ErrorMessage);
+        Assert.Contains("Account is temporarily locked", result.ErrorMessage);
     }
 
-    [Fact]
+    [IntegrationFact]
     public async Task BadgeRevocation_RemovesSessions()
     {
         SetUserContext(Guid.Empty, "service_account", DenverSite);
@@ -109,7 +110,7 @@ public sealed class BadgeLoginFlowTests : IntegrationTestBase
         Assert.Empty(sessions);
     }
 
-    [Fact]
+    [IntegrationFact]
     public async Task SessionExpires_RemovedFromActiveList()
     {
         SetUserContext(Guid.Empty, "service_account", DenverSite);
@@ -133,10 +134,10 @@ public sealed class BadgeLoginFlowTests : IntegrationTestBase
         Assert.Empty(sessions);
     }
 
-    [Fact]
+    [IntegrationFact]
     public async Task BadgeLogin_InvalidRequest_ReturnsProblemDetails()
     {
-        using var apiClient = await ApiClient.CreateAsync();
+        await using var apiClient = await ApiClient.CreateAsync();
 
         var response = await apiClient.Client.PostAsJsonAsync("api/auth/badge-login", new
         {

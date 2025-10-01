@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Harvestry.Identity.Infrastructure.Persistence;
+using Harvestry.Shared.Kernel.Serialization;
 
 namespace Harvestry.Identity.Infrastructure.Jobs;
 
@@ -122,20 +126,32 @@ public sealed class AuditChainVerificationJob : BackgroundService
             mismatches);
     }
 
+    /// <summary>
+    /// Computes SHA256 hash of audit row using canonical JSON serialization.
+    /// 
+    /// Canonical serialization ensures:
+    /// - Alphabetical key ordering (deterministic)
+    /// - Deterministic output across environments
+    /// - No false positives from insertion-order differences
+    /// 
+    /// Input format: { "payload": "...", "prevHash": "..." }
+    /// Keys are automatically sorted alphabetically.
+    /// </summary>
+    /// <param name="prevHash">Previous hash in the chain</param>
+    /// <param name="payload">Audit event payload (JSON string)</param>
+    /// <returns>Hex-encoded SHA256 hash</returns>
     private static string ComputeRowHash(string? prevHash, string payload)
     {
-        var options = new JsonSerializerOptions
+        // Use canonical serialization for deterministic hashing
+        // Keys will be sorted alphabetically: "payload", "prevHash"
+        var hashInput = new Dictionary<string, object>
         {
-            WriteIndented = false,
-            PropertyNamingPolicy = null,
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            { "payload", payload },
+            { "prevHash", prevHash ?? string.Empty }
         };
 
-        var json = JsonSerializer.Serialize(new
-        {
-            payload,
-            prevHash = prevHash ?? string.Empty
-        }, options);
+        // Serialize with canonical ordering (keys sorted alphabetically)
+        var json = CanonicalJsonSerializer.Serialize(hashInput);
 
         using var sha256 = SHA256.Create();
         var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(json));

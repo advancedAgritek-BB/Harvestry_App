@@ -32,7 +32,7 @@ public sealed class DatabaseRepository : IDatabaseRepository
         string action,
         string resourceType,
         Guid siteId,
-        Dictionary<string, object>? context = null,
+        IReadOnlyDictionary<string, object>? context = null,
         CancellationToken cancellationToken = default)
     {
         if (userId == Guid.Empty)
@@ -41,8 +41,10 @@ public sealed class DatabaseRepository : IDatabaseRepository
             throw new ArgumentException("Action is required", nameof(action));
         if (string.IsNullOrWhiteSpace(resourceType))
             throw new ArgumentException("Resource type is required", nameof(resourceType));
+        if (siteId == Guid.Empty)
+            throw new ArgumentException("SiteId is required", nameof(siteId));
 
-        var connection = await PrepareConnectionAsync(siteId, cancellationToken).ConfigureAwait(false);
+        await using var connection = await PrepareConnectionAsync(siteId, cancellationToken).ConfigureAwait(false);
 
         const string sql = @"
             SELECT granted, requires_two_person, deny_reason
@@ -61,7 +63,10 @@ public sealed class DatabaseRepository : IDatabaseRepository
         command.Parameters.Add("action", NpgsqlDbType.Varchar).Value = action;
         command.Parameters.Add("resource_type", NpgsqlDbType.Varchar).Value = resourceType;
         command.Parameters.Add("site_id", NpgsqlDbType.Uuid).Value = siteId;
-        command.Parameters.Add("context", NpgsqlDbType.Jsonb).Value = JsonUtilities.SerializeDictionary(context ?? new Dictionary<string, object>());
+        var payload = context is null
+            ? new Dictionary<string, object>()
+            : context.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        command.Parameters.Add("context", NpgsqlDbType.Jsonb).Value = JsonUtilities.SerializeDictionary(payload);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -86,8 +91,10 @@ public sealed class DatabaseRepository : IDatabaseRepository
             throw new ArgumentException("UserId is required", nameof(userId));
         if (string.IsNullOrWhiteSpace(taskType))
             throw new ArgumentException("Task type is required", nameof(taskType));
+        if (siteId == Guid.Empty)
+            throw new ArgumentException("SiteId is required", nameof(siteId));
 
-        var connection = await PrepareConnectionAsync(siteId, cancellationToken).ConfigureAwait(false);
+        await using var connection = await PrepareConnectionAsync(siteId, cancellationToken).ConfigureAwait(false);
 
         const string sql = @"
             SELECT is_allowed, missing_requirements
@@ -116,7 +123,7 @@ public sealed class DatabaseRepository : IDatabaseRepository
         return (isAllowed, requirements);
     }
 
-    public async Task<IEnumerable<TaskGatingRequirement>> GetTaskGatingRequirementsAsync(
+    public async Task<IReadOnlyCollection<TaskGatingRequirement>> GetTaskGatingRequirementsAsync(
         string taskType,
         Guid? siteId = null,
         CancellationToken cancellationToken = default)

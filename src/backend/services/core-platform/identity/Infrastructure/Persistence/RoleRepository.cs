@@ -19,7 +19,7 @@ public sealed class RoleRepository : IRoleRepository, IDisposable
     private readonly ILogger<RoleRepository> _logger;
     private readonly ConcurrentDictionary<Guid, Role> _roleCache = new();
     private readonly SemaphoreSlim _cacheSemaphore = new(1, 1);
-    private bool _disposed;
+    private int _disposed;
 
     public RoleRepository(
         IdentityDbContext dbContext,
@@ -175,7 +175,12 @@ public sealed class RoleRepository : IRoleRepository, IDisposable
         command.CommandText = sql;
         PopulateParameters(command, role);
 
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        if (rowsAffected == 0)
+        {
+            throw new InvalidOperationException($"Role {role.Id} not found or update was blocked");
+        }
+        
         _roleCache[role.Id] = role;
     }
 
@@ -231,11 +236,12 @@ public sealed class RoleRepository : IRoleRepository, IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
-        
+        // Thread-safe atomic disposal
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+            return;
+
         _cacheSemaphore?.Dispose();
-        _roleCache?.Clear();
-        _disposed = true;
+        // Note: ConcurrentDictionary doesn't need explicit clearing on dispose
         GC.SuppressFinalize(this);
     }
 }

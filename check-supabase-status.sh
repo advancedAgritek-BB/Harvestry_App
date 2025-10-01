@@ -1,7 +1,15 @@
 #!/bin/bash
+
+# Validate required environment variable
+if [ -z "$SUPABASE_PROJECT_REF" ]; then
+    echo "Error: SUPABASE_PROJECT_REF environment variable is not set" >&2
+    echo "Please set it in your .env.local file or export it in your shell" >&2
+    exit 1
+fi
+
 echo "Checking Supabase project status..."
 echo ""
-echo "1. Go to: https://app.supabase.com/project/twijnllcaxathttwgugp"
+echo "1. Go to: https://app.supabase.com/project/${SUPABASE_PROJECT_REF}"
 echo ""
 echo "2. Check if the project status shows:"
 echo "   ✓ Status: Active (green dot)"

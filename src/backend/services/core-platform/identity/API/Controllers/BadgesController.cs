@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Harvestry.Identity.Application.Interfaces;
 using Harvestry.Identity.Domain.Entities;
+using Harvestry.Identity.Domain.Enums;
 using Harvestry.Identity.Domain.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

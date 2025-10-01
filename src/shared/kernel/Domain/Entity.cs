@@ -31,6 +31,9 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>> where TId : notnull
     /// </summary>
     protected void RaiseDomainEvent(IDomainEvent domainEvent)
     {
+        if (domainEvent == null)
+            throw new ArgumentNullException(nameof(domainEvent));
+
         _domainEvents.Add(domainEvent);
     }
 

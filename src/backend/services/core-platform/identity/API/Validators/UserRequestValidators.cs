@@ -1,13 +1,12 @@
 using System;
-using System.Text.RegularExpressions;
 using FluentValidation;
 using Harvestry.Identity.API.Controllers;
+using Harvestry.Identity.API.Validation;
 
 namespace Harvestry.Identity.API.Validators;
 
 public sealed class CreateUserRequestValidator : AbstractValidator<UsersController.CreateUserRequest>
 {
-    private const string PhonePattern = @"^\+?[1-9]\d{0,14}$";
 
     public CreateUserRequestValidator()
     {
@@ -26,8 +25,8 @@ public sealed class CreateUserRequestValidator : AbstractValidator<UsersControll
 
         RuleFor(request => request.PhoneNumber)
             .Cascade(CascadeMode.Stop)
-            .Must(phone => string.IsNullOrWhiteSpace(phone) || Regex.IsMatch(phone.Trim(), PhonePattern))
-            .WithMessage("Phone number must be in E.164 format (max 15 digits).");
+            .Must(phone => string.IsNullOrWhiteSpace(phone) || ValidationConstants.PhoneRegex.IsMatch(phone.Trim()))
+            .WithMessage(ValidationConstants.ErrorMessages.InvalidPhoneFormat);
 
         When(request => request.SiteAssignments is { Length: > 0 }, () =>
         {
@@ -54,8 +53,6 @@ public sealed class SiteAssignmentRequestValidator : AbstractValidator<UsersCont
 
 public sealed class UpdateUserRequestValidator : AbstractValidator<UsersController.UpdateUserRequest>
 {
-    private const string PhonePattern = @"^\+?[1-9]\d{0,14}$";
-
     public UpdateUserRequestValidator()
     {
         RuleFor(request => request.FirstName)
@@ -68,20 +65,20 @@ public sealed class UpdateUserRequestValidator : AbstractValidator<UsersControll
 
         RuleFor(request => request.PhoneNumber)
             .Cascade(CascadeMode.Stop)
-            .Must(phone => string.IsNullOrWhiteSpace(phone) || Regex.IsMatch(phone.Trim(), PhonePattern))
-            .WithMessage("Phone number must be in E.164 format (max 15 digits).");
+            .Must(phone => string.IsNullOrWhiteSpace(phone) || ValidationConstants.PhoneRegex.IsMatch(phone.Trim()))
+            .WithMessage(ValidationConstants.ErrorMessages.InvalidPhoneFormat);
 
         RuleFor(request => request.ProfilePhotoUrl)
-            .When(request => !string.IsNullOrWhiteSpace(request.ProfilePhotoUrl))
-            .MaximumLength(512);
+            .MaximumLength(512)
+            .When(request => !string.IsNullOrWhiteSpace(request.ProfilePhotoUrl));
 
         RuleFor(request => request.LanguagePreference)
-            .When(request => !string.IsNullOrWhiteSpace(request.LanguagePreference))
-            .MaximumLength(16);
+            .MaximumLength(16)
+            .When(request => !string.IsNullOrWhiteSpace(request.LanguagePreference));
 
         RuleFor(request => request.Timezone)
-            .When(request => !string.IsNullOrWhiteSpace(request.Timezone))
-            .MaximumLength(64);
+            .MaximumLength(64)
+            .When(request => !string.IsNullOrWhiteSpace(request.Timezone));
 
         RuleFor(request => request.UpdatedBy)
             .Must(id => !id.HasValue || id.Value != Guid.Empty)

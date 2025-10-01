@@ -232,9 +232,15 @@ public sealed class UserRepository : IUserRepository
             }
         }
         
+        // Batch load all user sites to avoid N+1 query
+        var userIds = userRecords.Select(r => r.Id).ToList();
+        var sitesByUser = await LoadUserSitesBatchAsync(connection, userIds, cancellationToken).ConfigureAwait(false);
+
         foreach (var record in userRecords)
         {
-            var sites = await LoadUserSitesAsync(connection, record.Id, cancellationToken).ConfigureAwait(false);
+            var sites = sitesByUser.ContainsKey(record.Id)
+                ? sitesByUser[record.Id]
+                : new List<UserSite>();
 
             var user = User.Restore(
                 record.Id,
@@ -456,6 +462,38 @@ public sealed class UserRepository : IUserRepository
                 }
             }
 
+            // Delete assignments that are no longer in the user's collection
+            var currentSiteIds = user.UserSites.Select(us => us.SiteId).ToList();
+            if (currentSiteIds.Count > 0)
+            {
+                const string deleteSql = @"
+                    DELETE FROM user_sites
+                    WHERE user_id = @user_id
+                    AND site_id != ALL(@site_ids);
+                ";
+
+                await using var deleteCommand = connection.CreateCommand();
+                deleteCommand.CommandText = deleteSql;
+                deleteCommand.Transaction = transaction;
+                deleteCommand.Parameters.Add("user_id", NpgsqlDbType.Uuid).Value = user.Id;
+                deleteCommand.Parameters.Add("site_ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = currentSiteIds.ToArray();
+                await deleteCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                // If no assignments, delete all for this user
+                const string deleteAllSql = @"
+                    DELETE FROM user_sites
+                    WHERE user_id = @user_id;
+                ";
+
+                await using var deleteCommand = connection.CreateCommand();
+                deleteCommand.CommandText = deleteAllSql;
+                deleteCommand.Transaction = transaction;
+                deleteCommand.Parameters.Add("user_id", NpgsqlDbType.Uuid).Value = user.Id;
+                await deleteCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
+
             // Sync user site assignments (upsert existing, insert new)
             const string upsertSql = @"
                 INSERT INTO user_sites (
@@ -582,27 +620,6 @@ public sealed class UserRepository : IUserRepository
 
     private static MappedUser MapUser(NpgsqlDataReader reader)
     {
-        static string GetString(NpgsqlDataReader reader, string column)
-            => reader.GetString(reader.GetOrdinal(column));
-
-        static string? GetNullableString(NpgsqlDataReader reader, string column)
-        {
-            var ordinal = reader.GetOrdinal(column);
-            return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
-        }
-
-        static DateTime? GetNullableDateTime(NpgsqlDataReader reader, string column)
-        {
-            var ordinal = reader.GetOrdinal(column);
-            return reader.IsDBNull(ordinal) ? null : reader.GetDateTime(ordinal);
-        }
-
-        static Guid? GetNullableGuid(NpgsqlDataReader reader, string column)
-        {
-            var ordinal = reader.GetOrdinal(column);
-            return reader.IsDBNull(ordinal) ? null : reader.GetGuid(ordinal);
-        }
-
         var id = reader.GetGuid(reader.GetOrdinal("user_id"));
         var email = Email.Create(GetString(reader, "email"));
         var phoneRaw = GetNullableString(reader, "phone_number");
@@ -693,6 +710,62 @@ public sealed class UserRepository : IUserRepository
         return assignments;
     }
 
+    private static async Task<Dictionary<Guid, List<UserSite>>> LoadUserSitesBatchAsync(
+        NpgsqlConnection connection,
+        List<Guid> userIds,
+        CancellationToken cancellationToken)
+    {
+        if (userIds == null || userIds.Count == 0)
+            return new Dictionary<Guid, List<UserSite>>();
+
+        const string sql = @"
+            SELECT
+                user_site_id,
+                user_id,
+                site_id,
+                role_id,
+                is_primary_site,
+                assigned_at,
+                assigned_by,
+                revoked_at,
+                revoked_by,
+                revoke_reason
+            FROM user_sites
+            WHERE user_id = ANY(@user_ids);
+        ";
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.Parameters.Add("user_ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = userIds.ToArray();
+
+        var result = new Dictionary<Guid, List<UserSite>>();
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var userId = reader.GetGuid(reader.GetOrdinal("user_id"));
+            var assignment = UserSite.Restore(
+                reader.GetGuid(reader.GetOrdinal("user_site_id")),
+                userId,
+                reader.GetGuid(reader.GetOrdinal("site_id")),
+                reader.GetGuid(reader.GetOrdinal("role_id")),
+                reader.GetBoolean(reader.GetOrdinal("is_primary_site")),
+                reader.GetDateTime(reader.GetOrdinal("assigned_at")),
+                reader.GetGuid(reader.GetOrdinal("assigned_by")),
+                GetNullableDateTime(reader, "revoked_at"),
+                GetNullableGuid(reader, "revoked_by"),
+                GetNullableString(reader, "revoke_reason"));
+
+            if (!result.ContainsKey(userId))
+            {
+                result[userId] = new List<UserSite>();
+            }
+            result[userId].Add(assignment);
+        }
+
+        return result;
+    }
+
     private readonly record struct MappedUser(
         Guid Id,
         Email Email,
@@ -716,4 +789,28 @@ public sealed class UserRepository : IUserRepository
         DateTime UpdatedAt,
         Guid? CreatedBy,
         Guid? UpdatedBy);
+
+    private static string GetString(NpgsqlDataReader reader, string column)
+    {
+        var ordinal = reader.GetOrdinal(column);
+        return reader.GetString(ordinal);
+    }
+
+    private static string? GetNullableString(NpgsqlDataReader reader, string column)
+    {
+        var ordinal = reader.GetOrdinal(column);
+        return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+    }
+
+    private static DateTime? GetNullableDateTime(NpgsqlDataReader reader, string column)
+    {
+        var ordinal = reader.GetOrdinal(column);
+        return reader.IsDBNull(ordinal) ? null : reader.GetDateTime(ordinal);
+    }
+
+    private static Guid? GetNullableGuid(NpgsqlDataReader reader, string column)
+    {
+        var ordinal = reader.GetOrdinal(column);
+        return reader.IsDBNull(ordinal) ? null : reader.GetGuid(ordinal);
+    }
 }

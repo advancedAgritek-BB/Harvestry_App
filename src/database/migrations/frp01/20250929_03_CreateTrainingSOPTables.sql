@@ -11,7 +11,7 @@
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS sops (
     sop_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    org_id UUID NOT NULL,
+    org_id UUID NOT NULL REFERENCES organizations(organization_id) ON DELETE CASCADE,
     sop_code VARCHAR(50) UNIQUE NOT NULL, -- e.g., "SOP-001-HARVEST"
     title VARCHAR(300) NOT NULL,
     description TEXT,
@@ -49,7 +49,7 @@ COMMENT ON COLUMN sops.applies_to_roles IS 'JSON array of role names this SOP ap
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS training_modules (
     module_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    org_id UUID NOT NULL,
+    org_id UUID NOT NULL REFERENCES organizations(organization_id) ON DELETE CASCADE,
     module_code VARCHAR(50) UNIQUE NOT NULL, -- e.g., "TRN-101-SAFETY"
     title VARCHAR(300) NOT NULL,
     description TEXT,
@@ -308,10 +308,18 @@ CREATE POLICY sops_read_all ON sops
 FOR SELECT
 USING (TRUE); -- All users can read SOPs
 
-CREATE POLICY sops_admin_modify ON sops
-FOR INSERT, UPDATE, DELETE
+CREATE POLICY sops_admin_insert ON sops
+FOR INSERT
+WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
+
+CREATE POLICY sops_admin_update ON sops
+FOR UPDATE
 USING (current_setting('app.user_role', TRUE) IN ('admin', 'manager'))
 WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
+
+CREATE POLICY sops_admin_delete ON sops
+FOR DELETE
+USING (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
 
 -- Training modules: Same as SOPs
 ALTER TABLE training_modules ENABLE ROW LEVEL SECURITY;
@@ -320,10 +328,18 @@ CREATE POLICY training_modules_read_all ON training_modules
 FOR SELECT
 USING (TRUE);
 
-CREATE POLICY training_modules_admin_modify ON training_modules
-FOR INSERT, UPDATE, DELETE
+CREATE POLICY training_modules_admin_insert ON training_modules
+FOR INSERT
+WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
+
+CREATE POLICY training_modules_admin_update ON training_modules
+FOR UPDATE
 USING (current_setting('app.user_role', TRUE) IN ('admin', 'manager'))
 WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
+
+CREATE POLICY training_modules_admin_delete ON training_modules
+FOR DELETE
+USING (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
 
 -- Quizzes: Same as parent resources
 ALTER TABLE quizzes ENABLE ROW LEVEL SECURITY;
@@ -332,10 +348,18 @@ CREATE POLICY quizzes_read_all ON quizzes
 FOR SELECT
 USING (TRUE);
 
-CREATE POLICY quizzes_admin_modify ON quizzes
-FOR INSERT, UPDATE, DELETE
+CREATE POLICY quizzes_admin_insert ON quizzes
+FOR INSERT
+WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
+
+CREATE POLICY quizzes_admin_update ON quizzes
+FOR UPDATE
 USING (current_setting('app.user_role', TRUE) IN ('admin', 'manager'))
 WITH CHECK (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
+
+CREATE POLICY quizzes_admin_delete ON quizzes
+FOR DELETE
+USING (current_setting('app.user_role', TRUE) IN ('admin', 'manager'));
 
 -- Training assignments: User-scoped
 ALTER TABLE training_assignments ENABLE ROW LEVEL SECURITY;
@@ -364,10 +388,18 @@ CREATE POLICY task_gating_read_all ON task_gating_requirements
 FOR SELECT
 USING (TRUE);
 
-CREATE POLICY task_gating_admin_modify ON task_gating_requirements
-FOR INSERT, UPDATE, DELETE
+CREATE POLICY task_gating_admin_insert ON task_gating_requirements
+FOR INSERT
+WITH CHECK (current_setting('app.user_role', TRUE) = 'admin');
+
+CREATE POLICY task_gating_admin_update ON task_gating_requirements
+FOR UPDATE
 USING (current_setting('app.user_role', TRUE) = 'admin')
 WITH CHECK (current_setting('app.user_role', TRUE) = 'admin');
+
+CREATE POLICY task_gating_admin_delete ON task_gating_requirements
+FOR DELETE
+USING (current_setting('app.user_role', TRUE) = 'admin');
 
 -- ============================================================================
 -- AUDIT TRIGGERS

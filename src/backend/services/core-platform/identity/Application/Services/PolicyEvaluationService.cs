@@ -46,7 +46,7 @@ public sealed class PolicyEvaluationService : IPolicyEvaluationService
         string action,
         string resourceType,
         Guid siteId,
-        Dictionary<string, object>? context = null,
+        IReadOnlyDictionary<string, object>? context = null,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation(
@@ -280,12 +280,51 @@ public sealed class PolicyEvaluationService : IPolicyEvaluationService
 
         if (!string.Equals(record.Status, "pending", StringComparison.OrdinalIgnoreCase))
         {
+            _logger.LogWarning("Approval {ApprovalId} is not pending (status {Status})", approvalId, record.Status);
+            return false;
+        }
+
+        // Check expiration (matching approval flow)
+        if (record.ExpiresAt <= DateTime.UtcNow)
+        {
+            _logger.LogWarning("Approval {ApprovalId} expired at {ExpiresAt}", approvalId, record.ExpiresAt);
+            var auditContext = new Dictionary<string, object?>
+            {
+                ["approval_id"] = approvalId,
+                ["existing_status"] = record.Status,
+                ["expires_at"] = record.ExpiresAt
+            };
+
+            var auditEntry = AuthorizationAuditEntry.Denied(
+                approverUserId,
+                record.SiteId,
+                record.Action,
+                record.ResourceType,
+                record.ResourceId,
+                "Approval expired",
+                auditContext);
+
+            await _authorizationAuditRepository.LogAsync(auditEntry, cancellationToken).ConfigureAwait(false);
             return false;
         }
 
         if (record.InitiatorUserId == approverUserId)
         {
             throw new InvalidOperationException("Initiator cannot reject their own approval request");
+        }
+
+        // Check permission (matching approval flow)
+        var evaluation = await EvaluatePermissionAsync(
+            approverUserId,
+            record.Action,
+            record.ResourceType,
+            record.SiteId,
+            null,
+            cancellationToken);
+
+        if (!evaluation.IsGranted)
+        {
+            throw new InvalidOperationException($"Approver does not have permission to reject: {evaluation.DenyReason}");
         }
 
         var success = await _twoPersonApprovalRepository.RejectAsync(
@@ -317,7 +356,7 @@ public sealed class PolicyEvaluationService : IPolicyEvaluationService
     /// <summary>
     /// Sanitize and validate context dictionary for ABAC evaluation
     /// </summary>
-    private Dictionary<string, object>? SanitizeContext(Dictionary<string, object>? context)
+    private Dictionary<string, object>? SanitizeContext(IReadOnlyDictionary<string, object>? context)
     {
         if (context == null || context.Count == 0)
             return null;
