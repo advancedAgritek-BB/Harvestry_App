@@ -141,9 +141,9 @@ tests/e2e/
 
 **Test Files:**
 ```
-tests/unit/Tasks/
-├── TaskLifecycleServiceTests.cs           # State machine
-└── TaskGatingResolverTests.cs             # SOP checks
+tests/backend/services/workflow-messaging/tasks/TaskApplicationTests/
+├── TaskLifecycleServiceTests.cs           # State machine (✅)
+└── TaskGatingResolverServiceTests.cs      # SOP checks (✅)
 
 tests/integration/Slack/
 ├── SlackBridgeTests.cs                    # Outbox → Slack
@@ -157,9 +157,9 @@ tests/e2e/
 ```
 
 **Acceptance Criteria:**
-- ✅ Integration test: Task events notify Slack p95 < 2s
-- ✅ Contract test: Idempotency verified
-- ✅ E2E test: Blocked task shows reason + Slack notify
+- ⏳ Integration test: Task events notify Slack p95 < 2s
+- ⏳ Contract test: Idempotency verified
+- 🚧 E2E test: Blocked task shows reason + Slack notify (unit coverage in place)
 
 ---
 

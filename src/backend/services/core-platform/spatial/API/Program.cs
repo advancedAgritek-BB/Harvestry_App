@@ -5,6 +5,11 @@ using Harvestry.Spatial.API.Validators;
 using Harvestry.Spatial.Application.Interfaces;
 using Harvestry.Spatial.Application.Services;
 using Harvestry.Spatial.Infrastructure.Persistence;
+using Harvestry.Shared.Authentication;
+using Harvestry.Shared.Observability;
+using Harvestry.Shared.Observability.Tracing;
+using HealthChecks.NpgSql;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +27,47 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateRoomRequestValidator>();
+
+// ===== Authentication & Authorization =====
+var supabaseConfigured = builder.Configuration.GetSection("Supabase").Exists() 
+    && !string.IsNullOrWhiteSpace(builder.Configuration["Supabase:JwtSecret"]);
+
+if (supabaseConfigured)
+{
+    builder.Services.AddSupabaseJwtAuthentication(builder.Configuration);
+}
+else if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddAuthentication("Header")
+        .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, 
+            Harvestry.Shared.Authentication.HeaderAuthenticationHandler>("Header", null);
+}
+else
+{
+    throw new InvalidOperationException(
+        "Supabase authentication must be configured in production.");
+}
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
+// OpenTelemetry instrumentation
+builder.Services.AddHarvestryOpenTelemetry(
+    builder.Configuration,
+    serviceName: "Harvestry.Spatial",
+    serviceVersion: "1.0.0");
+
+// Health checks
+var spatialConnStr = builder.Configuration.GetConnectionString("Spatial")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string not found");
+builder.Services.AddHealthChecks()
+    .AddNpgSql(spatialConnStr, name: "database", tags: new[] { "db", "ready" })
+    .AddCheck("startup", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("Spatial service is running"), tags: new[] { "live" });
 
 builder.Services.AddSingleton(provider =>
 {
@@ -52,8 +98,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<RlsContextMiddleware>();
+app.UseHttpsRedirection();
 app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseMiddleware<RlsContextMiddleware>();
 app.MapControllers();
+
+// Health check endpoints
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 app.Run();

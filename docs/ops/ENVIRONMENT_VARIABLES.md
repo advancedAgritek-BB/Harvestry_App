@@ -46,4 +46,18 @@ This document captures the runtime configuration required across Track B servi
 
 ---
 
-_Last updated: 2025-09-30_
+> Last updated: 2025-09-30
+
+---
+
+## Telemetry Service
+
+| Variable | Scope | Description | Default |
+|----------|-------|-------------|---------|
+| `TELEMETRY_DB_CONNECTION` *(secret)* | Telemetry Ingest/Query | Connection string for the telemetry Postgres/Timescale database. | — |
+| `TELEMETRY_MQTT_BROKER_URL` *(secret)* | Telemetry Ingest | MQTT broker URI (e.g., `mqtts://broker.example.com:8883`). | — |
+| `TELEMETRY_MQTT_USERNAME` *(secret)* | Telemetry Ingest | MQTT authentication username. | — |
+| `TELEMETRY_MQTT_PASSWORD` *(secret)* | Telemetry Ingest | MQTT authentication password/secret. | — |
+| `TELEMETRY_MAX_BATCH_SIZE` | Telemetry Ingest | Maximum number of readings per ingest batch. | `5000` |
+| `TELEMETRY_COPY_BATCH_BYTES` | Telemetry Ingest | COPY bulk insert buffer size in bytes. | `1048576` |
+| `Telemetry:WalReplication:Enabled` | Telemetry Real-Time | Enables WAL-based real-time fan-out when logical replication is available. | `false` |

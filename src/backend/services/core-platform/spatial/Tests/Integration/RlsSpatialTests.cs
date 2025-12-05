@@ -27,13 +27,17 @@ public sealed class RlsSpatialTests : IntegrationTestBase
             RoomType = RoomType.Mother,
             RequestedByUserId = SpatialTestDataSeeder.ManagerUserId
         });
+        
+        // Assert room creation succeeded
+        Assert.NotNull(room);
+        Assert.NotEqual(Guid.Empty, room.Id);
 
         // Switch context to different user/site (no user_sites membership)
         var outsiderUserId = Guid.NewGuid();
         var outsiderSiteId = Guid.NewGuid();
         SetUserContext(outsiderUserId, "viewer", outsiderSiteId);
 
-        var fetched = await roomRepository.GetByIdAsync(room.Id).ConfigureAwait(false);
+        var fetched = await roomRepository.GetByIdAsync(room.Id);
         Assert.Null(fetched); // RLS should prevent access
     }
 }

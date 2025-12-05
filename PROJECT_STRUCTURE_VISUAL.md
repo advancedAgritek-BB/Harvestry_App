@@ -510,27 +510,35 @@ docs/
 ## 🎯 Key Design Principles
 
 ### ✅ Bounded Contexts & Squad Alignment
+
 Services map to squads and domain boundaries
 
 ### ✅ Clean Architecture (Onion)
+
 API → Application → Domain ← Infrastructure
 
 ### ✅ Single Responsibility
+
 Each file/class does one thing, < 500 lines
 
 ### ✅ Dependency Inversion
+
 Domain has no external dependencies
 
 ### ✅ Testability
+
 Tests organized by type, co-located with services
 
 ### ✅ Observability First
+
 Tracing, metrics, logging built-in
 
 ### ✅ Security by Design
+
 RLS, ABAC, audit trails, secrets management
 
 ### ✅ Scalability
+
 Microservices, partitioning, caching, edge computing
 
 ---

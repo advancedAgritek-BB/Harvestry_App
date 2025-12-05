@@ -13,5 +13,8 @@ public sealed class CreateEquipmentChannelRequestValidator : AbstractValidator<C
 
         RuleFor(x => x.Role)
             .MaximumLength(200);
+
+        RuleFor(x => x.RequestedByUserId)
+            .NotEmpty();
     }
 }

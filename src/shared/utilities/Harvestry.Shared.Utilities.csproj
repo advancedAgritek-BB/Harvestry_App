@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Harvestry.Shared.Utilities</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Resilience (Polly 8.x via Microsoft.Extensions.Http.Resilience) -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.10.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageReference Include="Polly.Core" Version="8.4.2" />
+  </ItemGroup>
+</Project>
+

@@ -1,0 +1,3 @@
+export { FacilityHealthBar } from './FacilityHealthBar';
+
+

@@ -4,7 +4,6 @@ using System.Threading.RateLimiting;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Harvestry.Identity.API.Middleware;
-using Harvestry.Identity.API.Security;
 using Harvestry.Identity.API.Validators;
 using Harvestry.Identity.Application.Interfaces;
 using Harvestry.Identity.Application.Services;
@@ -12,7 +11,9 @@ using Harvestry.Identity.Infrastructure.External;
 using Harvestry.Identity.Infrastructure.Health;
 using Harvestry.Identity.Infrastructure.Jobs;
 using Harvestry.Identity.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Authentication;
+using Harvestry.Shared.Authentication;
+using Harvestry.Shared.Observability;
+using Harvestry.Shared.Observability.Tracing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,11 +22,18 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Serilog;
 using Serilog.Formatting.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Create a temporary logger for startup configuration
+using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder.AddConsole());
+var startupLogger = loggerFactory.CreateLogger("Startup");
+
+SlackSecretsBootstrapper.TryAddSlackSecrets(builder.Configuration, startupLogger);
 
 builder.Host.UseSerilog((context, services, loggerConfiguration) =>
 {
@@ -41,6 +49,19 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
 });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("SlackOAuth", client =>
+{
+    client.BaseAddress = new Uri("https://slack.com/");
+});
+
+// OpenTelemetry instrumentation
+builder.Services.AddHarvestryOpenTelemetry(
+    builder.Configuration,
+    serviceName: "Harvestry.Identity",
+    serviceVersion: "1.0.0");
+
+builder.Services.Configure<SlackCredentialsOptions>(builder.Configuration.GetSection("Slack:Credentials"));
 
 builder.Services.AddControllers();
 
@@ -74,8 +95,29 @@ builder.Services.AddHealthChecks()
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddAuthentication("Header")
-    .AddScheme<AuthenticationSchemeOptions, HeaderAuthenticationHandler>("Header", _ => { });
+// Authentication - Use Supabase JWT in production, fallback to header auth in development
+var isDevelopment = builder.Environment.IsDevelopment();
+var supabaseConfigured = builder.Configuration.GetSection("Supabase").Exists() 
+    && !string.IsNullOrWhiteSpace(builder.Configuration["Supabase:JwtSecret"]);
+
+if (supabaseConfigured)
+{
+    builder.Services.AddSupabaseJwtAuthentication(builder.Configuration);
+    startupLogger.LogInformation("Supabase JWT authentication configured");
+}
+else if (isDevelopment)
+{
+    builder.Services.AddAuthentication("Header")
+        .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, 
+            Harvestry.Shared.Authentication.HeaderAuthenticationHandler>("Header", null);
+    startupLogger.LogWarning("Using header-based authentication (development mode)");
+}
+else
+{
+    throw new InvalidOperationException(
+        "Supabase authentication must be configured in production. " +
+        "Set Supabase:Url and Supabase:JwtSecret in configuration.");
+}
 
 var rateLimitSettings = ResolveRateLimitSettings(builder.Configuration);
 
@@ -137,11 +179,19 @@ builder.Services.AddCors(options =>
     });
 });
 
+// RLS context accessor - use Identity's implementation
 builder.Services.AddSingleton<IRlsContextAccessor, AsyncLocalRlsContextAccessor>();
 
-builder.Services.AddSingleton(provider =>
+// Register webhook signature validator for Supabase webhooks
+if (supabaseConfigured)
 {
-    var configuration = provider.GetRequiredService<IConfiguration>();
+    builder.Services.AddSingleton<Harvestry.Shared.Authentication.IWebhookSignatureValidator, 
+        Harvestry.Shared.Authentication.SupabaseWebhookSignatureValidator>();
+}
+
+builder.Services.AddDbContext<IdentityDbContext>(options =>
+{
+    var configuration = builder.Configuration;
     var connectionString = configuration.GetConnectionString("Identity")
         ?? configuration["Identity:ConnectionString"]
         ?? Environment.GetEnvironmentVariable("IDENTITY_DB_CONNECTION");
@@ -150,15 +200,8 @@ builder.Services.AddSingleton(provider =>
     {
         throw new InvalidOperationException("PostgreSQL connection string for Identity service was not provided.");
     }
-
-    return IdentityDataSourceFactory.Create(connectionString);
-});
-
-builder.Services.AddScoped(sp =>
-{
-    var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
-    var logger = sp.GetRequiredService<ILogger<IdentityDbContext>>();
-    return new IdentityDbContext(dataSource, logger);
+    
+    options.UseNpgsql(connectionString);
 });
 
 // Repositories
@@ -181,6 +224,7 @@ builder.Services.AddSingleton<INotificationService, LoggingNotificationService>(
 builder.Services.AddHostedService<AuditChainVerificationJob>();
 builder.Services.AddHostedService<SessionCleanupJob>();
 builder.Services.AddHostedService<BadgeExpirationNotificationJob>();
+builder.Services.AddHostedService<SlackTokenRefreshJob>();
 
 var app = builder.Build();
 

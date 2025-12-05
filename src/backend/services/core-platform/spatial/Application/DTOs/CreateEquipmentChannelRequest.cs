@@ -8,4 +8,5 @@ public sealed record CreateEquipmentChannelRequest
     public string? Role { get; init; }
     public string? PortMetaJson { get; init; }
     public Guid? AssignedZoneId { get; init; }
+    public Guid RequestedByUserId { get; init; }
 }

@@ -260,8 +260,6 @@ UPDATE equipment SET
     uptime_seconds = @uptime_seconds,
     notes = @notes,
     metadata_json = @metadata_json,
-    created_at = @created_at,
-    created_by_user_id = @created_by_user_id,
     updated_at = @updated_at,
     updated_by_user_id = @updated_by_user_id
 WHERE id = @id;
@@ -439,7 +437,7 @@ WHERE id = @id;
     {
         if (query.Status.HasValue)
         {
-            command.Parameters.Add("status", NpgsqlDbType.Unknown).Value = query.Status.Value.ToString();
+            command.Parameters.Add("status", NpgsqlDbType.Unknown).Value = query.Status.Value.ToString().ToLowerInvariant();
         }
 
         if (query.CoreType.HasValue)

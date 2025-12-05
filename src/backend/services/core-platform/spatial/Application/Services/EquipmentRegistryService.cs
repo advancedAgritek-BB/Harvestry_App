@@ -183,7 +183,7 @@ public sealed class EquipmentRegistryService : IEquipmentRegistryService
 
         EnsureSameSite(siteId, equipment.SiteId, nameof(Equipment), equipment.Id);
 
-        equipment.RecordHeartbeat(request.HeartbeatAt, request.SignalStrengthDbm, request.BatteryPercent, request.UptimeSeconds);
+        equipment.RecordHeartbeat(request.HeartbeatAt.UtcDateTime, request.SignalStrengthDbm, request.BatteryPercent, request.UptimeSeconds);
         await _equipmentRepository.UpdateAsync(equipment, cancellationToken).ConfigureAwait(false);
     }
 
@@ -230,6 +230,7 @@ public sealed class EquipmentRegistryService : IEquipmentRegistryService
         if (request == null) throw new ArgumentNullException(nameof(request));
         ValidateIdentifier(siteId, nameof(siteId));
         ValidateIdentifier(equipmentId, nameof(equipmentId));
+        ValidateIdentifier(request.RequestedByUserId, nameof(request.RequestedByUserId));
 
         var equipment = await _equipmentRepository.GetByIdAsync(equipmentId, cancellationToken).ConfigureAwait(false)
                        ?? throw new KeyNotFoundException($"Equipment {equipmentId} was not found");

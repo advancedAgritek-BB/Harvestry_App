@@ -44,6 +44,11 @@ public sealed class SpatialDbContext : IAsyncDisposable, IDisposable
 
     public async Task<NpgsqlConnection> GetOpenConnectionAsync(CancellationToken cancellationToken = default)
     {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SpatialDbContext));
+        }
+        
         if (_connection is { State: ConnectionState.Open })
         {
             return _connection;
@@ -52,6 +57,12 @@ public sealed class SpatialDbContext : IAsyncDisposable, IDisposable
         await _connectionSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            // Re-check disposed after acquiring semaphore
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(SpatialDbContext));
+            }
+            
             if (_connection is { State: ConnectionState.Open })
             {
                 return _connection;
@@ -81,12 +92,15 @@ public sealed class SpatialDbContext : IAsyncDisposable, IDisposable
 
         var connection = await GetOpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
-        command.CommandText = $@"
+        command.CommandText = @"
             SELECT 
-                set_config('{CurrentUserKey}', @userId::text, false),
-                set_config('{UserRoleKey}', @role, false),
-                set_config('{SiteKey}', @siteId::text, false);
+                set_config(@currentUserKey, @userId::text, false),
+                set_config(@userRoleKey, @role, false),
+                set_config(@siteKey, @siteId::text, false);
         ";
+        command.Parameters.AddWithValue("currentUserKey", CurrentUserKey);
+        command.Parameters.AddWithValue("userRoleKey", UserRoleKey);
+        command.Parameters.AddWithValue("siteKey", SiteKey);
 
         command.Parameters.Add("userId", NpgsqlDbType.Uuid).Value = userId;
         command.Parameters.Add("role", NpgsqlDbType.Text).Value = role.Trim().ToLowerInvariant();
@@ -100,12 +114,15 @@ public sealed class SpatialDbContext : IAsyncDisposable, IDisposable
     {
         var connection = await GetOpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
-        command.CommandText = $@"
+        command.CommandText = @"
             SELECT 
-                set_config('{CurrentUserKey}', NULL, false),
-                set_config('{UserRoleKey}', NULL, false),
-                set_config('{SiteKey}', NULL, false);
+                set_config(@currentUserKey, NULL, false),
+                set_config(@userRoleKey, NULL, false),
+                set_config(@siteKey, NULL, false);
         ";
+        command.Parameters.AddWithValue("currentUserKey", CurrentUserKey);
+        command.Parameters.AddWithValue("userRoleKey", UserRoleKey);
+        command.Parameters.AddWithValue("siteKey", SiteKey);
 
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }

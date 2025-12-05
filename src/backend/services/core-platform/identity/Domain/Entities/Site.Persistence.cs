@@ -6,7 +6,7 @@ namespace Harvestry.Identity.Domain.Entities;
 
 public sealed partial class Site
 {
-public static Site Restore(
+    public static Site Restore(
         Guid id,
         Guid orgId,
         string siteName,
@@ -26,7 +26,16 @@ public static Site Restore(
         IDictionary<string, object>? sitePolicies,
         IDictionary<string, object>? metadata,
         DateTime createdAt,
-        DateTime updatedAt)
+        DateTime updatedAt,
+        // METRC fields
+        long? metrcFacilityId = null,
+        FacilityType? facilityType = null,
+        string? metrcApiKeyEncrypted = null,
+        string? metrcUserKeyEncrypted = null,
+        string? stateCode = null,
+        bool isMetrcEnabled = false,
+        DateTime? metrcLastSyncAt = null,
+        string? metrcSyncStatus = null)
     {
         var site = new Site(id)
         {
@@ -52,7 +61,16 @@ public static Site Restore(
                 ? new Dictionary<string, object>(metadata)
                 : new Dictionary<string, object>(),
             CreatedAt = createdAt,
-            UpdatedAt = updatedAt
+            UpdatedAt = updatedAt,
+            // METRC fields
+            MetrcFacilityId = metrcFacilityId,
+            FacilityType = facilityType,
+            MetrcApiKeyEncrypted = metrcApiKeyEncrypted,
+            MetrcUserKeyEncrypted = metrcUserKeyEncrypted,
+            StateCode = stateCode,
+            IsMetrcEnabled = isMetrcEnabled,
+            MetrcLastSyncAt = metrcLastSyncAt,
+            MetrcSyncStatus = metrcSyncStatus
         };
 
         return site;

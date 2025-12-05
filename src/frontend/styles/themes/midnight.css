@@ -1,0 +1,196 @@
+/* Theme Composition - Imports tokens and defines theme-specific overrides */
+@import '../tokens/colors.css';
+@import '../tokens/typography.css';
+@import '../tokens/spacing.css';
+@import '../components/animations.css';
+@import './daylight.css';
+
+/* Default/Base - Applied when no theme is set (fallback to dark) */
+:root {
+  color-scheme: dark;
+  
+  /* Refined Premium Palette - RGB format for Tailwind opacity support */
+  --bg-primary-rgb: 2 4 8;
+  --bg-mobile-rgb: 0 0 0;
+  --bg-surface-rgb: 15 21 36;
+  --bg-elevated-rgb: 18 24 41;
+  --bg-hover-rgb: 30 41 59;
+  
+  --bg-primary: rgb(var(--bg-primary-rgb));
+  --bg-mobile: rgb(var(--bg-mobile-rgb));
+  --bg-surface: rgb(var(--bg-surface-rgb));
+  --bg-elevated: rgb(var(--bg-elevated-rgb));
+  --bg-hover: rgb(var(--bg-hover-rgb));
+  
+  /* Card Gradient */
+  --bg-surface-gradient: linear-gradient(180deg, rgba(23, 30, 48, 0.7) 0%, rgba(15, 21, 36, 1) 100%);
+  
+  /* Inner Tiles */
+  --bg-tile: rgba(255, 255, 255, 0.03);
+  --bg-tile-hover: rgba(255, 255, 255, 0.06);
+
+  /* Lighting Effects */
+  --border-rgb: 30 41 59;
+  --border: rgb(var(--border-rgb));
+  --border-highlight: rgba(255, 255, 255, 0.08);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 15px rgba(6, 182, 212, 0.1);
+  
+  /* Text - RGB format */
+  --text-primary-rgb: 241 245 249;
+  --text-muted-rgb: 148 163 184;
+  --text-subtle-rgb: 100 116 139;
+  
+  --text-primary: rgb(var(--text-primary-rgb));
+  --text-muted: rgb(var(--text-muted-rgb));
+  --text-subtle: rgb(var(--text-subtle-rgb));
+  
+  /* Semantic Accents - Bright for dark backgrounds */
+  --accent-cyan-rgb: 6 182 212;
+  --accent-emerald-rgb: 16 185 129;
+  --accent-amber-rgb: 245 158 11;
+  --accent-rose-rgb: 244 63 94;
+  --accent-sky-rgb: 14 165 233;
+  --accent-violet-rgb: 139 92 246;
+  
+  --accent-cyan: rgb(var(--accent-cyan-rgb));
+  --accent-emerald: rgb(var(--accent-emerald-rgb));
+  --accent-amber: rgb(var(--accent-amber-rgb));
+  --accent-rose: rgb(var(--accent-rose-rgb));
+  --accent-sky: rgb(var(--accent-sky-rgb));
+  --accent-violet: rgb(var(--accent-violet-rgb));
+
+  /* Alpha Variants */
+  --bg-surface-alpha: rgba(15, 21, 36, 0.8);
+  --accent-cyan-alpha: rgba(6, 182, 212, 0.1);
+  --accent-rose-alpha: rgba(244, 63, 94, 0.1);
+  
+  /* Scrollbar colors */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+  
+  /* Glass effects */
+  --glass-bg: rgba(15, 21, 36, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  
+  /* Ring offset for focus states */
+  --ring-offset-color: rgb(var(--bg-primary-rgb));
+}
+
+/* Dark Theme - Explicit dark mode (using html selector for consistency with light theme) */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  
+  --bg-primary-rgb: 2 4 8;
+  --bg-mobile-rgb: 0 0 0;
+  --bg-surface-rgb: 15 21 36;
+  --bg-elevated-rgb: 18 24 41;
+  --bg-hover-rgb: 30 41 59;
+  
+  --bg-primary: rgb(var(--bg-primary-rgb));
+  --bg-mobile: rgb(var(--bg-mobile-rgb));
+  --bg-surface: rgb(var(--bg-surface-rgb));
+  --bg-elevated: rgb(var(--bg-elevated-rgb));
+  --bg-hover: rgb(var(--bg-hover-rgb));
+  
+  --bg-surface-gradient: linear-gradient(180deg, rgba(23, 30, 48, 0.7) 0%, rgba(15, 21, 36, 1) 100%);
+  --bg-tile: rgba(255, 255, 255, 0.03);
+  --bg-tile-hover: rgba(255, 255, 255, 0.06);
+  
+  --border-rgb: 30 41 59;
+  --border: rgb(var(--border-rgb));
+  --border-highlight: rgba(255, 255, 255, 0.08);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 15px rgba(6, 182, 212, 0.1);
+  
+  --text-primary-rgb: 241 245 249;
+  --text-muted-rgb: 148 163 184;
+  --text-subtle-rgb: 100 116 139;
+  
+  --text-primary: rgb(var(--text-primary-rgb));
+  --text-muted: rgb(var(--text-muted-rgb));
+  --text-subtle: rgb(var(--text-subtle-rgb));
+  
+  --accent-cyan-rgb: 6 182 212;
+  --accent-emerald-rgb: 16 185 129;
+  --accent-amber-rgb: 245 158 11;
+  --accent-rose-rgb: 244 63 94;
+  --accent-sky-rgb: 14 165 233;
+  --accent-violet-rgb: 139 92 246;
+  
+  --accent-cyan: rgb(var(--accent-cyan-rgb));
+  --accent-emerald: rgb(var(--accent-emerald-rgb));
+  --accent-amber: rgb(var(--accent-amber-rgb));
+  --accent-rose: rgb(var(--accent-rose-rgb));
+  --accent-sky: rgb(var(--accent-sky-rgb));
+  --accent-violet: rgb(var(--accent-violet-rgb));
+
+  --bg-surface-alpha: rgba(15, 21, 36, 0.8);
+  --accent-cyan-alpha: rgba(6, 182, 212, 0.1);
+  --accent-rose-alpha: rgba(244, 63, 94, 0.1);
+  
+  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+  --glass-bg: rgba(15, 21, 36, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  
+  --ring-offset-color: rgb(var(--bg-primary-rgb));
+}
+
+/* Dark theme body styling */
+html[data-theme="dark"] body,
+:root:not([data-theme]) body {
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(circle at 50% 0%, #172033 0%, transparent 40%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile/OLED Override for dark theme */
+@media (max-width: 768px) {
+  html[data-theme="dark"] body,
+  :root:not([data-theme]) body {
+    background-color: var(--bg-mobile);
+    background-image: none;
+  }
+}
+
+/* Premium Card Class */
+.card-premium {
+  background: var(--bg-surface-gradient);
+  border: 1px solid var(--border);
+  border-top: 1px solid var(--border-highlight);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(8px);
+}
+
+/* Inner Tile Class (for list items/KPIs) */
+.tile-premium {
+  background: var(--bg-tile);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tile-premium:hover {
+  background: var(--bg-tile-hover);
+  border-color: var(--border-highlight);
+  transform: translateY(-1px);
+}
+
+/* Glass Utilities */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-header {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}

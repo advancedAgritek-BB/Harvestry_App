@@ -115,7 +115,11 @@ WHERE id = @id;";
         command.CommandText = sql;
         PopulateParameters(command, mapping);
 
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        var affectedRows = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        if (affectedRows == 0)
+        {
+            throw new InvalidOperationException($"Valve zone mapping {mapping.Id} not found.");
+        }
     }
 
     public async Task DeleteAsync(Guid mappingId, CancellationToken cancellationToken = default)

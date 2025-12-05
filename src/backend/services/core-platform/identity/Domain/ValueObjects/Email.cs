@@ -10,9 +10,9 @@ namespace Harvestry.Identity.Domain.ValueObjects;
 /// </summary>
 public sealed class Email : ValueObject
 {
-    // Stricter email regex that disallows consecutive dots, leading/trailing dots, and requires 2+ char TLD
+    // Stricter email regex that allows plus addressing, disallows consecutive dots, leading/trailing dots, and requires 2+ char TLD
     private static readonly Regex EmailRegex = new(
-        @"^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$",
+        @"^[a-zA-Z0-9]([a-zA-Z0-9.+_-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private Email(string value)

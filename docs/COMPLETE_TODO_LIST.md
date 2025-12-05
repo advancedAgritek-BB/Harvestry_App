@@ -4,6 +4,11 @@
 **Current Focus:** FRP-01 (Identity, Authentication & Authorization)  
 **Overall Track B Progress:** ~8% Complete
 
+## 📝 Backlog Additions (2025-10-02)
+
+1. **Stage template defaults for FRP-03** – Product/Ops to define the recommended stage and transition set, with import tooling for tenants before development starts.
+2. **Commissioning service playbook** – Customer Success & Product to scope pricing, responsibilities, and onboarding checklist for the optional stage-configuration service.
+
 ---
 
 ## 🎯 CRITICAL PATH - FRP-01 (Identity) - IN PROGRESS

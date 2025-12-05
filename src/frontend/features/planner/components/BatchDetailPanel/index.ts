@@ -1,0 +1,2 @@
+export { BatchDetailPanel } from './BatchDetailPanel';
+

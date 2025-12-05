@@ -94,7 +94,7 @@ public sealed class CalibrationServiceTests
             MeasuredValue = 99.8m,
             Result = CalibrationResult.WithinTolerance,
             IntervalDaysOverride = intervalOverride
-        }).ConfigureAwait(false);
+        });
 
         Assert.NotNull(inserted);
         Assert.Equal(intervalOverride, response.IntervalDays);
@@ -196,7 +196,7 @@ public sealed class CalibrationServiceTests
             .Callback<Guid, DateTime, CancellationToken>((_, dueBefore, _) => capturedDueBefore = dueBefore)
             .ReturnsAsync(new List<Calibration> { calibration });
 
-        var results = await _service.GetOverdueAsync(siteId, null).ConfigureAwait(false);
+        var results = await _service.GetOverdueAsync(siteId, null);
 
         Assert.NotNull(capturedDueBefore);
         Assert.True((DateTime.UtcNow - capturedDueBefore!.Value).TotalSeconds < 5);

@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Harvestry.Spatial.API.Controllers;
 
 [ApiController]
-[Route("api/sites/{siteId:guid}/equipment/{equipmentId:guid}/calibrations")]
+[Route("api/v1/sites/{siteId:guid}/equipment/{equipmentId:guid}/calibrations")]
 public sealed class CalibrationController : ControllerBase
 {
     private readonly ICalibrationService _calibrationService;

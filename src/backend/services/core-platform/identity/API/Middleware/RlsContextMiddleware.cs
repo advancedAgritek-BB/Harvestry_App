@@ -1,6 +1,7 @@
 using System;
 using System.Security.Claims;
 using Harvestry.Identity.Application.Interfaces;
+using Harvestry.Shared.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -8,32 +9,30 @@ namespace Harvestry.Identity.API.Middleware;
 
 /// <summary>
 /// Middleware that populates the database RLS context based on the current HTTP request.
-/// For now it falls back to the service account context when claims or headers are missing.
+/// Extracts user information from JWT claims (Supabase) or headers (development fallback).
+/// Falls back to the service account context when claims or headers are missing.
 /// </summary>
 public sealed class RlsContextMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly IRlsContextAccessor _rlsContextAccessor;
     private readonly ILogger<RlsContextMiddleware> _logger;
 
     public RlsContextMiddleware(
         RequestDelegate next,
-        IRlsContextAccessor rlsContextAccessor,
         ILogger<RlsContextMiddleware> logger)
     {
         _next = next ?? throw new ArgumentNullException(nameof(next));
-        _rlsContextAccessor = rlsContextAccessor ?? throw new ArgumentNullException(nameof(rlsContextAccessor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IRlsContextAccessor rlsContextAccessor)
     {
         var userId = ResolveUserId(context.User);
         var role = ResolveRole(context.User);
         var siteId = ResolveSiteId(context.Request);
 
         var rlsContext = new RlsContext(userId, role, siteId);
-        _rlsContextAccessor.Set(rlsContext);
+        rlsContextAccessor.Set(rlsContext);
 
         try
         {
@@ -41,18 +40,18 @@ public sealed class RlsContextMiddleware
         }
         finally
         {
-            _rlsContextAccessor.Clear();
+            rlsContextAccessor.Clear();
         }
     }
 
     private Guid ResolveUserId(ClaimsPrincipal user)
     {
-        var value = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? user?.FindFirst("sub")?.Value;
-
-        if (!string.IsNullOrWhiteSpace(value) && Guid.TryParse(value, out var parsed))
+        // Use the shared extension method for JWT claim extraction
+        var userId = user.GetUserId();
+        
+        if (userId.HasValue)
         {
-            return parsed;
+            return userId.Value;
         }
 
         _logger.LogDebug("Falling back to service account user for RLS context");
@@ -61,15 +60,8 @@ public sealed class RlsContextMiddleware
 
     private string ResolveRole(ClaimsPrincipal user)
     {
-        var value = user?.FindFirst(ClaimTypes.Role)?.Value
-            ?? user?.FindFirst("role")?.Value;
-
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            return value;
-        }
-
-        return "service_account";
+        // Use the shared extension method for JWT claim extraction
+        return user.GetRole();
     }
 
     private Guid? ResolveSiteId(HttpRequest request)

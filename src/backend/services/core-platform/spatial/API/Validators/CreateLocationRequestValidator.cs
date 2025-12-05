@@ -73,7 +73,7 @@ public sealed class CreateLocationRequestValidator : AbstractValidator<CreateLoc
         }
         try
         {
-            JsonDocument.Parse(metadata);
+            using var doc = JsonDocument.Parse(metadata);
             return true;
         }
         catch (JsonException)

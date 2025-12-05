@@ -1,0 +1,16 @@
+/* Color Tokens - Base semantic color definitions */
+/* NOTE: Actual theme colors are defined in midnight.css (dark) and daylight.css (light) */
+/* This file provides fallback/base definitions and documents the color token system */
+
+:root {
+  /* 
+   * Color System Overview:
+   * - All colors use RGB format for Tailwind opacity modifier support
+   * - Theme-specific values are set in midnight.css and daylight.css
+   * - Components should use semantic tokens (--bg-*, --text-*, --accent-*) 
+   *   rather than raw color values
+   */
+
+  /* Ring offset color for focus states - updated by theme */
+  --ring-offset-color: rgb(var(--bg-primary-rgb));
+}

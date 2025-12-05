@@ -158,7 +158,14 @@ public sealed class CalibrationService : ICalibrationService
         var interval = overrideInterval ?? equipmentInterval ?? DefaultCalibrationIntervalDays;
         if (interval <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(overrideInterval), "Calibration interval must be positive.");
+            // Determine accurate parameter name for the exception
+            string paramName = overrideInterval.HasValue
+                ? nameof(overrideInterval)
+                : equipmentInterval.HasValue
+                    ? nameof(equipmentInterval)
+                    : nameof(DefaultCalibrationIntervalDays);
+            
+            throw new ArgumentOutOfRangeException(paramName, "Calibration interval must be positive.");
         }
 
         return interval;

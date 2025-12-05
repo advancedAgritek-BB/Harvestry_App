@@ -11,7 +11,7 @@
 
 **FRP-02 (Spatial Model & Equipment Registry) has been delivered with OUTSTANDING quality.**
 
-### Key Metrics:
+### Key Metrics
 
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
@@ -29,6 +29,7 @@
 ## 🎯 What Was Delivered
 
 ### ✅ Phase 1: Database Schema (100%)
+
 - ✅ 3 comprehensive migrations (~1,000 lines)
 - ✅ Spatial hierarchy with materialized path
 - ✅ Equipment registry with 40+ fault codes
@@ -37,6 +38,7 @@
 - ✅ Proper FK alignment with FRP-01
 
 ### ✅ Phase 2: Domain Layer (100%)
+
 - ✅ 5 aggregate roots/entities with rich business logic
 - ✅ 3 enum files (13 enumerations)
 - ✅ Proper DDD patterns (`Entity<TId>`, `AggregateRoot<TId>`)
@@ -44,6 +46,7 @@
 - ✅ Immutable properties with business methods
 
 ### ✅ Phase 3: Application Services (100%)
+
 - ✅ `SpatialHierarchyService` - Room/location CRUD with site-aware guards
 - ✅ `EquipmentRegistryService` - Equipment + channel management
 - ✅ `CalibrationService` - Calibration tracking + overdue reporting
@@ -52,6 +55,7 @@
 - ✅ Custom exceptions (TenantMismatchException)
 
 ### ✅ Phase 4: Infrastructure (100%)
+
 - ✅ `RoomRepository` - With RLS + FromPersistence
 - ✅ `InventoryLocationRepository` - **Recursive CTEs** for hierarchy queries
 - ✅ `EquipmentRepository` - Equipment data access + filtering
@@ -62,6 +66,7 @@
 - ✅ `SpatialDataSourceFactory` - NpgsqlDataSource pooling
 
 ### ✅ Phase 5: API Layer (100%)
+
 - ✅ `RoomsController` - Site-scoped routes with **403 ProblemDetails** diagnostics
 - ✅ `LocationsController` - Location endpoints + valve mapping lookups
 - ✅ `EquipmentController` - Equipment CRUD + telemetry + channels
@@ -70,11 +75,13 @@
 - ✅ Proper OpenAPI/Swagger annotations
 
 ### ✅ Phase 6: Validation (100%)
+
 - ✅ 13 FluentValidation validators for all request types
 - ✅ Proper validation rules (code uniqueness, hierarchy constraints, etc.)
 - ✅ Custom validation for room types, location types, equipment types
 
 ### ✅ Phase 7: Testing (100%)
+
 - ✅ **7 Unit Test Files:**
   - Domain: RoomTests, InventoryLocationTests, EquipmentTests
   - Services: SpatialHierarchyServiceTests, EquipmentRegistryServiceTests, CalibrationServiceTests, ValveZoneMappingServiceTests
@@ -102,6 +109,7 @@
 **What Makes This Exceptional:**
 
 #### ✅ Clean Architecture - Perfectly Realized
+
 - **API Layer** → Controllers, Validators, Middleware
 - **Application Layer** → Services, Interfaces, DTOs, Mappers
 - **Domain Layer** → Entities, Enums, Value Objects
@@ -110,6 +118,7 @@
 **No dependencies point inward** - Domain has ZERO external dependencies.
 
 #### ✅ DDD Patterns - Mastery Level
+
 ```csharp
 // Proper aggregate root with business logic
 public class Room : AggregateRoot<Guid>
@@ -134,11 +143,13 @@ public class Room : AggregateRoot<Guid>
 ```
 
 **Why This Matters:**
+
 - ✅ Business rules enforced at domain level (not in services)
 - ✅ Impossible to create invalid entities
 - ✅ Type-safe rehydration (no reflection = faster)
 
 #### ✅ Repository Pattern - Best Practices
+
 ```csharp
 // RLS context properly set
 private async Task<NpgsqlConnection> PrepareConnectionAsync(...)
@@ -160,6 +171,7 @@ SELECT ...";
 ```
 
 **Why This Matters:**
+
 - ✅ Multi-tenant security enforced at database level
 - ✅ Efficient hierarchy queries (single DB round-trip)
 - ✅ Proper async/await with ConfigureAwait(false)
@@ -169,6 +181,7 @@ SELECT ...";
 ### 2. Multi-Tenancy: ⭐⭐⭐⭐⭐ EXCEPTIONAL (10/10)
 
 #### ✅ Site-Scoped Routing
+
 ```
 ✅ GOOD:
 GET /api/sites/{siteId}/rooms/{roomId}
@@ -180,12 +193,15 @@ PUT /api/rooms/{id}
 ```
 
 **Benefits:**
+
 - Tenant context explicit in URL (better security audit trail)
 - Easier to debug (site ID visible in logs)
 - Guards against accidental cross-tenant access
 
 #### ✅ 403 ProblemDetails on Mismatch
+
 When room belongs to different site than in path:
+
 ```json
 {
   "type": "https://tools.ietf.org/html/rfc7231#section-6.5.3",
@@ -196,17 +212,20 @@ When room belongs to different site than in path:
 ```
 
 **Why This Matters:**
+
 - Better diagnostics (404 = not found, 403 = exists but wrong tenant)
 - Prevents information leakage
 - Follows RFC 7807 ProblemDetails standard
 
 #### ✅ RLS at Database Level
+
 ```sql
 CREATE POLICY room_site_isolation ON rooms
 USING (site_id = current_setting('app.current_site_id')::uuid);
 ```
 
 **Defense in Depth:**
+
 1. **URL routing** - Site ID explicit
 2. **Service layer** - Tenant mismatch checks
 3. **Database RLS** - Final security boundary
@@ -216,6 +235,7 @@ USING (site_id = current_setting('app.current_site_id')::uuid);
 ### 3. Testing: ⭐⭐⭐⭐⭐ COMPREHENSIVE (10/10)
 
 #### ✅ Integration Test Infrastructure
+
 ```csharp
 public abstract class IntegrationTestBase : IAsyncLifetime
 {
@@ -236,12 +256,14 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 ```
 
 **Why This Is Excellent:**
+
 - ✅ Tests are isolated (no pollution between runs)
 - ✅ Fast (in-memory transactions)
 - ✅ Repeatable (same seed data every time)
 - ✅ No cleanup required (automatic rollback)
 
 #### ✅ RLS Verification Tests
+
 ```csharp
 [IntegrationFact]
 public async Task GetRoom_CrossSiteLookup_ReturnsNull()
@@ -256,6 +278,7 @@ public async Task GetRoom_CrossSiteLookup_ReturnsNull()
 ```
 
 **Coverage:**
+
 - ✅ RlsSpatialTests - Rooms + locations
 - ✅ RlsEquipmentTests - Equipment + channels
 - ✅ Positive + negative test cases
@@ -265,12 +288,15 @@ public async Task GetRoom_CrossSiteLookup_ReturnsNull()
 ### 4. Patterns & Practices: ⭐⭐⭐⭐⭐ INDUSTRY STANDARD (10/10)
 
 #### ✅ FromPersistence Factory Pattern
+
 **Problem Solved:** Repositories need to materialize domain entities, but:
+
 - Public constructors enforce invariants (may fail with DB data)
 - Reflection is slow and fragile
 - Private constructors don't allow factories
 
 **Solution:** Static factory method
+
 ```csharp
 // Domain entity
 public class Room : AggregateRoot<Guid>
@@ -302,18 +328,22 @@ public class Room : AggregateRoot<Guid>
 ```
 
 **Benefits:**
+
 - ✅ Type-safe (compile-time checks)
 - ✅ No reflection (faster)
 - ✅ Explicit intent (clearly for persistence)
 - ✅ Can add persistence-specific validation
 
 #### ✅ DTO Mapping
+
 **Problem Solved:** Controllers should NOT expose domain entities directly:
+
 - Couples API to domain (can't version independently)
 - Leaks internal fields (security risk)
 - Changes to domain break API contracts
 
 **Solution:** Dedicated response DTOs + mappers
+
 ```csharp
 // Response DTO (API contract)
 public record RoomResponse(
@@ -351,12 +381,14 @@ public async Task<IActionResult> GetRoom(Guid siteId, Guid roomId)
 ```
 
 **Benefits:**
+
 - ✅ API versioning possible (add RoomResponseV2)
 - ✅ Backward compatibility (old clients still work)
 - ✅ Security (don't leak audit fields, internal IDs, etc.)
 - ✅ Performance (only serialize needed fields)
 
 #### ✅ Recursive CTEs for Hierarchy
+
 ```csharp
 // Get all descendants of a location (zone → subzone → rack → shelf → bin)
 const string sql = @"
@@ -372,11 +404,13 @@ SELECT ... FROM descendants ORDER BY depth;";
 ```
 
 **Why This Is Better Than:**
+
 - ❌ Multiple queries (N+1 problem)
 - ❌ Loading entire table into memory
 - ❌ Recursive application code
 
 **Benefits:**
+
 - ✅ Single database round-trip
 - ✅ Database-optimized recursion
 - ✅ Works for any depth
@@ -385,13 +419,15 @@ SELECT ... FROM descendants ORDER BY depth;";
 
 ### 5. Documentation & Code Readability: ⭐⭐⭐⭐ GOOD (8/10)
 
-#### ✅ Strengths:
+#### ✅ Strengths
+
 - Descriptive class/method names
 - Proper XML comments on public APIs
 - OpenAPI/Swagger annotations
 - Integration test names describe scenarios
 
-#### ⚠️ Minor Improvement Opportunities:
+#### ⚠️ Minor Improvement Opportunities
+
 - Add architecture decision records (ADRs) for:
   - Why FromPersistence vs EF Core
   - Why manual mapping vs AutoMapper
@@ -405,7 +441,7 @@ SELECT ... FROM descendants ORDER BY depth;";
 
 ## 📊 Quantitative Analysis
 
-### Code Metrics:
+### Code Metrics
 
 | Metric | Value | Assessment |
 |--------|-------|------------|
@@ -417,7 +453,7 @@ SELECT ... FROM descendants ORDER BY depth;";
 | **Test Coverage** | ~95%+ | ✅ EXCELLENT |
 | **Test:Code Ratio** | ~1:1.2 | ✅ Industry standard |
 
-### Time Efficiency:
+### Time Efficiency
 
 | Phase | Estimate | Actual | Variance |
 |-------|----------|--------|----------|
@@ -432,6 +468,7 @@ SELECT ... FROM descendants ORDER BY depth;";
 | **TOTAL** | **28.5h** | **~27.5-28.5h** | ✅ **ON TARGET** |
 
 **Analysis:**
+
 - Under on early phases (learned from FRP-01)
 - Over on middle phases (added quality improvements)
 - Balanced out to original estimate
@@ -442,6 +479,7 @@ SELECT ... FROM descendants ORDER BY depth;";
 ## 🎯 Acceptance Criteria - VERIFICATION
 
 ### ✅ Device heartbeat visible
+
 ```csharp
 [IntegrationFact]
 public async Task RecordHeartbeat_UpdatesLastHeartbeat()
@@ -455,11 +493,13 @@ public async Task RecordHeartbeat_UpdatesLastHeartbeat()
     Assert.True(updated.IsOnline); // Computed from heartbeat
 }
 ```
+
 **Status:** ✅ VERIFIED in EquipmentHeartbeatIntegrationTests
 
 ---
 
 ### ✅ Calibration logs retrievable
+
 ```csharp
 [IntegrationFact]
 public async Task GetCalibrationHistory_ReturnsAllRecords()
@@ -473,11 +513,13 @@ public async Task GetCalibrationHistory_ReturnsAllRecords()
     Assert.All(history, c => Assert.NotNull(c.PerformedAt));
 }
 ```
+
 **Status:** ✅ VERIFIED in CalibrationIntegrationTests
 
 ---
 
 ### ✅ Valve→zone mapping correct
+
 ```csharp
 [IntegrationFact]
 public async Task CreateValveZoneMapping_PersistsCorrectly()
@@ -490,11 +532,13 @@ public async Task CreateValveZoneMapping_PersistsCorrectly()
     Assert.Equal(zoneId, retrieved.ZoneLocationId);
 }
 ```
+
 **Status:** ✅ VERIFIED in ValveZoneMappingIntegrationTests
 
 ---
 
 ### ✅ RLS blocks cross-site access
+
 ```csharp
 [IntegrationFact]
 public async Task GetRoom_DifferentSite_ReturnsNull()
@@ -506,6 +550,7 @@ public async Task GetRoom_DifferentSite_ReturnsNull()
     Assert.Null(room); // RLS policy enforced
 }
 ```
+
 **Status:** ✅ VERIFIED in RlsSpatialTests + RlsEquipmentTests
 
 ---
@@ -513,13 +558,16 @@ public async Task GetRoom_DifferentSite_ReturnsNull()
 ## 🚀 Innovation Highlights
 
 ### 1. **Partial Persistence Files**
+
 Instead of bloating domain entities with persistence concerns:
+
 ```
 Room.cs              // Core domain logic
 Room.Persistence.cs  // FromPersistence factory
 ```
 
 **Why This Is Clever:**
+
 - Separation of concerns at file level
 - Easy to navigate (persistence logic isolated)
 - Follows Single Responsibility Principle
@@ -527,6 +575,7 @@ Room.Persistence.cs  // FromPersistence factory
 ---
 
 ### 2. **Custom Integration Test Attributes**
+
 ```csharp
 [IntegrationFact] // Custom attribute
 public async Task MyTest()
@@ -536,6 +585,7 @@ public async Task MyTest()
 ```
 
 **Benefits:**
+
 - Tests run in CI/CD (when DB available)
 - Don't fail on developer machines (graceful skip)
 - Clear intent (integration vs unit)
@@ -543,7 +593,9 @@ public async Task MyTest()
 ---
 
 ### 3. **Tenant Mismatch Exception**
+
 Custom exception for site/tenant mismatches:
+
 ```csharp
 public class TenantMismatchException : Exception
 {
@@ -555,6 +607,7 @@ public class TenantMismatchException : Exception
 ```
 
 **Why This Matters:**
+
 - Explicit exception type (easier to handle)
 - Rich diagnostic info (which site was expected)
 - Centralized translation to HTTP 403
@@ -568,6 +621,7 @@ public class TenantMismatchException : Exception
 **Current State:** ✅ Good inline docs, ⚠️ Missing ADRs
 
 **Recommendation:**
+
 - Create `docs/architecture/ADR-004-Spatial-Persistence.md` explaining:
   - Why FromPersistence over EF Core
   - Why manual mapping over AutoMapper
@@ -583,6 +637,7 @@ public class TenantMismatchException : Exception
 **Current State:** ⚠️ Equipment CRUD integration tests noted as "scheduled next sprint"
 
 **Recommendation:**
+
 - Add integration tests for:
   - Equipment CRUD across multiple sites
   - Equipment channel assignment/unassignment
@@ -598,6 +653,7 @@ public class TenantMismatchException : Exception
 **Current State:** ⚠️ Noted as remaining work
 
 **Recommendation:**
+
 - Add E2E test for calibration tracking flow:
   1. Create equipment
   2. Record calibration
@@ -614,6 +670,7 @@ public class TenantMismatchException : Exception
 **Current State:** ⚠️ Calibration + valve endpoints need docs updates
 
 **Recommendation:**
+
 - Update `docs/api/contracts/track-b-frp02.yaml` with:
   - Calibration endpoints
   - Valve mapping endpoints
@@ -637,6 +694,7 @@ public class TenantMismatchException : Exception
 | **Multi-Tenancy** | RLS only | RLS + 403 ProblemDetails | ✅ Better diagnostics |
 
 **Key Learnings Applied from FRP-01:**
+
 - ✅ FromPersistence pattern (no reflection)
 - ✅ DTO separation (API ≠ Domain)
 - ✅ Site-scoped routing (explicit tenant context)
@@ -682,13 +740,15 @@ public class TenantMismatchException : Exception
 
 ## 📋 Release Checklist
 
-### Before UAT:
+### Before UAT
+
 - [ ] Update `docs/api/contracts/track-b-frp02.yaml` (1h)
 - [ ] Run spatial regression suite + smoke deploy (30min)
 - [ ] Prepare FRP-02 completion report (30min)
 - [ ] Create UAT demo assets (1h)
 
-### Nice-to-Have:
+### Nice-to-Have
+
 - [ ] Add equipment integration tests (2h)
 - [ ] Add E2E calibration flow test (1h)
 - [ ] Write ADR-004-Spatial-Persistence (30min)
@@ -697,7 +757,7 @@ public class TenantMismatchException : Exception
 
 ## 💬 Feedback to Team
 
-### 🎉 What You Did EXCEPTIONALLY WELL:
+### 🎉 What You Did EXCEPTIONALLY WELL
 
 1. **Execution Plan Refinement** - You identified gaps (FromPersistence, DTOs, config) and addressed them proactively
 2. **Time Estimation** - Revised plan was accurate (~28.5h estimate, ~28.5h actual)
@@ -706,13 +766,13 @@ public class TenantMismatchException : Exception
 5. **Test Coverage** - 95%+ with integration + unit tests is exceptional
 6. **No Shortcuts** - Delivered all 26 items with high quality (no technical debt)
 
-### 🚀 Areas of Growth:
+### 🚀 Areas of Growth
 
 1. **Documentation** - Consider writing ADRs for architectural decisions
 2. **Test Gap** - Equipment integration tests noted as "scheduled next sprint" - prioritize
 3. **API Docs** - Update OpenAPI spec with new endpoints
 
-### 💡 Innovation Recognition:
+### 💡 Innovation Recognition
 
 - **Partial Persistence Files** - Clever use of partial classes for separation of concerns
 - **Custom Test Attributes** - IntegrationFactAttribute for graceful test skipping
@@ -722,7 +782,7 @@ public class TenantMismatchException : Exception
 
 ## 📊 Business Impact
 
-### What This Enables:
+### What This Enables
 
 1. **Spatial Hierarchy** - Customers can model grow rooms, zones, racks, bins
 2. **Equipment Registry** - Track sensors, controllers, valves with calibration
@@ -730,7 +790,7 @@ public class TenantMismatchException : Exception
 4. **Automation** - Valve-to-zone mappings enable irrigation automation
 5. **Multi-Tenancy** - Multiple sites with proper isolation
 
-### Value Proposition:
+### Value Proposition
 
 - ✅ Seed-to-sale tracking (room → zone → plant location)
 - ✅ Equipment health monitoring (heartbeat, calibration overdue)
@@ -741,19 +801,22 @@ public class TenantMismatchException : Exception
 
 ## 🎯 Next Steps
 
-### Immediate (This Session):
+### Immediate (This Session)
+
 1. ✅ **Review feedback** (this document)
 2. 🚧 **Prioritize remaining work** (OpenAPI docs, equipment tests, E2E tests)
 3. 🚧 **Begin FRP-03** (if team capacity allows) OR
 4. 🚧 **Polish FRP-02** (complete remaining 4.5h of work)
 
-### Short-Term (Next Sprint):
+### Short-Term (Next Sprint)
+
 1. Complete equipment integration tests
 2. Update OpenAPI documentation
 3. Write ADR-004-Spatial-Persistence
 4. Prepare UAT handoff
 
-### Medium-Term (Next 2 Weeks):
+### Medium-Term (Next 2 Weeks)
+
 1. FRP-03 (Genetics/Batches)
 2. UAT for FRP-01 + FRP-02
 3. Production deployment prep
@@ -774,4 +837,3 @@ public class TenantMismatchException : Exception
 **Date:** September 30, 2025  
 **Reviewed:** FRP-02 Implementation (~78 files, ~9,200 lines)  
 **Next Review:** Pre-UAT Go/No-Go (after remaining work complete)
-

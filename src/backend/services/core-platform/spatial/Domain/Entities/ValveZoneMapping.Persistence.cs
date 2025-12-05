@@ -26,7 +26,6 @@ public partial class ValveZoneMapping
             Enabled = enabled,
             CreatedAt = createdAt,
             UpdatedAt = updatedAt,
-            CreatedByUserId = createdByUserId,
             UpdatedByUserId = updatedByUserId
         };
     }

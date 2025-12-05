@@ -1,0 +1,61 @@
+/* Animation Keyframes and Classes for Premium Feel */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes shimmy {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Base Transition for all interactive elements */
+.transition-premium {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); /* Standard Ease */
+  transition-duration: 300ms;
+}
+
+/* Widget Entry Animation */
+.animate-in-up {
+  animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Staggered delays for grid items (up to 10 items) */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+.stagger-8 { animation-delay: 400ms; }
+
+/* Skeleton Loading Shine */
+.skeleton-shine {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-surface);
+}
+.skeleton-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 100%
+  );
+  animation: shimmy 2s infinite;
+}
+

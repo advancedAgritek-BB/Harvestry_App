@@ -1,9 +1,12 @@
 # FRP-03 Execution Plan - Genetics, Strains & Batches
 
 **Date:** October 2, 2025  
-**Status:** 🎯 Ready to Start  
+**Status:** ✅ Completed (Retained for historical reference)  
 **Approach:** Build vertically in 3 feature slices  
-**Estimated Time:** 18-22 hours (accounts for shared prep, configuration, and validation work)
+**Estimated Time (Original):** 24-28 hours  
+**Execution Outcome:** Delivered in full — see `FRP03_FINAL_STATUS_UPDATE.md` for the completed scope and test evidence.
+
+> **Note:** The detailed plan below remains unchanged to preserve the original delivery blueprint. All tasks referenced here are complete.
 
 ---
 
@@ -42,7 +45,7 @@ Instead of building all services → all repos → all controllers, we build **c
 - ✅ Reduces integration risk
 - ✅ Can deploy slice-by-slice
 
-**Note:** Total estimate is 20 hours over 4 days (accounts for infrastructure setup, implementation, testing, and deployment wiring). This is conservative and includes breaks, context switching, and configuration tasks.
+**Note:** Total estimate is 24 hours over 5 days (accounts for infrastructure setup, implementation, propagation approvals, testing, and deployment wiring). This is conservative and includes breaks, context switching, and compliance validation tasks.
 
 ---
 
@@ -52,22 +55,22 @@ Instead of building all services → all repos → all controllers, we build **c
 SLICE 1: Genetics & Strains Management
 ├── Service: GeneticsManagementService
 ├── Repos: GeneticsRepository, PhenotypeRepository, StrainRepository
-├── Controller: GeneticsController, StrainsController
+├── Controllers: GeneticsController, StrainsController
 ├── Validators: GeneticsValidators, StrainValidators
 └── Tests: Unit + Integration
 
-SLICE 2: Batch Lifecycle Management
-├── Service: BatchLifecycleService
-├── Repos: BatchRepository, BatchEventRepository, BatchRelationshipRepository
-├── Controller: BatchesController
-├── Validators: BatchValidators
+SLICE 2: Batch Lifecycle & Code Rules
+├── Services: BatchLifecycleService, BatchCodeRuleService
+├── Repos: BatchRepository, BatchEventRepository, BatchRelationshipRepository, BatchCodeRuleRepository
+├── Controllers: BatchesController, BatchCodeRulesController
+├── Validators: BatchLifecycleValidators, BatchCodeRuleValidators
 └── Tests: Unit + Integration
 
-SLICE 3: Mother Plant Health Tracking
-├── Service: MotherHealthService
-├── Repos: MotherPlantRepository, MotherHealthLogRepository
-├── Controller: MotherPlantsController
-├── Validators: MotherPlantValidators
+SLICE 3: Mother Plants & Propagation Controls
+├── Service: MotherHealthService (health + propagation)
+├── Repos: MotherPlantRepository, MotherHealthLogRepository, PropagationSettingsRepository, PropagationOverrideRequestRepository
+├── Controllers: MotherPlantsController, PropagationController
+├── Validators: MotherPlantValidators, PropagationValidators
 └── Tests: Unit + Integration
 ```
 
@@ -78,17 +81,17 @@ SLICE 3: Mother Plant Health Tracking
 Complete these shared tasks before starting the feature slices:
 
 1. **Domain Rehydration Helpers (45 min)**
-   - Add static `FromPersistence(...)` factories (or internal constructors) to `Genetics`, `Phenotype`, `Strain`, `Batch`, `BatchEvent`, `BatchRelationship`, `MotherPlant`, and `MotherHealthLog` so repositories can materialize aggregates without reflection.
-   - Keep persistence-specific guardrails inside the factory to centralize validation and audit stamping.
+   - Add static `FromPersistence(...)` factories (or internal constructors) to `Genetics`, `Phenotype`, `Strain`, `Batch`, `BatchEvent`, `BatchRelationship`, `BatchCodeRule`, `MotherPlant`, `MotherHealthLog`, `PropagationSettings`, and `PropagationOverrideRequest` so repositories can materialize aggregates without reflection.
+   - Keep persistence-specific guardrails inside the factory to centralize validation, propagation limits, and audit stamping.
 
 2. **DTO Mapping Profiles (20 min)**
    - Create an AutoMapper profile (or dedicated mapper class) under `Application/Mappers` to convert between domain entities and API DTOs.
    - Ensures controllers return DTOs rather than exposing domain types directly.
 
-3. **Configuration & DI Checklist (25 min)**
-   - Register `GeneticsDataSourceFactory`, services, repositories, validators, and mappers in the API `Program.cs`.
-   - Wire up a dedicated `GENETICS_DB_CONNECTION` secret across `appsettings.*`, Kubernetes/Helm manifests, and CI secret templates.
-   - Document the environment variable in `docs/infra/environment-variables.md` for operations.
+3. **Configuration & DI Checklist (30 min)**
+   - Register genetics/batch/mother services, repositories (including batch code rules + propagation), validators, and mappers in the existing API `Program.cs`.
+   - Reuse the established multi-tenant database source; add connection retries/config where required rather than introducing a new secret.
+   - Capture a backlog task to wire Slack/email delivery once the communications platform is available; document reminder channels as TBD in `docs/infra/environment-variables.md`.
 
 ---
 
@@ -290,15 +293,7 @@ public record StrainResponse(
 
 ### Task 1.5: Create Repositories (120 min)
 
-**File:** `Infrastructure/Persistence/GeneticsDataSourceFactory.cs`
-
-**Copy from:** `identity/Infrastructure/Persistence/IdentityDataSourceFactory.cs`  
-**Changes:**
-
-- Rename class to `GeneticsDataSourceFactory`
-- Read connection string from `GENETICS_DB_CONNECTION` (new secret managed alongside identity connection)
-
-**Estimated lines:** ~150
+**DI Registration:** reuse existing `NpgsqlDataSource` pooling registered for core platform services; extend DI setup to add genetics repositories without introducing a new connection secret.
 
 ---
 
@@ -333,8 +328,9 @@ public class GeneticsRepository : IGeneticsRepository
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
     
-    public async Task<Genetics?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<Genetics?> GetByIdAsync(Guid id, Guid userId, CancellationToken ct = default)
     {
+        const string setRlsSql = "SET LOCAL app.current_user_id = @userId";
         const string sql = @"
             SELECT id, site_id, name, description, genetic_type,
                    thc_percentage_range, cbd_percentage_range, flowering_time_days,
@@ -344,7 +340,16 @@ public class GeneticsRepository : IGeneticsRepository
             WHERE id = @id";
         
         await using var connection = await _dataSource.OpenConnectionAsync(ct);
-        await using var cmd = new NpgsqlCommand(sql, connection);
+        await using var transaction = await connection.BeginTransactionAsync(ct);
+        
+        // Set RLS context
+        await using (var rlsCmd = new NpgsqlCommand(setRlsSql, connection, transaction))
+        {
+            rlsCmd.Parameters.AddWithValue("userId", userId);
+            await rlsCmd.ExecuteNonQueryAsync(ct);
+        }
+        
+        await using var cmd = new NpgsqlCommand(sql, connection, transaction);
         cmd.Parameters.AddWithValue("id", id);
         
         await using var reader = await cmd.ExecuteReaderAsync(ct);
@@ -389,7 +394,7 @@ public class GeneticsRepository : IGeneticsRepository
 
 **Key implementation notes:**
 
-- Set RLS context: `SET LOCAL app.current_user_id = '{userId}'`
+- **RLS Context:** Accept a `userId` parameter in all repository methods; open connection, begin transaction, execute parameterized `SET LOCAL app.current_user_id = @userId` on the same connection/transaction before running queries
 - Use parameterized queries (SQL injection protection)
 - Implement retry logic for transient errors
 - Proper async/await with cancellation tokens
@@ -464,10 +469,22 @@ public class GeneticsController : ControllerBase
     
     private Guid GetCurrentUserId()
     {
-        // Extract from JWT claims or context
-        var userIdClaim = User.FindFirst("sub")?.Value;
-        return Guid.Parse(userIdClaim ?? throw new UnauthorizedAccessException());
+        // Try multiple common claim keys for user ID
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value
+            ?? User.FindFirst("user_id")?.Value;
+        
+        if (string.IsNullOrWhiteSpace(userIdClaim))
+            throw new UnauthorizedAccessException("User ID claim is missing");
+        
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            throw new UnauthorizedAccessException("User ID claim is not a valid GUID");
+        
+        return userId;
     }
+    
+    // NOTE: For production, extract this helper into a shared ControllerBase in Harvestry.Common
+    // or reuse the existing UsersController.TryGetUserId pattern to avoid duplication across controllers.
 }
 ```
 
@@ -857,92 +874,97 @@ public class GeneticsManagementIntegrationTests : IntegrationTestBase
 
 ---
 
-## 🔧 SLICE 2: BATCH LIFECYCLE MANAGEMENT
+## 🔧 SLICE 2: BATCH LIFECYCLE & STAGE CONFIGURATION
 
-**Goal:** Complete batch lifecycle with state machine and event tracking  
-**Time:** 7-8 hours  
+**Goal:** Deliver batch lifecycle flows plus site-configurable stages, transitions, and code rules  
+**Time:** 8-9 hours  
 **Dependencies:** Slice 1 (Strains must exist)
 
 ### Quick Overview (Detailed steps similar to Slice 1)
 
-**Service:** `BatchLifecycleService.cs` (~500 lines)
+**Services:** `BatchLifecycleService.cs` (~520 lines), `BatchStageConfigurationService.cs` (~320 lines), `BatchCodeRuleService.cs` (~250 lines)
 
-- CreateBatch, GetBatch, UpdateBatch
-- ChangeStage, UpdateLocation, UpdatePlantCount
-- SplitBatch, MergeBatches, QuarantineBatch
-- HarvestBatch, DestroyBatch, GetLineage
-- AddEvent, GetEvents
+- Create/Update/Get batches with regulatory stage enforcement
+- ChangeStage, UpdateLocation, UpdatePlantCount with audit events
+- Split/Merge/Quarantine/Release/Harvest/Destroy flows
+- Generate batch codes using rule engine + preview context
+- Manage stage definitions (CRUD, ordering, defaults), transitions, and approval roles
+- List, upsert, archive batch code rules per site
 
-**Repositories:** `BatchRepository.cs` (~400 lines), `BatchEventRepository.cs` (~200 lines), `BatchRelationshipRepository.cs` (~250 lines)
+**Repositories:** `BatchRepository.cs` (~420 lines), `BatchEventRepository.cs` (~220 lines), `BatchRelationshipRepository.cs` (~260 lines), `BatchStageDefinitionRepository.cs` (~220 lines), `BatchStageTransitionRepository.cs` (~200 lines), `BatchStageHistoryRepository.cs` (~180 lines), `BatchCodeRuleRepository.cs` (~200 lines)
 
 - Standard CRUD with RLS
-- State machine validation queries
-- Lineage relationship queries
-- Event history queries
+- Regulatory stage validation queries + lineage traversal
+- Stage definition ordering + transition checks
+- Event history queries + stage history persistence
+- Rule retrieval, uniqueness, and reset policy queries
 
-**Controller:** `BatchesController.cs` (~400 lines)
+**Controllers:** `BatchesController.cs` (~450 lines), `BatchStagesController.cs` (~260 lines), `BatchCodeRulesController.cs` (~220 lines)
 
 - POST /api/sites/{siteId}/batches
-- GET /api/sites/{siteId}/batches (with filters)
-- GET /api/sites/{siteId}/batches/{batchId}
-- POST /api/sites/{siteId}/batches/{batchId}/stage-change
-- POST /api/sites/{siteId}/batches/{batchId}/split
-- POST /api/sites/{siteId}/batches/merge
-- POST /api/sites/{siteId}/batches/{batchId}/quarantine
-- POST /api/sites/{siteId}/batches/{batchId}/harvest
-- GET /api/sites/{siteId}/batches/{batchId}/lineage
-- GET /api/sites/{siteId}/batches/{batchId}/events
+- PUT /api/sites/{siteId}/batches/{batchId}
+- GET /api/sites/{siteId}/batches (filters: status, stageId)
+- Stage change, split, merge, quarantine, release-quarantine, harvest, destroy endpoints
+- Lineage + event endpoints
+- GET/POST/PUT/DELETE /api/sites/{siteId}/batch-stages
+- POST /api/sites/{siteId}/batch-stages/reorder
+- GET/POST/DELETE /api/sites/{siteId}/batch-stages/transitions
+- GET/POST/PUT/DELETE /api/sites/{siteId}/batch-code-rules
+- POST /api/sites/{siteId}/batch-code-rules/preview
 
-**Validators:** `BatchValidators.cs` (~200 lines)
+**Validators:** `BatchLifecycleValidators.cs`, `BatchStageValidators.cs`, `BatchCodeRuleValidators.cs` (~340 lines combined)
 
-**Tests:** 4 files (~600 lines total)
+**Tests:** 6 files (~900 lines total)
 
-- BatchTests.cs (unit - state machine)
+- BatchTests.cs (unit - state machine + regulatory stages)
 - BatchLifecycleServiceTests.cs (unit)
-- BatchLifecycleIntegrationTests.cs (integration)
-- RlsBatchTests.cs (integration - RLS)
+- BatchStageDefinitionTests.cs / BatchStageTransitionTests.cs (unit)
+- BatchStageConfigurationIntegrationTests.cs (integration)
+- BatchCodeRuleServiceTests.cs (unit)
+- RlsBatchStagesAndRulesTests.cs (integration - RLS)
+
+> Stage templates ship with recommended defaults; capture optional commissioning tasks for customer onboarding if bespoke stage design is needed.
 
 ---
 
 ## 🔧 SLICE 3: MOTHER PLANT HEALTH TRACKING
 
 **Goal:** Mother plant registry with health logging  
-**Time:** 4-5 hours  
+**Time:** 5-6 hours  
 **Dependencies:** Slice 2 (Batches must exist)
 
 ### Quick Overview
 
-**Service:** `MotherHealthService.cs` (~300 lines)
+**Service:** `MotherHealthService.cs` (~380 lines)
 
-- CreateMotherPlant, GetMotherPlant, UpdateMotherPlant
-- RecordHealthLog, GetHealthLogs, GetHealthSummary
-- PropagateMotherPlant, RetireMotherPlant, ReactivateMotherPlant
-- UpdateLocation, GetOverdueForHealthCheck
+- Create/Update/Get mother plants + location management
+- RecordHealthLog with `HealthAssessment` value object
+- Register propagation counts and enforce site-wide limits
+- Raise propagation override requests + route approvals
+- Manage reminder cadence + overdue health checks
 
-**Repositories:** `MotherPlantRepository.cs` (~300 lines), `MotherHealthLogRepository.cs` (~200 lines)
+**Repositories:** `MotherPlantRepository.cs` (~320 lines), `MotherHealthLogRepository.cs` (~220 lines), `PropagationSettingsRepository.cs` (~180 lines), `PropagationOverrideRequestRepository.cs` (~220 lines)
 
 - Standard CRUD with RLS
-- Health log queries (by date range, by status)
-- Propagation tracking queries
-- Overdue health check queries
+- Health log analytics (status trends, window queries)
+- Propagation limit calculations (daily/weekly/mother specific)
+- Override request persistence + decision audit
 
-**Controller:** `MotherPlantsController.cs` (~250 lines)
+**Controllers:** `MotherPlantsController.cs` (~320 lines), `PropagationController.cs` (~220 lines)
 
-- POST /api/sites/{siteId}/mother-plants
-- GET /api/sites/{siteId}/mother-plants (with filters)
-- GET /api/sites/{siteId}/mother-plants/{motherPlantId}
-- POST /api/sites/{siteId}/mother-plants/{motherPlantId}/health-log
-- POST /api/sites/{siteId}/mother-plants/{motherPlantId}/propagate
-- GET /api/sites/{siteId}/mother-plants/{motherPlantId}/health-logs
-- GET /api/sites/{siteId}/mother-plants/{motherPlantId}/health-summary
+- CRUD + health log endpoints for mother plants
+- Register propagation + request override endpoints
+- Site-wide propagation settings (GET/PUT)
+- Override lists + approval endpoints
 
-**Validators:** `MotherPlantValidators.cs` (~150 lines)
+**Validators:** `MotherPlantValidators.cs`, `PropagationValidators.cs` (~240 lines combined)
 
-**Tests:** 3 files (~400 lines total)
+**Tests:** 4 files (~520 lines total)
 
-- MotherPlantTests.cs (unit - health tracking)
+- MotherPlantTests.cs (unit - health + propagation)
+- PropagationSettingsTests.cs (unit)
 - MotherHealthServiceTests.cs (unit)
-- MotherPlantIntegrationTests.cs (integration)
+- PropagationControlIntegrationTests.cs (integration)
 
 ---
 
@@ -956,7 +978,7 @@ public class GeneticsManagementIntegrationTests : IntegrationTestBase
 
 ### Day 2 (6 hours) - Slice 1 Part 2
 
-- Morning (3h): Complete Task 1.4 and build `GeneticsDataSourceFactory`
+- Morning (3h): Complete Task 1.4 and finalize mapper/validator wiring for genetics/phenotypes
 - Afternoon (3h): GeneticsRepository + PhenotypeRepository + StrainRepository (Task 1.5)
 
 ### Day 3 (5 hours) - Slice 1 Part 3 + Slice 2 Start
@@ -964,19 +986,19 @@ public class GeneticsManagementIntegrationTests : IntegrationTestBase
 - Morning (2h): Task 1.6 (controllers with explicit routing + DTO responses)
 - Midday (1h): Task 1.7 (validators)
 - Afternoon (2h): Tasks 1.8-1.9 (unit + integration tests)
-- Evening (1h): Begin Slice 2 (BatchLifecycleService interface + DTOs)
+- Evening (1h): Begin Slice 2 (BatchLifecycle + Stage/Rule service interfaces & DTOs)
 
 ### Day 4 (6 hours) - Slice 2 Complete
 
-- Morning (3h): BatchLifecycleService + repositories (with mapper + rehydration helpers)
-- Afternoon (3h): BatchesController + validators + tests
+- Morning (3h): BatchLifecycleService + stage configuration service + repositories (batches/events/relationships/stages/Transitions)
+- Afternoon (3h): BatchesController + BatchStagesController + BatchCodeRulesController + validators + initial tests
 
 ### Day 5 (4 hours) - Slice 3 Complete
 
-- Morning (2.5h): MotherHealthService + repositories + controller
-- Afternoon (1.5h): Validators + tests + final integration
+- Morning (2.5h): MotherHealthService + propagation repositories + controller pair
+- Afternoon (1.5h): Propagation validators + override approval wiring + integration smoke tests
 
-**Total:** 27 hours over 5 days (includes pre-slice setup, implementation, testing, and configuration/DI wiring)
+**Total:** 24 hours over 5 days (includes pre-slice setup, implementation, propagation approvals, testing, and configuration/DI wiring)
 
 ---
 
@@ -1065,7 +1087,7 @@ Before marking a slice complete, verify:
 FRP-03 is successfully complete when:
 
 - ✅ All 3 slices delivered and tested
-- ✅ 21/21 checklist items marked complete
+- ✅ All checklist items marked complete
 - ✅ All acceptance criteria met
 - ✅ Performance targets met (p95 < 200ms)
 - ✅ Documentation updated
@@ -1076,4 +1098,3 @@ FRP-03 is successfully complete when:
 ---
 
 **Ready to start?** Begin with **Slice 1, Task 1.1** (Folder Structure) 🚀
-

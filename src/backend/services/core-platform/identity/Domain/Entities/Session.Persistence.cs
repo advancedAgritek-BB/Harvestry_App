@@ -6,7 +6,7 @@ namespace Harvestry.Identity.Domain.Entities;
 
 public sealed partial class Session
 {
-public static Session Restore(
+    public static Session Restore(
         Guid id,
         Guid userId,
         Guid? siteId,

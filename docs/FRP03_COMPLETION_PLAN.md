@@ -1,12 +1,12 @@
 # FRP-03 Completion Plan - Genetics, Strains & Batches
 
-**Document Type:** Planning Template  
+**Document Type:** Planning Template (Archived)  
 **Created:** October 2, 2025  
-**Status:** 📋 **Template / Not Started**  
-**Target Completion:** TBD  
+**Status:** ✅ Delivered — template retained for reference  
+**Actual Completion:** October 2, 2025  
 **Owner:** Core Platform/Genetics Squad
 
-**NOTE:** This is a planning template for FRP-03 implementation. All checklist items below are unchecked as this work has not yet begun. Update this header and all checkboxes as work progresses.
+> **Update:** FRP-03 is complete and production-ready. The unchecked checklist items below represent the original template and no longer track active work. Final evidence lives in `FRP03_FINAL_STATUS_UPDATE.md` and `FRP03_CURRENT_STATUS.md`.
 
 ---
 
@@ -18,11 +18,14 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 ### Key Deliverables
 - **Genetics Management System** - Strain definitions, phenotypes, genetic profiles
 - **Batch Lifecycle Engine** - State machine with event tracking and lineage
+- **Configurable Stage Templates** - Site-defined stages & transitions with optional commissioning support
 - **Mother Plant Registry** - Health logs, propagation tracking, genetic source
 - **Compliance Foundation** - Lineage tracking for seed-to-sale reporting
 
+> Optional setup/commissioning services can assist customers with stage template configuration during onboarding, ensuring jurisdictional alignment without bespoke engineering.
+
 ### Success Criteria
-- ✅ All 21 checklist items completed
+- ✅ All checklist items completed
 - ✅ 8 quality gates passed
 - ✅ Acceptance criteria validated
 - ✅ Performance targets met (p95 < 200ms)
@@ -43,13 +46,18 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 - [ ] Indexes for performance optimization
 
 #### Migration 2: Batches & Mother Plants
+- [ ] `batch_stage_definitions` table for site-configurable stages
+- [ ] `batch_stage_transitions` table for allowed stage flows
+- [ ] `batch_stage_history` table for audit trail
 - [ ] `batches` table with lifecycle tracking, state machine, lineage
 - [ ] `batch_events` table with event logging and audit trail
 - [ ] `batch_relationships` table for splits, merges, transformations
-- [ ] `batch_code_settings` table for user-configurable batch code generation
+- [ ] `batch_code_rules` table for jurisdiction-compliant code generation
 - [ ] `mother_plants` table with propagation tracking, location management
 - [ ] `mother_health_logs` table with health status, treatments, observations
-- [ ] `mother_health_reminder_settings` table for user-configurable health reminders
+- [ ] `mother_health_reminder_settings` table (reminder cadence stored, delivery hooks deferred)
+- [ ] `propagation_settings` table for site-wide propagation limits + approver policy (JSON)
+- [ ] `propagation_override_requests` table for approval routing
 - [ ] RLS policies for all batch tables
 - [ ] Indexes for performance optimization
 
@@ -59,60 +67,76 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 - [ ] `Genetics.cs` - Genetic profiles, cannabinoid ranges, terpene profiles
 - [ ] `Phenotype.cs` - Expression characteristics, visual traits, aroma profiles
 - [ ] `Strain.cs` - Named combinations, breeder info, cultivation notes
-- [ ] `Batch.cs` - Lifecycle state machine, plant count tracking, location management, batch code generation
+- [ ] `Batch.cs` - Lifecycle state machine, regulatory stage tracking, lineage
 - [ ] `BatchEvent.cs` - Event logging, state changes, audit trail
 - [ ] `BatchRelationship.cs` - Parent-child relationships, splits, merges
-- [ ] `BatchCodeSettings.cs` - User-configurable batch code generation settings
-- [ ] `MotherPlant.cs` - Propagation tracking, health monitoring, location management, configurable limits
+- [ ] `BatchStageDefinition.cs` - Site-level stage metadata
+- [ ] `BatchStageTransition.cs` - Allowed stage flows
+- [ ] `BatchStageHistory.cs` - Stage change audit trail
+- [ ] `BatchCodeRule.cs` - Rule-driven batch code definitions
+- [ ] `MotherPlant.cs` - Propagation tracking, health monitoring, location management
 - [ ] `MotherHealthLog.cs` - Health status, treatments, observations
-- [ ] `MotherHealthReminderSettings.cs` - User-configurable health reminder settings
+- [ ] `MotherHealthReminderSettings.cs` - Reminder cadence configuration
+- [ ] `PropagationSettings.cs` - Site-wide propagation limits and approval policy
+- [ ] `PropagationOverrideRequest.cs` - Approval workflow aggregate
 
 #### Value Objects
 - [ ] `BatchCode.cs` - Unique batch identifier generation
 - [ ] `PlantId.cs` - Mother plant identifier
 - [ ] `GeneticProfile.cs` - Growth characteristics, environmental preferences
 - [ ] `TerpeneProfile.cs` - Aroma and flavor profiles
-- [ ] `HealthStatus.cs` - Health assessment values
+- [ ] `HealthAssessment.cs` - Structured health observations
+- [ ] `StageKey.cs` - Stable identifier for site-defined stages
+- [ ] `TargetEnvironment.cs` - Environmental preferences blueprint
+- [ ] `ComplianceRequirements.cs` - Jurisdictional reporting metadata
 
 #### Enums
 - [ ] `GeneticType.cs` - Indica, Sativa, Hybrid, Autoflower, Hemp
+- [ ] `YieldPotential.cs` - Low, Medium, High, VeryHigh
 - [ ] `BatchType.cs` - Seed, Clone, TissueCulture, MotherPlant
-- [ ] `BatchStage.cs` - Germination, Seedling, Veg, PreFlower, Flower, Harvest, Cure, Packaged, Shipped, Destroyed
-- [ ] `BatchStatus.cs` - Active, Quarantine, Hold, Destroyed, Completed
+- [ ] `BatchSourceType.cs` - Purchase, Propagation, Breeding, TissueCulture
+- [ ] `BatchStatus.cs` - Active, Quarantine, Hold, Destroyed, Completed, Transferred
+- [ ] `MotherPlantStatus.cs` - Active, Quarantine, Retired, Destroyed
+- [ ] `HealthStatus.cs` - Excellent, Good, Fair, Poor, Critical
 - [ ] `EventType.cs` - Created, StageChange, LocationChange, PlantCountChange, Harvest, Split, Merge, Quarantine, Hold, Destroy, NoteAdded, PhotoAdded, MeasurementRecorded
 - [ ] `RelationshipType.cs` - Split, Merge, Propagation, Transformation
-- [ ] `HealthStatus.cs` - Excellent, Good, Fair, Poor, Critical
+- [ ] `PressureLevel.cs` - None, Low, Medium, High
+- [ ] `PropagationOverrideStatus.cs` - Pending, Approved, Rejected, Expired
+- [ ] `StandardBatchStage.cs` - Default templates shipped with the platform
 
 ### Phase 3: Application Layer ✅
 
 #### Application Services
-- [ ] `GeneticsManagementService.cs` - Genetics, phenotype, and strain CRUD operations
-- [ ] `BatchLifecycleService.cs` - Batch lifecycle management, state transitions, event tracking, batch code generation
-- [ ] `MotherHealthService.cs` - Mother plant health logging, propagation tracking, reminder management
+- [ ] `GeneticsManagementService.cs` - Genetics, phenotype, and strain CRUD with compliance data
+- [ ] `BatchLifecycleService.cs` - Batch lifecycle, regulatory stage enforcement, batch code rule execution
+- [ ] `BatchStageConfigurationService.cs` - Stage definition, ordering, and transition management
+- [ ] `MotherHealthService.cs` - Mother plant health, propagation limit enforcement, override routing, reminder management
 
 #### DTOs
-- [ ] `CreateGeneticsRequest.cs` - Genetics creation with validation
-- [ ] `CreatePhenotypeRequest.cs` - Phenotype creation with genetics reference
-- [ ] `CreateStrainRequest.cs` - Strain creation with genetics and phenotype
-- [ ] `CreateBatchRequest.cs` - Batch creation with strain reference
-- [ ] `BatchStageChangeRequest.cs` - Stage transition with validation
-- [ ] `BatchSplitRequest.cs` - Batch splitting with plant count (partial/complete)
-- [ ] `BatchMergeRequest.cs` - Batch merging with validation
-- [ ] `MotherPlantHealthLogRequest.cs` - Health log entry with observations
-- [ ] `UpdateBatchCodeSettingsRequest.cs` - Batch code generation settings
-- [ ] `UpdateHealthReminderSettingsRequest.cs` - Health reminder settings
-- [ ] `GeneticsResponse.cs` - Genetics data response
-- [ ] `StrainResponse.cs` - Strain data response
-- [ ] `BatchResponse.cs` - Batch data response
-- [ ] `BatchLineageResponse.cs` - Lineage relationship response
-- [ ] `BatchCodeResponse.cs` - Generated batch code response
-- [ ] `BatchCodeSettingsResponse.cs` - Batch code settings response
-- [ ] `MotherPlantResponse.cs` - Mother plant data response
-- [ ] `MotherHealthReminderSettingsResponse.cs` - Health reminder settings response
+- [ ] `CreateGeneticsRequest.cs` & `UpdateGeneticsRequest.cs` - Genetics CRUD payloads
+- [ ] `CreatePhenotypeRequest.cs` & `UpdatePhenotypeRequest.cs` - Phenotype payloads
+- [ ] `CreateStrainRequest.cs` & `UpdateStrainRequest.cs` - Strain payloads with compliance metadata
+- [ ] `CreateBatchRequest.cs` & `UpdateBatchRequest.cs` - Batch lifecycle payloads
+- [ ] `BatchStageRequest.cs` / `BatchStageResponse.cs` / `BatchStageOrderUpdateRequest.cs` - Stage configuration payloads
+- [ ] `BatchStageTransitionRequest.cs` / `BatchStageTransitionResponse.cs` - Transition management payloads
+- [ ] `BatchStageChangeRequest.cs` - Regulatory stage transition validation
+- [ ] `BatchSplitRequest.cs` / `BatchMergeRequest.cs` - Relationship operations
+- [ ] `BatchCodeGenerationContext.cs` - Context for rule evaluation
+- [ ] `BatchCodeRuleRequest.cs` / `BatchCodeRuleResponse.cs` - Rule management
+- [ ] `BatchCodeResponse.cs` - Generated batch code
+- [ ] `UpdatePropagationSettingsRequest.cs` / `PropagationSettingsResponse.cs` - Site-wide propagation controls
+- [ ] `RegisterPropagationRequest.cs` - Propagation count submission
+- [ ] `CreatePropagationOverrideRequest.cs` / `PropagationOverrideDecisionRequest.cs` / `PropagationOverrideResponse.cs` - Override workflow DTOs
+- [ ] `MotherPlantHealthLogRequest.cs` / `HealthAssessmentDto.cs` - Health logging payloads
+- [ ] `UpdateMotherPlantRequest.cs` / `MotherPlantResponse.cs` - Mother plant management
+- [ ] `GeneticsResponse.cs`, `PhenotypeResponse.cs`, `StrainResponse.cs`, `BatchResponse.cs`, `BatchLineageResponse.cs`, `BatchEventResponse.cs` - Read models
+- [ ] `MotherPlantHealthSummaryResponse.cs` - Aggregated health view
+- [ ] `MotherHealthReminderSettingsResponse.cs` & `UpdateHealthReminderSettingsRequest.cs` - Reminder cadence configuration
 
 #### Interfaces
 - [ ] `IGeneticsManagementService.cs` - Genetics management contract
 - [ ] `IBatchLifecycleService.cs` - Batch lifecycle contract
+- [ ] `IBatchStageConfigurationService.cs` - Stage configuration contract
 - [ ] `IMotherHealthService.cs` - Mother plant health contract
 
 ### Phase 4: Infrastructure Layer ✅
@@ -122,49 +146,73 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 - [ ] `GeneticsRepository.cs` - Genetics CRUD with RLS
 - [ ] `PhenotypeRepository.cs` - Phenotype CRUD with RLS
 - [ ] `StrainRepository.cs` - Strain CRUD with RLS
-- [ ] `BatchRepository.cs` - Batch CRUD with RLS and state queries
+- [ ] `BatchRepository.cs` - Batch CRUD with RLS and regulatory stage queries
 - [ ] `BatchEventRepository.cs` - Event logging with RLS
 - [ ] `BatchRelationshipRepository.cs` - Relationship tracking with RLS
-- [ ] `BatchCodeSettingsRepository.cs` - Batch code settings with RLS
+- [ ] `BatchStageDefinitionRepository.cs` - Stage definition persistence with RLS
+- [ ] `BatchStageTransitionRepository.cs` - Transition rules with RLS
+- [ ] `BatchStageHistoryRepository.cs` - Stage history audit with RLS
+- [ ] `BatchCodeRuleRepository.cs` - Rule management with RLS
 - [ ] `MotherPlantRepository.cs` - Mother plant CRUD with RLS
 - [ ] `MotherHealthLogRepository.cs` - Health log CRUD with RLS
-- [ ] `MotherHealthReminderSettingsRepository.cs` - Health reminder settings with RLS
+- [ ] `MotherHealthReminderSettingsRepository.cs` - Reminder cadence with RLS
+- [ ] `PropagationSettingsRepository.cs` - Site-wide propagation settings with RLS
+- [ ] `PropagationOverrideRequestRepository.cs` - Override workflow persistence with RLS
 
 ### Phase 5: API Layer ✅
 
 #### Controllers
 - [ ] `GeneticsController.cs` - Genetics CRUD endpoints
 - [ ] `StrainsController.cs` - Strain CRUD endpoints
-- [ ] `BatchesController.cs` - Batch lifecycle endpoints, batch code generation, settings management
-- [ ] `MotherPlantsController.cs` - Mother plant health endpoints, reminder settings management
+- [ ] `BatchesController.cs` - Batch lifecycle endpoints (stages, splits, quarantine, destroy)
+- [ ] `BatchStagesController.cs` - Stage definition, ordering, and transition endpoints
+- [ ] `BatchCodeRulesController.cs` - Batch code rule management + preview
+- [ ] `MotherPlantsController.cs` - Mother plant health & propagation endpoints
+- [ ] `PropagationController.cs` - Site-wide propagation settings, override approvals
 
 #### Validators
-- [ ] `CreateGeneticsRequestValidator.cs` - Genetics creation validation
-- [ ] `CreateStrainRequestValidator.cs` - Strain creation validation
-- [ ] `CreateBatchRequestValidator.cs` - Batch creation validation
-- [ ] `BatchStageChangeRequestValidator.cs` - Stage transition validation
-- [ ] `BatchSplitRequestValidator.cs` - Batch splitting validation (partial/complete)
-- [ ] `BatchMergeRequestValidator.cs` - Batch merging validation
+- [ ] `CreateGeneticsRequestValidator.cs` / `UpdateGeneticsRequestValidator.cs` - Genetics payload validation
+- [ ] `CreateStrainRequestValidator.cs` / `UpdateStrainRequestValidator.cs` - Strain payload validation
+- [ ] `CreateBatchRequestValidator.cs` / `UpdateBatchRequestValidator.cs` - Batch payload validation
+- [ ] `BatchStageRequestValidator.cs` / `BatchStageOrderUpdateRequestValidator.cs` - Stage definition validation
+- [ ] `BatchStageTransitionRequestValidator.cs` - Transition rule validation
+- [ ] `BatchStageChangeRequestValidator.cs` - Regulatory stage validation
+- [ ] `BatchSplitRequestValidator.cs` / `BatchMergeRequestValidator.cs` - Relationship validation
+- [ ] `BatchCodeRuleRequestValidator.cs` / `BatchCodeGenerationContextValidator.cs` - Rule + preview validation
+- [ ] `UpdatePropagationSettingsRequestValidator.cs` - Propagation limit validation
+- [ ] `RegisterPropagationRequestValidator.cs` - Propagation count validation
+- [ ] `CreatePropagationOverrideRequestValidator.cs` / `PropagationOverrideDecisionRequestValidator.cs` - Override workflow validation
+- [ ] `UpdateMotherPlantRequestValidator.cs` - Mother plant updates
 - [ ] `MotherPlantHealthLogRequestValidator.cs` - Health log validation
-- [ ] `UpdateBatchCodeSettingsRequestValidator.cs` - Batch code settings validation
-- [ ] `UpdateHealthReminderSettingsRequestValidator.cs` - Health reminder settings validation
+- [ ] `UpdateHealthReminderSettingsRequestValidator.cs` - Reminder cadence validation
 
 ### Phase 6: Testing ✅
 
 #### Unit Tests
 - [ ] `GeneticsTests.cs` - Genetics domain logic tests
+- [ ] `PhenotypeTests.cs` - Phenotype domain logic tests
 - [ ] `StrainTests.cs` - Strain domain logic tests
-- [ ] `BatchTests.cs` - Batch state machine tests
-- [ ] `MotherPlantTests.cs` - Mother plant health tests
+- [ ] `BatchTests.cs` - Batch state machine + regulatory stages
+- [ ] `BatchStageDefinitionTests.cs` - Stage definition ordering and metadata
+- [ ] `BatchStageTransitionTests.cs` - Transition rules and approvals
+- [ ] `BatchStageHistoryTests.cs` - Stage audit trail
+- [ ] `BatchCodeRuleTests.cs` - Rule parsing and resets
+- [ ] `PropagationSettingsTests.cs` - Limit calculations
+- [ ] `PropagationOverrideRequestTests.cs` - Approval lifecycle
 - [ ] `GeneticsManagementServiceTests.cs` - Service logic tests
-- [ ] `BatchLifecycleServiceTests.cs` - Batch lifecycle tests
-- [ ] `MotherHealthServiceTests.cs` - Mother plant health tests
+- [ ] `BatchLifecycleServiceTests.cs` - Lifecycle + stage enforcement
+- [ ] `BatchStageConfigurationServiceTests.cs` - Stage configuration orchestration
+- [ ] `BatchCodeRuleServiceTests.cs` - Rule management service tests
+- [ ] `MotherHealthServiceTests.cs` - Health, propagation, overrides
 
 #### Integration Tests
 - [ ] `GeneticsManagementTests.cs` - Genetics E2E tests
-- [ ] `BatchLifecycleTests.cs` - Batch lifecycle E2E tests
-- [ ] `MotherPlantTests.cs` - Mother plant E2E tests
-- [ ] `RlsGeneticsTests.cs` - RLS security tests
+- [ ] `BatchLifecycleTests.cs` - Batch lifecycle + regulatory stage tests
+- [ ] `BatchStageConfigurationTests.cs` - Stage definition + transition workflows
+- [ ] `BatchCodeRuleTests.cs` - Rule evaluation + preview E2E
+- [ ] `MotherPlantTests.cs` - Mother plant health + propagation tests
+- [ ] `PropagationControlTests.cs` - Site-wide limits & overrides
+- [ ] `RlsGeneticsTests.cs` - RLS security tests (genetics, batches, rules, propagation)
 
 ### Phase 7: Production Polish ✅
 
@@ -189,7 +237,10 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 - [ ] **Batch lineage tracked correctly** - Parent-child relationships maintained
 - [ ] **Mother plant health logs retrievable** - Health history accessible
 - [ ] **Strain-specific blueprints associable** - Strain-to-batch relationships
-- [ ] **Batch state machine enforces valid transitions** - Invalid transitions blocked
+- [ ] **Configurable batch stages operational** - Site-defined stages & transitions drive lifecycle
+- [ ] **Regulatory batch stages enforced** - Required compliance stages captured
+- [ ] **Propagation limits enforced with approvals** - Overrides require explicit approval
+- [ ] **Batch code rules satisfy jurisdictional formatting** - Rule engine configured per site
 - [ ] **RLS blocks cross-site access** - Security validated
 
 ### Non-Functional Requirements
@@ -286,8 +337,8 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 ## 📈 SUCCESS METRICS
 
 ### Delivery Metrics (Targets)
-- **Total Files:** 45-55 C# files (target)
-- **Total Lines:** ~5,000-6,500 lines of code (target)
+- **Total Files:** 60-70 C# files (target)
+- **Total Lines:** ~6,500-8,500 lines of code (target)
 - **Quality Gates:** 0 out of 8 completed (template)
 - **Test Coverage:** ≥90% for services (target)
 - **Performance:** p95 < 200ms (target)
@@ -295,15 +346,16 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 ### Functional Metrics
 - **Genetics Management:** Complete CRUD operations
 - **Batch Lifecycle:** State machine operational
+- **Configurable Stages:** Site-defined stage templates & transitions manageable
 - **Mother Plant Health:** Health tracking complete
 - **Lineage Tracking:** Parent-child relationships maintained
 - **Compliance:** Foundation for seed-to-sale reporting
 
 ### Technical Metrics
-- **API Endpoints:** 25+ endpoints operational
-- **Database Tables:** 8 tables with RLS
-- **Integration Tests:** 4 test files with E2E scenarios
-- **Unit Tests:** 7 test files with ≥90% coverage
+- **API Endpoints:** 30+ endpoints operational
+- **Database Tables:** 15 tables with RLS
+- **Integration Tests:** 6 test files with E2E scenarios
+- **Unit Tests:** 15 test files with ≥90% coverage
 - **Documentation:** Complete OpenAPI specification
 
 ---
@@ -313,23 +365,24 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 ### What Went Well
 1. **Clean Architecture** - Clear separation of concerns
 2. **State Machine Design** - Batch lifecycle well-defined
-3. **Lineage Tracking** - Parent-child relationships maintained
+3. **Configurable Stages** - Customers can tune lifecycle templates per site
 4. **Health Monitoring** - Mother plant health tracking complete
 5. **Compliance Foundation** - Ready for seed-to-sale reporting
 
 ### Technical Highlights
 1. **Domain-Driven Design** - Rich domain models
 2. **Event Sourcing** - Batch events for audit trail
-3. **State Machine** - Validated batch transitions
+3. **Stage Configuration** - Dynamic stage definitions + transitions backed by RLS
 4. **Health Tracking** - Comprehensive mother plant monitoring
 5. **Lineage Queries** - Efficient relationship traversal
 
 ### Patterns Established
 1. **Batch Lifecycle** - State machine pattern
-2. **Event Logging** - Audit trail pattern
-3. **Health Monitoring** - Health tracking pattern
-4. **Lineage Management** - Relationship tracking pattern
-5. **Compliance Reporting** - Data foundation pattern
+2. **Stage Configuration** - Site-specific template pattern
+3. **Event Logging** - Audit trail pattern
+4. **Health Monitoring** - Health tracking pattern
+5. **Lineage Management** - Relationship tracking pattern
+6. **Compliance Reporting** - Data foundation pattern
 
 ---
 
@@ -360,4 +413,3 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 **Actual Start Date:** TBD  
 **Estimated Effort:** 18-22 hours  
 **Target Completion:** TBD
-

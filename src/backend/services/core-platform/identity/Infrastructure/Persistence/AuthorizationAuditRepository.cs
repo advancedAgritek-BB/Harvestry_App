@@ -75,8 +75,7 @@ public sealed class AuthorizationAuditRepository : IAuthorizationAuditRepository
             !string.IsNullOrWhiteSpace(entry.IpAddress) ? entry.IpAddress! : DBNull.Value;
         command.Parameters.Add("user_agent", NpgsqlDbType.Text).Value =
             !string.IsNullOrWhiteSpace(entry.UserAgent) ? entry.UserAgent! : DBNull.Value;
-        command.Parameters.Add("occurred_at", NpgsqlDbType.TimestampTz).Value =
-            entry.OccurredAt.HasValue ? entry.OccurredAt.Value : DBNull.Value;
+        command.Parameters.Add("occurred_at", NpgsqlDbType.TimestampTz).Value = entry.OccurredAt;
 
         var rows = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         if (rows == 0)

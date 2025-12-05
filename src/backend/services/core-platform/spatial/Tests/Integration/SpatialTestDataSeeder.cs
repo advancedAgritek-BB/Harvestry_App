@@ -20,7 +20,7 @@ internal static class SpatialTestDataSeeder
         var dbContext = services.GetRequiredService<SpatialDbContext>();
         var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("SpatialTestDataSeeder");
 
-        await dbContext.SetRlsContextAsync(Guid.Empty, "admin", null, cancellationToken).ConfigureAwait(false);
+        await dbContext.SetRlsContextAsync(Guid.Empty, "admin", null, cancellationToken);
 
         var connection = transaction.Connection ?? throw new InvalidOperationException("Transaction connection not available.");
         await using var command = connection.CreateCommand();
@@ -52,7 +52,7 @@ internal static class SpatialTestDataSeeder
 
         try
         {
-            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await command.ExecuteNonQueryAsync(cancellationToken);
         }
         catch (PostgresException ex)
         {
@@ -61,7 +61,7 @@ internal static class SpatialTestDataSeeder
         }
         finally
         {
-            await dbContext.ResetRlsContextAsync(cancellationToken).ConfigureAwait(false);
+            await dbContext.ResetRlsContextAsync(cancellationToken);
         }
     }
 }

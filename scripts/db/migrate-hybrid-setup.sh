@@ -36,8 +36,7 @@ if [ -f .env.local ]; then
             value="${value%\"}"
             value="${value#\'}"
             value="${value%\'}"
-            declare -g "$key=$value"
-            export "$key"
+            declare -gx "$key=$value"
         fi
     done < .env.local
     set +a

@@ -6,30 +6,95 @@ namespace Harvestry.Spatial.Domain.Enums;
 /// </summary>
 public enum CoreEquipmentType
 {
+    // -------------------------------------------------------------------------
+    // CONTROLLERS
+    // -------------------------------------------------------------------------
+    
     /// <summary>
-    /// Environmental or irrigation controller
+    /// Environmental or irrigation controller (generic)
     /// </summary>
     Controller,
     
     /// <summary>
-    /// Sensor (temperature, humidity, EC, pH, VWC, CO2, PPFD, etc.)
+    /// EC/pH controller (inline fertigation control)
     /// </summary>
-    Sensor,
+    EcPhController,
+    
+    // -------------------------------------------------------------------------
+    // WATER QUALITY SENSORS
+    // -------------------------------------------------------------------------
     
     /// <summary>
-    /// Actuator (generic)
+    /// pH sensor - measures acidity/alkalinity
     /// </summary>
-    Actuator,
+    PhSensor,
     
     /// <summary>
-    /// Nutrient injector/dosing pump
+    /// EC sensor - measures electrical conductivity (nutrient strength)
     /// </summary>
-    Injector,
+    EcSensor,
     
     /// <summary>
-    /// Pump (irrigation, recirculation, etc.)
+    /// Dissolved Oxygen (DO) sensor
     /// </summary>
-    Pump,
+    DoSensor,
+    
+    /// <summary>
+    /// Oxidation-Reduction Potential (ORP) sensor
+    /// </summary>
+    OrpSensor,
+    
+    /// <summary>
+    /// Water temperature sensor
+    /// </summary>
+    WaterTempSensor,
+    
+    // -------------------------------------------------------------------------
+    // ENVIRONMENTAL SENSORS
+    // -------------------------------------------------------------------------
+    
+    /// <summary>
+    /// Temperature/Humidity sensor (combined)
+    /// </summary>
+    TempHumiditySensor,
+    
+    /// <summary>
+    /// CO2 sensor
+    /// </summary>
+    Co2Sensor,
+    
+    /// <summary>
+    /// Light sensor (PAR/PPFD)
+    /// </summary>
+    LightSensor,
+    
+    /// <summary>
+    /// Substrate/soil moisture sensor (VWC)
+    /// </summary>
+    SubstrateSensor,
+    
+    // -------------------------------------------------------------------------
+    // FLOW & LEVEL SENSORS
+    // -------------------------------------------------------------------------
+    
+    /// <summary>
+    /// Flow meter (measures flow rate/volume)
+    /// </summary>
+    FlowMeter,
+    
+    /// <summary>
+    /// Pressure sensor
+    /// </summary>
+    PressureSensor,
+    
+    /// <summary>
+    /// Level sensor (tank/reservoir level)
+    /// </summary>
+    LevelSensor,
+    
+    // -------------------------------------------------------------------------
+    // ACTUATORS & PUMPS
+    // -------------------------------------------------------------------------
     
     /// <summary>
     /// Valve (solenoid, motorized, etc.)
@@ -37,19 +102,83 @@ public enum CoreEquipmentType
     Valve,
     
     /// <summary>
-    /// Meter (flow, pressure, etc.)
+    /// Pump (irrigation, recirculation, etc.)
     /// </summary>
-    Meter,
+    Pump,
     
     /// <summary>
-    /// EC/pH controller (inline control)
+    /// Nutrient injector/dosing pump
     /// </summary>
-    EcPhController,
+    Injector,
+    
+    /// <summary>
+    /// Actuator (generic)
+    /// </summary>
+    Actuator,
+    
+    // -------------------------------------------------------------------------
+    // VESSELS & TANKS
+    // -------------------------------------------------------------------------
     
     /// <summary>
     /// Mix tank for nutrient preparation
     /// </summary>
-    MixTank
+    MixTank,
+    
+    /// <summary>
+    /// Reservoir tank
+    /// </summary>
+    Reservoir,
+    
+    // -------------------------------------------------------------------------
+    // LEGACY/GENERIC (for backward compatibility)
+    // -------------------------------------------------------------------------
+    
+    /// <summary>
+    /// Generic sensor (legacy - prefer specific sensor types)
+    /// </summary>
+    Sensor,
+    
+    /// <summary>
+    /// Generic meter (legacy - prefer FlowMeter, PressureSensor, etc.)
+    /// </summary>
+    Meter
+}
+
+/// <summary>
+/// Sensor placement/installation context - describes where a sensor is installed
+/// </summary>
+public enum SensorPlacement
+{
+    /// <summary>
+    /// In-line installation (in piping/tubing)
+    /// </summary>
+    Inline,
+    
+    /// <summary>
+    /// Installed in batch/mixing tank
+    /// </summary>
+    BatchTank,
+    
+    /// <summary>
+    /// Measures runoff/drain water
+    /// </summary>
+    Runoff,
+    
+    /// <summary>
+    /// Installed in reservoir/storage tank
+    /// </summary>
+    Reservoir,
+    
+    /// <summary>
+    /// Ambient/environmental measurement
+    /// </summary>
+    Ambient,
+    
+    /// <summary>
+    /// In substrate/growing media
+    /// </summary>
+    Substrate
 }
 
 /// <summary>
@@ -100,9 +229,9 @@ public enum CalibrationMethod
 }
 
 /// <summary>
-/// Calibration result enumeration
+/// Calibration outcome enumeration (overall pass/fail)
 /// </summary>
-public enum CalibrationResult
+public enum CalibrationOutcome
 {
     /// <summary>
     /// Calibration passed all checks
@@ -112,8 +241,14 @@ public enum CalibrationResult
     /// <summary>
     /// Calibration failed
     /// </summary>
-    Fail,
-    
+    Fail
+}
+
+/// <summary>
+/// Tolerance status for calibration readings
+/// </summary>
+public enum ToleranceStatus
+{
     /// <summary>
     /// Reading is within acceptable tolerance
     /// </summary>

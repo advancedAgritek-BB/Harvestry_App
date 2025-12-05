@@ -1,7 +1,9 @@
 # FRP-01: Identity, Authentication & Authorization - Progress Status
 
 **Last Updated:** 2025-09-29  
-**Status:** 🚧 In Progress (~45% Complete - Services Layer Complete)
+**Status:** 🚧 In Progress (~45% Complete - Services Layer Complete, Infrastructure & API Layers Pending)
+
+_Note: Progress percentage reflects that Domain, DTOs, and Services layers are complete (45%), while Infrastructure (repositories), API Controllers, and Testing layers remain pending. The percentage will increase as we complete the remaining layers._
 
 ---
 

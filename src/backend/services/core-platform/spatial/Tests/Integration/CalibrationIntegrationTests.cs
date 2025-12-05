@@ -29,7 +29,7 @@ public sealed class CalibrationIntegrationTests : IntegrationTestBase
             Name = "Calibration Room",
             RoomType = RoomType.Flower,
             RequestedByUserId = SpatialTestDataSeeder.ManagerUserId
-        }).ConfigureAwait(false);
+        });
 
         var zone = await hierarchyService.CreateLocationAsync(new CreateLocationRequest
         {
@@ -39,7 +39,7 @@ public sealed class CalibrationIntegrationTests : IntegrationTestBase
             Code = $"ZN-{Guid.NewGuid():N}".Substring(0, 6),
             Name = "Zone 1",
             RequestedByUserId = SpatialTestDataSeeder.ManagerUserId
-        }).ConfigureAwait(false);
+        });
 
         var equipment = await equipmentService.CreateAsync(new CreateEquipmentRequest
         {
@@ -52,7 +52,7 @@ public sealed class CalibrationIntegrationTests : IntegrationTestBase
             Manufacturer = "TestCo",
             Model = "ModelX",
             SerialNumber = Guid.NewGuid().ToString("N").Substring(0, 12)
-        }).ConfigureAwait(false);
+        });
 
         var calibration = await calibrationService.RecordAsync(
             SpatialTestDataSeeder.SiteId,
@@ -68,7 +68,7 @@ public sealed class CalibrationIntegrationTests : IntegrationTestBase
                 Result = CalibrationResult.WithinTolerance,
                 Notes = "Routine calibration",
                 IntervalDaysOverride = 14
-            }).ConfigureAwait(false);
+            });
 
         Assert.Equal(equipment.Id, calibration.EquipmentId);
         Assert.Equal(14, calibration.IntervalDays);
@@ -76,13 +76,13 @@ public sealed class CalibrationIntegrationTests : IntegrationTestBase
         Assert.True(calibration.NextDueAt > calibration.PerformedAt);
 
         SetUserContext(SpatialTestDataSeeder.ManagerUserId, "manager", SpatialTestDataSeeder.SiteId);
-        var reloadedEquipment = await equipmentRepository.GetByIdAsync(equipment.Id).ConfigureAwait(false);
+        var reloadedEquipment = await equipmentRepository.GetByIdAsync(equipment.Id);
         Assert.NotNull(reloadedEquipment);
         Assert.Equal(calibration.PerformedAt, reloadedEquipment!.LastCalibrationAt);
         Assert.Equal(calibration.NextDueAt, reloadedEquipment.NextCalibrationDueAt);
         Assert.Equal(14, reloadedEquipment.CalibrationIntervalDays);
 
-        var history = await calibrationService.GetHistoryAsync(SpatialTestDataSeeder.SiteId, equipment.Id).ConfigureAwait(false);
+        var history = await calibrationService.GetHistoryAsync(SpatialTestDataSeeder.SiteId, equipment.Id);
         Assert.Single(history);
         Assert.Equal(calibration.Id, history.Single().Id);
     }
@@ -103,7 +103,7 @@ public sealed class CalibrationIntegrationTests : IntegrationTestBase
             Name = "Tenant Guard Room",
             RoomType = RoomType.Mother,
             RequestedByUserId = SpatialTestDataSeeder.ManagerUserId
-        }).ConfigureAwait(false);
+        });
 
         var zone = await hierarchyService.CreateLocationAsync(new CreateLocationRequest
         {
@@ -113,7 +113,7 @@ public sealed class CalibrationIntegrationTests : IntegrationTestBase
             Code = $"ZN-{Guid.NewGuid():N}".Substring(0, 6),
             Name = "Zone Tenant",
             RequestedByUserId = SpatialTestDataSeeder.ManagerUserId
-        }).ConfigureAwait(false);
+        });
 
         var equipment = await equipmentService.CreateAsync(new CreateEquipmentRequest
         {
@@ -123,7 +123,7 @@ public sealed class CalibrationIntegrationTests : IntegrationTestBase
             Code = $"EQ-{Guid.NewGuid():N}".Substring(0, 6),
             TypeCode = "sensor",
             CoreType = CoreEquipmentType.Sensor
-        }).ConfigureAwait(false);
+        });
 
         await Assert.ThrowsAsync<TenantMismatchException>(() =>
             calibrationService.GetHistoryAsync(Guid.NewGuid(), equipment.Id));

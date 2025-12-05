@@ -43,7 +43,7 @@ public sealed class InventoryLocationTests
             updatedAt: DateTime.UtcNow.AddHours(-2),
             updatedByUserId: UserId);
 
-        location.AddPlants(5);
+        location.AddPlants(5, UserId);
 
         Assert.Equal(10, location.CurrentPlantCount);
         Assert.Equal(LocationStatus.Full, location.Status);
@@ -80,6 +80,6 @@ public sealed class InventoryLocationTests
             updatedAt: DateTime.UtcNow.AddHours(-2),
             updatedByUserId: UserId);
 
-        Assert.Throws<InvalidOperationException>(() => location.AddPlants(2));
+        Assert.Throws<InvalidOperationException>(() => location.AddPlants(2, UserId));
     }
 }

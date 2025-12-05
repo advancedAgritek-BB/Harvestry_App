@@ -10,9 +10,11 @@
 ### **Application Layer**
 
 #### **1. Repository Interfaces** (`Application/Interfaces/IRepository.cs`)
+
 **Purpose:** Define contracts for data access layer
 
 **Interfaces Created:**
+
 - `IUserRepository` - User aggregate persistence
 - `IBadgeRepository` - Badge entity persistence
 - `ISessionRepository` - Session entity persistence
@@ -21,6 +23,7 @@
 - `IDatabaseRepository` - Database-level operations (PostgreSQL functions)
 
 **Key Features:**
+
 - Async/await patterns throughout
 - CancellationToken support
 - Generic repository pattern
@@ -29,16 +32,19 @@
 ---
 
 #### **2. PolicyEvaluationService** (`Application/Services/PolicyEvaluationService.cs`)
+
 **Purpose:** ABAC permission evaluation and two-person approval workflow
 
 **Lines of Code:** ~250  
 **Dependencies:**
+
 - IDatabaseRepository (calls `check_abac_permission` PostgreSQL function)
 - IUserRepository
 - ISiteRepository
 - ILogger<PolicyEvaluationService>
 
 **Key Methods:**
+
 ```csharp
 Task<PolicyEvaluationResult> EvaluatePermissionAsync(...)
 Task<TwoPersonApprovalResponse> InitiateTwoPersonApprovalAsync(...)
@@ -48,6 +54,7 @@ Task<IEnumerable<TwoPersonApprovalResponse>> GetPendingApprovalsAsync(...)
 ```
 
 **Features:**
+
 - ✅ Comprehensive structured logging (Information, Warning, Error)
 - ✅ Input validation (null checks, business rules)
 - ✅ Calls database ABAC function for policy evaluation
@@ -59,21 +66,25 @@ Task<IEnumerable<TwoPersonApprovalResponse>> GetPendingApprovalsAsync(...)
 ---
 
 #### **3. TaskGatingService** (`Application/Services/TaskGatingService.cs`)
+
 **Purpose:** Evaluate SOP/training prerequisites for task execution
 
 **Lines of Code:** ~120  
 **Dependencies:**
+
 - IDatabaseRepository (calls `check_task_gating` PostgreSQL function)
 - IUserRepository
 - ILogger<TaskGatingService>
 
 **Key Methods:**
+
 ```csharp
 Task<TaskGatingResult> CheckTaskGatingAsync(...)
 Task<IEnumerable<TaskGatingRequirement>> GetRequirementsForTaskTypeAsync(...)
 ```
 
 **Features:**
+
 - ✅ Structured logging for gating decisions
 - ✅ Explicit denial reasons (missing SOP, training, etc.)
 - ✅ Calls database function for requirement checks
@@ -83,16 +94,19 @@ Task<IEnumerable<TaskGatingRequirement>> GetRequirementsForTaskTypeAsync(...)
 ---
 
 #### **4. BadgeAuthService** (`Application/Services/BadgeAuthService.cs`)
+
 **Purpose:** Badge-based authentication and session management
 
 **Lines of Code:** ~280  
 **Dependencies:**
+
 - IBadgeRepository
 - IUserRepository
 - ISessionRepository
 - ILogger<BadgeAuthService>
 
 **Key Methods:**
+
 ```csharp
 Task<BadgeLoginResult> LoginWithBadgeAsync(...)
 Task<bool> RevokeBadgeAsync(...)
@@ -101,6 +115,7 @@ Task<bool> RevokeSessionAsync(...)
 ```
 
 **Features:**
+
 - ✅ Badge code parsing and validation
 - ✅ Multi-layered security checks:
   - Badge format validation
@@ -118,6 +133,7 @@ Task<bool> RevokeSessionAsync(...)
 - ✅ Comprehensive error messages for users
 
 **Security Features:**
+
 - RandomNumberGenerator for token generation
 - Base64 URL-safe encoding
 - Badge code masking in logs (shows first 4 + last 4)
@@ -129,7 +145,9 @@ Task<bool> RevokeSessionAsync(...)
 ### **DTOs and Response Objects**
 
 #### **PolicyEvaluationResult.cs** (~180 lines)
+
 **Classes:**
+
 1. `PolicyEvaluationResult` - ABAC permission result
    - IsGranted (bool)
    - RequiresTwoPersonApproval (bool)
@@ -196,21 +214,25 @@ Task<bool> RevokeSessionAsync(...)
 ### **SOLID Principles Applied**
 
 ✅ **Single Responsibility Principle**
+
 - Each service has one focused responsibility
 - Clear separation: PolicyEvaluation, TaskGating, BadgeAuth
 
 ✅ **Dependency Inversion Principle**
+
 - All dependencies are interfaces (IRepository, ILogger)
 - Easy to mock for unit testing
 - Loosely coupled components
 
 ✅ **Interface Segregation Principle**
+
 - Focused interfaces (IUserRepository vs. IDatabaseRepository)
 - Clients depend only on methods they use
 
 ### **Clean Architecture Compliance**
 
 ✅ **Application Layer Structure**
+
 ```
 Application/
 ├── DTOs/              # Data transfer objects
@@ -221,6 +243,7 @@ Application/
 ```
 
 ✅ **Dependency Flow**
+
 - Application → Domain (✅ correct)
 - Application → NOT Infrastructure (✅ correct)
 - All infrastructure dependencies via interfaces
@@ -228,10 +251,12 @@ Application/
 ### **DDD Patterns**
 
 ✅ **Repository Pattern**
+
 - Interfaces in Application layer
 - Implementations in Infrastructure (pending)
 
 ✅ **Domain-Driven Design**
+
 - Rich domain models (User, Badge, Session)
 - Value objects (BadgeCode, Email, PhoneNumber)
 - Aggregate roots (User)
@@ -239,19 +264,23 @@ Application/
 ### **Code Quality**
 
 ✅ **File Length Compliance**
+
 - Longest file: BadgeAuthService.cs (~280 lines) ✅ < 500 line limit
 - All files well under 500 line threshold
 
 ✅ **Method Size**
+
 - Most methods: 20-40 lines ✅
 - Largest method: LoginWithBadgeAsync (~80 lines) ⚠️ Consider refactoring
 
 ✅ **Logging**
+
 - Structured logging throughout
 - Appropriate log levels (Information, Warning, Error)
 - Sensitive data masking (badge codes)
 
 ✅ **Error Handling**
+
 - ArgumentException for invalid inputs
 - InvalidOperationException for business rule violations
 - Try-catch with logging at service boundaries
@@ -349,15 +378,18 @@ Application/
 **Estimated Time:** 3-4 hours
 
 #### **1. Create Database Context with RLS** (1 hour)
+
 **File:** `Infrastructure/Persistence/IdentityDbContext.cs`
 
 **Requirements:**
+
 - Npgsql connection management
 - RLS context variable setting (`app.current_user_id`, `app.user_role`, `app.site_id`)
 - Transaction support
 - Connection pooling configuration
 
 **Example:**
+
 ```csharp
 public class IdentityDbContext : IDisposable
 {
@@ -376,6 +408,7 @@ public class IdentityDbContext : IDisposable
 #### **2. Implement Repository Classes** (2-3 hours)
 
 **Files to Create:**
+
 - `Infrastructure/Persistence/UserRepository.cs`
 - `Infrastructure/Persistence/BadgeRepository.cs`
 - `Infrastructure/Persistence/SessionRepository.cs`
@@ -384,11 +417,13 @@ public class IdentityDbContext : IDisposable
 - `Infrastructure/Persistence/DatabaseRepository.cs` (for PostgreSQL functions)
 
 **Technology Stack:**
+
 - Npgsql for PostgreSQL connection
 - Dapper for query execution (lightweight ORM)
 - Manual mapping (or AutoMapper for complex objects)
 
 **Key Features:**
+
 - Implement all interface methods
 - Set RLS context before queries
 - Use parameterized queries (SQL injection prevention)
@@ -399,6 +434,7 @@ public class IdentityDbContext : IDisposable
 **File:** `API/Program.cs` or `API/Startup.cs`
 
 **Services to Register:**
+
 ```csharp
 // Database
 services.AddScoped<IDbConnection>(sp =>
@@ -438,6 +474,7 @@ services.AddLogging(builder =>
 #### **Test Files to Create:**
 
 **Unit Tests (with Moq for mocking):**
+
 - `Tests/Unit/Services/PolicyEvaluationServiceTests.cs`
   - Test grant scenarios
   - Test deny scenarios
@@ -460,12 +497,14 @@ services.AddLogging(builder =>
   - Test explicit denial reasons
 
 **Testing Tools:**
+
 - xUnit (test framework)
 - Moq (mocking framework)
 - FluentAssertions (readable assertions)
 - AutoFixture (test data generation)
 
 **Example Test Structure:**
+
 ```csharp
 public class BadgeAuthServiceTests
 {
@@ -506,6 +545,7 @@ public class BadgeAuthServiceTests
 #### **Test Files to Create:**
 
 **Integration Tests (with real database):**
+
 - `Tests/Integration/RlsFuzzTests.cs` (20+ scenarios)
   - Test cross-site data access (should be blocked)
   - Test user can only see own data
@@ -524,6 +564,7 @@ public class BadgeAuthServiceTests
   - Expiration handling
 
 **Integration Test Setup:**
+
 ```csharp
 public class IntegrationTestFixture : IDisposable
 {
@@ -652,17 +693,19 @@ src/backend/services/core-platform/identity/
 
 ---
 
-## 🚀 Ready for Next Phase!
+## 🚀 Ready for Next Phase
 
 **Next Session Goal:** Infrastructure Layer (Repositories + DI)  
 **Est. Time:** 3-4 hours  
 **Deliverables:**
+
 - 7 repository implementations
 - Database context with RLS
 - Dependency injection configuration
 - Connection to Supabase verified
 
 **Command to Start Next Session:**
+
 ```bash
 cd src/backend/services/core-platform/identity/Infrastructure/Persistence
 # Create repository files

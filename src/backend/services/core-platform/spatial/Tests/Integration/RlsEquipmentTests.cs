@@ -54,7 +54,7 @@ public sealed class RlsEquipmentTests : IntegrationTestBase
         // Change context to outsider user/site
         SetUserContext(Guid.NewGuid(), "viewer", Guid.NewGuid());
 
-        var fetched = await equipmentRepository.GetByIdAsync(equipment.Id).ConfigureAwait(false);
+        var fetched = await equipmentRepository.GetByIdAsync(equipment.Id);
         Assert.Null(fetched); // RLS should hide equipment
     }
 }

@@ -17,7 +17,7 @@ namespace Harvestry.Identity.API.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/[controller]")]
+[Route("api/v1/badges")]
 public sealed class BadgesController : ControllerBase
 {
     private readonly IBadgeRepository _badgeRepository;

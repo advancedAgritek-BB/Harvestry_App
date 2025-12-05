@@ -49,6 +49,47 @@ public sealed partial class Site : AggregateRoot<Guid>
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
+    // METRC Compliance Fields
+    /// <summary>
+    /// METRC's internal facility identifier (returned from Facilities API)
+    /// </summary>
+    public long? MetrcFacilityId { get; private set; }
+
+    /// <summary>
+    /// Type of cannabis facility (Cultivator, Processor, CultivatorProcessor, Lab)
+    /// </summary>
+    public FacilityType? FacilityType { get; private set; }
+
+    /// <summary>
+    /// Encrypted METRC vendor/integrator API key for this facility
+    /// </summary>
+    public string? MetrcApiKeyEncrypted { get; private set; }
+
+    /// <summary>
+    /// Encrypted METRC user API key for this facility
+    /// </summary>
+    public string? MetrcUserKeyEncrypted { get; private set; }
+
+    /// <summary>
+    /// Two-letter state code for jurisdiction-specific rules (IL, CO, NY, etc.)
+    /// </summary>
+    public string? StateCode { get; private set; }
+
+    /// <summary>
+    /// Whether METRC integration is enabled for this site
+    /// </summary>
+    public bool IsMetrcEnabled { get; private set; }
+
+    /// <summary>
+    /// Last successful sync with METRC
+    /// </summary>
+    public DateTime? MetrcLastSyncAt { get; private set; }
+
+    /// <summary>
+    /// METRC sync status message (for troubleshooting)
+    /// </summary>
+    public string? MetrcSyncStatus { get; private set; }
+
     /// <summary>
     /// Is this site currently operational?
     /// </summary>
@@ -68,28 +109,8 @@ public sealed partial class Site : AggregateRoot<Guid>
             if (!LicenseExpiration.HasValue)
                 return true;
 
-            // Convert current UTC time to site's timezone for comparison
-            try
-            {
-                var siteTimeZone = string.IsNullOrWhiteSpace(Timezone)
-                    ? TimeZoneInfo.Utc
-                    : TimeZoneInfo.FindSystemTimeZoneById(Timezone);
-
-                var nowInSiteTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, siteTimeZone);
-                var expirationInSiteTime = TimeZoneInfo.ConvertTimeFromUtc(LicenseExpiration.Value, siteTimeZone);
-
-                return expirationInSiteTime > nowInSiteTime;
-            }
-            catch (TimeZoneNotFoundException)
-            {
-                // Fall back to UTC comparison if timezone is invalid
-                return LicenseExpiration.Value > DateTime.UtcNow;
-            }
-            catch (InvalidTimeZoneException)
-            {
-                // Fall back to UTC comparison if timezone is invalid
-                return LicenseExpiration.Value > DateTime.UtcNow;
-            }
+            // Direct UTC comparison (license expiration is stored in UTC)
+            return LicenseExpiration.Value > DateTime.UtcNow;
         }
     }
 
@@ -212,4 +233,100 @@ public sealed partial class Site : AggregateRoot<Guid>
 
         return defaultValue;
     }
+
+    /// <summary>
+    /// Configure METRC integration for this site
+    /// </summary>
+    public void ConfigureMetrc(
+        long metrcFacilityId,
+        FacilityType facilityType,
+        string stateCode,
+        string metrcApiKeyEncrypted,
+        string metrcUserKeyEncrypted)
+    {
+        if (string.IsNullOrWhiteSpace(stateCode))
+            throw new ArgumentException("State code is required for METRC configuration", nameof(stateCode));
+
+        if (stateCode.Length != 2)
+            throw new ArgumentException("State code must be a two-letter code (e.g., IL, CO)", nameof(stateCode));
+
+        if (string.IsNullOrWhiteSpace(metrcApiKeyEncrypted))
+            throw new ArgumentException("METRC API key is required", nameof(metrcApiKeyEncrypted));
+
+        if (string.IsNullOrWhiteSpace(metrcUserKeyEncrypted))
+            throw new ArgumentException("METRC user key is required", nameof(metrcUserKeyEncrypted));
+
+        MetrcFacilityId = metrcFacilityId;
+        FacilityType = facilityType;
+        StateCode = stateCode.ToUpperInvariant();
+        MetrcApiKeyEncrypted = metrcApiKeyEncrypted;
+        MetrcUserKeyEncrypted = metrcUserKeyEncrypted;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Enable METRC integration for this site
+    /// </summary>
+    public void EnableMetrc()
+    {
+        if (!MetrcFacilityId.HasValue)
+            throw new InvalidOperationException("Cannot enable METRC without configuring facility ID first");
+
+        if (string.IsNullOrWhiteSpace(MetrcApiKeyEncrypted) || string.IsNullOrWhiteSpace(MetrcUserKeyEncrypted))
+            throw new InvalidOperationException("Cannot enable METRC without API keys configured");
+
+        IsMetrcEnabled = true;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Disable METRC integration for this site
+    /// </summary>
+    public void DisableMetrc()
+    {
+        IsMetrcEnabled = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Update METRC sync status after a sync operation
+    /// </summary>
+    public void UpdateMetrcSyncStatus(bool success, string? statusMessage = null)
+    {
+        if (success)
+        {
+            MetrcLastSyncAt = DateTime.UtcNow;
+            MetrcSyncStatus = statusMessage ?? "Sync successful";
+        }
+        else
+        {
+            MetrcSyncStatus = statusMessage ?? "Sync failed";
+        }
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Update METRC API credentials (encrypted)
+    /// </summary>
+    public void UpdateMetrcCredentials(string metrcApiKeyEncrypted, string metrcUserKeyEncrypted)
+    {
+        if (string.IsNullOrWhiteSpace(metrcApiKeyEncrypted))
+            throw new ArgumentException("METRC API key is required", nameof(metrcApiKeyEncrypted));
+
+        if (string.IsNullOrWhiteSpace(metrcUserKeyEncrypted))
+            throw new ArgumentException("METRC user key is required", nameof(metrcUserKeyEncrypted));
+
+        MetrcApiKeyEncrypted = metrcApiKeyEncrypted;
+        MetrcUserKeyEncrypted = metrcUserKeyEncrypted;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Check if METRC is properly configured and enabled
+    /// </summary>
+    public bool IsMetrcReady => IsMetrcEnabled 
+        && MetrcFacilityId.HasValue 
+        && !string.IsNullOrWhiteSpace(MetrcApiKeyEncrypted) 
+        && !string.IsNullOrWhiteSpace(MetrcUserKeyEncrypted)
+        && !string.IsNullOrWhiteSpace(StateCode);
 }

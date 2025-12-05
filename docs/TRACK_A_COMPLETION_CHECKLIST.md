@@ -69,6 +69,7 @@ Track A is complete when **all** of the following criteria are met:
 ## ✅ Observability
 
 ### Metrics
+
 - [x] Prometheus scraping all services
 - [x] Grafana golden dashboards deployed
   - [x] SLO Overview (API, ingest, push latency)
@@ -78,14 +79,17 @@ Track A is complete when **all** of the following criteria are met:
 - [ ] Alerts wired to Slack/PagerDuty (requires integration setup)
 
 ### Logs
+
 - [x] Loki ingesting structured logs
 - [x] Log correlation with trace IDs
 
 ### Traces
+
 - [x] Tempo collecting distributed traces
 - [ ] Services instrumented with OpenTelemetry SDK (implementation pending)
 
 ### Errors
+
 - [x] Sentry setup documented (self-hosted + SaaS)
 - [x] Backend integration guide (.NET)
 - [x] Frontend integration guide (Next.js)
@@ -131,31 +135,37 @@ Track A is complete when **all** of the following criteria are met:
 ## ✅ Testing
 
 ### Unit Tests
+
 - [ ] Backend services unit tested (80%+ coverage)
 - [ ] Frontend components unit tested
 
 ### Integration Tests
+
 - [ ] API endpoints tested with database
 - [ ] Contract tests for REST/WebSocket
 
 ### Load Tests
+
 - [x] k6 telemetry ingest scenario (p95 < 1.0s)
 - [x] k6 realtime push scenario (p95 < 1.5s)
 - [x] k6 API gateway scenario (command p95 < 800ms, task p95 < 300ms)
 - [x] Load test orchestration script
 
 ### Contract Tests
+
 - [x] Pact framework for REST APIs
 - [x] OpenAPI schema validation
 - [x] WebSocket deterministic scenarios
 - [x] Contract test orchestration script
 
 ### Acceptance Tests
+
 - [x] 7-day SLO validation harness
 - [x] Automated Prometheus querying
 - [x] JSON results logging
 
 ### E2E Tests
+
 - [ ] Critical user flows automated (requires services)
 
 **Status**: 11/16 complete (68.8%)
@@ -210,13 +220,16 @@ Track A is complete when **all** of the following criteria are met:
 ## 🚧 Remaining Work (5 items)
 
 ### Infrastructure Service Implementation (Requires Actual Services)
+
 1. **WAL-fanout service** - Requires .NET WebSocket/SSE service implementation
 2. **OpenTelemetry instrumentation** - Requires adding OTel SDK to actual services
 
 ### Testing (Requires Running Services)
+
 3. **E2E test automation** - Requires actual UI and API endpoints
 
 ### Optional Enhancements
+
 4. **Alert routing setup** - Slack/PagerDuty webhook configuration (documentation provided)
 5. **Unit test coverage** - Service-specific tests (requires actual service code)
 

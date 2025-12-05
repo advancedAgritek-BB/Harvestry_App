@@ -1,10 +1,12 @@
 # FRP-03 Executive Summary - Genetics, Strains & Batches
 
 **Date:** October 2, 2025  
-**Status:** 🎯 Ready to Start  
+**Status:** ✅ Approved & Delivered  
 **Owner:** Core Platform/Genetics Squad  
-**Estimated Effort:** 18-22 hours  
-**Target Completion:** October 6, 2025
+**Estimated Effort (Original):** 24-28 hours  
+**Actual Completion:** October 2, 2025
+
+> **Update:** FRP-03 has been shipped. The executive overview below is preserved for stakeholders who need the original scope narrative. Delivery evidence and metrics are captured in `FRP03_FINAL_STATUS_UPDATE.md`.
 
 ---
 
@@ -16,13 +18,13 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 ### Business Value
 - **Compliance Foundation** - Enables METRC reporting and regulatory compliance
 - **Quality Control** - Strain-specific tracking and mother plant health monitoring
-- **Operational Efficiency** - Automated batch lifecycle management
+- **Operational Efficiency** - Automated batch lifecycle management with configurable stages
 - **Traceability** - Complete lineage tracking from seed to sale
 - **Risk Mitigation** - Quarantine and hold capabilities for quality issues
 
 ### Technical Scope
 - **Genetics Management** - Strain definitions, phenotypes, genetic profiles
-- **Batch Lifecycle** - State machine with event tracking and lineage
+- **Batch Lifecycle & Stages** - Configurable stage templates, state machine, event tracking, lineage
 - **Mother Plant Registry** - Health logs, propagation tracking, genetic source
 - **Compliance Foundation** - Lineage tracking for seed-to-sale reporting
 
@@ -42,13 +44,19 @@ FRP-03 establishes the genetics and batch management foundation for the Harvestr
 - **Lineage Tracking** - Parent-child relationships for compliance
 - **Location Management** - Integration with spatial hierarchy
 
-### 3. Mother Plant Registry
+### 3. Configurable Stage Templates
+- **Tenant Flexibility** - Site-defined stage and transition catalogs
+- **Default Blueprints** - Recommended lifecycle presets for quick launch
+- **Approvals** - Transition-level approval routing support
+- **Commissioning Ready** - Optional onboarding service to configure templates
+
+### 4. Mother Plant Registry
 - **Health Monitoring** - Comprehensive health logs and status tracking
 - **Propagation Tracking** - Clone generation and source management
 - **Location Management** - Integration with spatial hierarchy
 - **Quality Control** - Health-based propagation decisions
 
-### 4. Compliance Foundation
+### 5. Compliance Foundation
 - **Lineage Queries** - Efficient relationship traversal
 - **Audit Trail** - Complete event history for regulatory reporting
 - **Data Integrity** - RLS policies and validation
@@ -66,15 +74,15 @@ Building complete vertical slices for faster delivery and validation:
 - Validation and dependency management
 - RLS security implementation
 
-**Slice 2: Batch Lifecycle Management** (7-8 hours)
-- Batch state machine and event tracking
-- Lineage relationship management
-- Location integration
+**Slice 2: Batch Lifecycle & Stage Configuration** (8-9 hours)
+- Batch lifecycle services plus configurable stage definitions/transitions
+- Batch code rule management and lineage relationship logic
+- Expanded validators, controllers, and RLS coverage
 
-**Slice 3: Mother Plant Health Tracking** (4-5 hours)
+**Slice 3: Mother Plant Health & Propagation Controls** (5-6 hours)
 - Health logging and status tracking
-- Propagation management
-- Quality control integration
+- Propagation limits, override workflow, and reminders
+- Quality control integration and reporting hooks
 
 ### Quality Assurance
 - **Unit Tests** - ≥90% coverage for all services
@@ -109,15 +117,15 @@ Building complete vertical slices for faster delivery and validation:
 ### Functional Metrics
 - **Genetics Management** - Complete CRUD operations
 - **Batch Lifecycle** - State machine operational
+- **Configurable Stages** - Site-defined templates + transitions manageable
 - **Mother Plant Health** - Health tracking complete
-- **Lineage Tracking** - Parent-child relationships maintained
 - **Compliance** - Foundation for seed-to-sale reporting
 
 ### Technical Metrics
-- **API Endpoints** - 25+ endpoints operational
-- **Database Tables** - 8 tables with RLS
-- **Integration Tests** - 4 test files with E2E scenarios
-- **Unit Tests** - 7 test files with ≥90% coverage
+- **API Endpoints** - 30+ endpoints operational
+- **Database Tables** - 15 tables with RLS
+- **Integration Tests** - 6 test files with E2E scenarios
+- **Unit Tests** - 15 test files with ≥90% coverage
 - **Performance** - p95 < 200ms response times
 
 ### Quality Metrics
@@ -134,6 +142,7 @@ Building complete vertical slices for faster delivery and validation:
 - ✅ **Batch lineage tracked correctly** - Parent-child relationships maintained
 - ✅ **Mother plant health logs retrievable** - Health history accessible
 - ✅ **Strain-specific blueprints associable** - Strain-to-batch relationships
+- ✅ **Configurable stage templates operational** - Site-defined stages & transitions drive lifecycle
 - ✅ **Batch state machine enforces valid transitions** - Invalid transitions blocked
 - ✅ **RLS blocks cross-site access** - Security validated
 
@@ -305,4 +314,3 @@ Building complete vertical slices for faster delivery and validation:
 **Total Effort:** 18-22 hours
 
 # 🚀 FRP-03 READY TO LAUNCH! 🚀
-

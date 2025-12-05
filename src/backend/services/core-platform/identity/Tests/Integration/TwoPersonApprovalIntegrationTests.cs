@@ -113,7 +113,8 @@ public sealed class TwoPersonApprovalIntegrationTests : IntegrationTestBase
         var approval = await policyService.InitiateTwoPersonApprovalAsync(request);
 
         await ExecuteSqlAsync(
-            $"UPDATE two_person_approvals SET expires_at = NOW() - INTERVAL '1 minute' WHERE approval_id = '{approval.ApprovalId}'");
+            "UPDATE two_person_approvals SET expires_at = NOW() - INTERVAL '1 minute' WHERE approval_id = @approvalId",
+            new { approvalId = approval.ApprovalId });
 
         var approved = await policyService.ApproveTwoPersonRequestAsync(approval.ApprovalId, DenverAdmin, "Late approval");
 

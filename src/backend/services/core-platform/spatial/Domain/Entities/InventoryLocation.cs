@@ -181,6 +181,9 @@ public partial class InventoryLocation : AggregateRoot<Guid>
         if (plantCapacity.HasValue && plantCapacity.Value < 0)
             throw new ArgumentException("Plant capacity cannot be negative", nameof(plantCapacity));
         
+        if (plantCapacity.HasValue && plantCapacity.Value < CurrentPlantCount)
+            throw new ArgumentException($"Plant capacity cannot be less than current plant count ({CurrentPlantCount})", nameof(plantCapacity));
+        
         if (rowNumber.HasValue && rowNumber.Value < 0)
             throw new ArgumentException("Row number cannot be negative", nameof(rowNumber));
         
@@ -206,6 +209,9 @@ public partial class InventoryLocation : AggregateRoot<Guid>
     {
         if (weightCapacityLbs.HasValue && weightCapacityLbs.Value < 0)
             throw new ArgumentException("Weight capacity cannot be negative", nameof(weightCapacityLbs));
+
+        if (weightCapacityLbs.HasValue && weightCapacityLbs.Value < CurrentWeightLbs)
+            throw new ArgumentException($"Weight capacity cannot be less than current weight ({CurrentWeightLbs} lbs)", nameof(weightCapacityLbs));
 
         if (updatedByUserId == Guid.Empty)
             throw new ArgumentException("Updated by user ID cannot be empty", nameof(updatedByUserId));
@@ -233,10 +239,13 @@ public partial class InventoryLocation : AggregateRoot<Guid>
     /// <summary>
     /// Increments plant count (for cultivation locations)
     /// </summary>
-    public void AddPlants(int count)
+    public void AddPlants(int count, Guid userId)
     {
         if (count <= 0)
             throw new ArgumentException("Count must be positive", nameof(count));
+        
+        if (userId == Guid.Empty)
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
         
         var newCount = CurrentPlantCount + count;
         
@@ -244,6 +253,7 @@ public partial class InventoryLocation : AggregateRoot<Guid>
             throw new InvalidOperationException($"Adding {count} plants would exceed capacity of {PlantCapacity.Value}");
         
         CurrentPlantCount = newCount;
+        UpdatedByUserId = userId;
         UpdatedAt = DateTime.UtcNow;
         
         // Auto-update status to Full if at capacity
@@ -256,15 +266,19 @@ public partial class InventoryLocation : AggregateRoot<Guid>
     /// <summary>
     /// Decrements plant count (for cultivation locations)
     /// </summary>
-    public void RemovePlants(int count)
+    public void RemovePlants(int count, Guid userId)
     {
         if (count <= 0)
             throw new ArgumentException("Count must be positive", nameof(count));
+        
+        if (userId == Guid.Empty)
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
         
         if (count > CurrentPlantCount)
             throw new InvalidOperationException($"Cannot remove {count} plants - only {CurrentPlantCount} present");
         
         CurrentPlantCount -= count;
+        UpdatedByUserId = userId;
         UpdatedAt = DateTime.UtcNow;
         
         // Auto-update status if no longer full
@@ -277,10 +291,13 @@ public partial class InventoryLocation : AggregateRoot<Guid>
     /// <summary>
     /// Adds weight to warehouse location
     /// </summary>
-    public void AddWeight(decimal weightLbs)
+    public void AddWeight(decimal weightLbs, Guid userId)
     {
         if (weightLbs <= 0)
             throw new ArgumentException("Weight must be positive", nameof(weightLbs));
+        
+        if (userId == Guid.Empty)
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
         
         var newWeight = CurrentWeightLbs + weightLbs;
         
@@ -288,6 +305,7 @@ public partial class InventoryLocation : AggregateRoot<Guid>
             throw new InvalidOperationException($"Adding {weightLbs} lbs would exceed capacity of {WeightCapacityLbs.Value} lbs");
         
         CurrentWeightLbs = newWeight;
+        UpdatedByUserId = userId;
         UpdatedAt = DateTime.UtcNow;
         
         // Auto-update status to Full if at capacity
@@ -300,15 +318,19 @@ public partial class InventoryLocation : AggregateRoot<Guid>
     /// <summary>
     /// Removes weight from warehouse location
     /// </summary>
-    public void RemoveWeight(decimal weightLbs)
+    public void RemoveWeight(decimal weightLbs, Guid userId)
     {
         if (weightLbs <= 0)
             throw new ArgumentException("Weight must be positive", nameof(weightLbs));
+        
+        if (userId == Guid.Empty)
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
         
         if (weightLbs > CurrentWeightLbs)
             throw new InvalidOperationException($"Cannot remove {weightLbs} lbs - only {CurrentWeightLbs} lbs present");
         
         CurrentWeightLbs -= weightLbs;
+        UpdatedByUserId = userId;
         UpdatedAt = DateTime.UtcNow;
         
         // Auto-update status if no longer full

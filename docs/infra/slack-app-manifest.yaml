@@ -1,0 +1,23 @@
+display_information:
+  name: Harvestry Tasks Notifier
+  description: Sends task lifecycle notifications from Harvestry into Slack channels.
+  background_color: "#377dff"
+features:
+  bot_user:
+    display_name: Harvestry Task Bot
+    always_online: false
+oauth_config:
+  redirect_urls:
+    - https://app.harvestry.local/api/slack/oauth/callback
+  scopes:
+    bot:
+      - chat:write
+      - chat:write.public
+      - channels:read
+      - groups:read
+      - im:write
+      - mpim:write
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: true

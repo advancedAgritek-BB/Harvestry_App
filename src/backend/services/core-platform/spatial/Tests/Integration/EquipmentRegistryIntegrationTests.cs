@@ -62,8 +62,8 @@ public sealed class EquipmentRegistryIntegrationTests : IntegrationTestBase
             PageSize = 10
         });
 
-        Assert.True(list.Items.Any(e => e.Id == created.Id));
-        Assert.False(list.Items.First(e => e.Id == created.Id).Channels.Any());
+        Assert.Contains(list.Items, e => e.Id == created.Id);
+        Assert.Empty(list.Items.First(e => e.Id == created.Id).Channels);
 
         // Retrieve with channels flag
         var detailed = await equipmentService.GetByIdAsync(SpatialTestDataSeeder.SiteId, created.Id, includeChannels: true);

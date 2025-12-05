@@ -26,7 +26,7 @@ public sealed class EquipmentHeartbeatIntegrationTests : IntegrationTestBase
             Name = "Heartbeat Room",
             RoomType = RoomType.Veg,
             RequestedByUserId = SpatialTestDataSeeder.ManagerUserId
-        }).ConfigureAwait(false);
+        });
 
         var zone = await hierarchyService.CreateLocationAsync(new CreateLocationRequest
         {
@@ -36,7 +36,7 @@ public sealed class EquipmentHeartbeatIntegrationTests : IntegrationTestBase
             Code = $"ZN-{Guid.NewGuid():N}".Substring(0, 6),
             Name = "Heartbeat Zone",
             RequestedByUserId = SpatialTestDataSeeder.ManagerUserId
-        }).ConfigureAwait(false);
+        });
 
         var equipment = await equipmentService.CreateAsync(new CreateEquipmentRequest
         {
@@ -49,7 +49,7 @@ public sealed class EquipmentHeartbeatIntegrationTests : IntegrationTestBase
             Manufacturer = "SensorWorks",
             Model = "SW-200",
             SerialNumber = Guid.NewGuid().ToString("N").Substring(0, 12)
-        }).ConfigureAwait(false);
+        });
 
         var heartbeatAt = DateTime.UtcNow;
 
@@ -62,12 +62,12 @@ public sealed class EquipmentHeartbeatIntegrationTests : IntegrationTestBase
                 SignalStrengthDbm = -55,
                 BatteryPercent = 90,
                 UptimeSeconds = 1200
-            }).ConfigureAwait(false);
+            });
 
         // Reapply context for retrieval
         SetUserContext(SpatialTestDataSeeder.ManagerUserId, "manager", SpatialTestDataSeeder.SiteId);
 
-        var refreshed = await equipmentService.GetByIdAsync(SpatialTestDataSeeder.SiteId, equipment.Id, includeChannels: false).ConfigureAwait(false);
+        var refreshed = await equipmentService.GetByIdAsync(SpatialTestDataSeeder.SiteId, equipment.Id, includeChannels: false);
 
         Assert.NotNull(refreshed);
         Assert.Equal(heartbeatAt, refreshed!.LastHeartbeatAt);

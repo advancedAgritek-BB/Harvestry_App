@@ -29,34 +29,73 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         ServiceProvider = _services.BuildServiceProvider();
 
         var dbContext = ServiceProvider.GetRequiredService<SpatialDbContext>();
-        _transaction = await dbContext.BeginTransactionAsync(IsolationLevel.ReadCommitted, CancellationToken.None).ConfigureAwait(false);
+        _transaction = await dbContext.BeginTransactionAsync(IsolationLevel.ReadCommitted, CancellationToken.None);
 
-        await SpatialTestDataSeeder.SeedAsync(ServiceProvider, _transaction, CancellationToken.None).ConfigureAwait(false);
+        await SpatialTestDataSeeder.SeedAsync(ServiceProvider, _transaction, CancellationToken.None);
     }
 
     public virtual async Task DisposeAsync()
     {
+        // Dispose all resources with individual try-catch to ensure all cleanup attempts are made
         if (_transaction != null)
         {
-            await _transaction.RollbackAsync().ConfigureAwait(false);
-            await _transaction.DisposeAsync().ConfigureAwait(false);
+            try
+            {
+                await _transaction.RollbackAsync();
+                await _transaction.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error disposing transaction: {ex.Message}");
+            }
         }
 
         if (_dataSource != null)
         {
-            await _dataSource.DisposeAsync().ConfigureAwait(false);
+            try
+            {
+                await _dataSource.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error disposing data source: {ex.Message}");
+            }
         }
 
         if (ServiceProvider is IAsyncDisposable asyncDisposable)
         {
-            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+            try
+            {
+                await asyncDisposable.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error disposing service provider: {ex.Message}");
+            }
         }
         else if (ServiceProvider is IDisposable disposable)
         {
-            disposable.Dispose();
+            try
+            {
+                disposable.Dispose();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error disposing service provider: {ex.Message}");
+            }
         }
 
-        _loggerFactory?.Dispose();
+        if (_loggerFactory != null)
+        {
+            try
+            {
+                _loggerFactory.Dispose();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error disposing logger factory: {ex.Message}");
+            }
+        }
     }
 
     protected virtual IConfiguration BuildConfiguration()

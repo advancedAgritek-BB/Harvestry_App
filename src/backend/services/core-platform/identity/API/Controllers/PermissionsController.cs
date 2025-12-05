@@ -12,7 +12,7 @@ namespace Harvestry.Identity.API.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/[controller]")]
+[Route("api/v1/permissions")]
 public sealed class PermissionsController : ControllerBase
 {
     private readonly IPolicyEvaluationService _policyEvaluationService;

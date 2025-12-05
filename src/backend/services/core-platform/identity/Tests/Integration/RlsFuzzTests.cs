@@ -88,7 +88,7 @@ public sealed class RlsFuzzTests : IntegrationTestBase
     }
 
     [IntegrationFact]
-    public async Task SessionWithoutContext_Fails()
+    public async Task SessionWithoutContext_UserCanReadOwnRecord()
     {
         SetUserContext(DenverOperator, "operator", BoulderSite);
         var repository = ServiceProvider.GetRequiredService<IUserRepository>();

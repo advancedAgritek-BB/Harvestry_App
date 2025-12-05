@@ -14,6 +14,16 @@ namespace Harvestry.Identity.API.Security;
 public sealed class HeaderAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     private readonly IRlsContextAccessor _rlsContextAccessor;
+    
+    // Allowed roles as defined in the database seeding
+    private static readonly HashSet<string> AllowedRoles = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "operator",
+        "supervisor",
+        "manager",
+        "admin",
+        "service_account"
+    };
 
     public HeaderAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
@@ -41,6 +51,13 @@ public sealed class HeaderAuthenticationHandler : AuthenticationHandler<Authenti
         {
             Logger.LogWarning("Missing X-User-Role header for user {UserId}", userId);
             return Task.FromResult(AuthenticateResult.Fail("Missing X-User-Role header"));
+        }
+        
+        // Validate role against whitelist
+        if (!AllowedRoles.Contains(roleHeader))
+        {
+            Logger.LogWarning("Invalid role '{Role}' provided for user {UserId}. Rejecting authentication.", roleHeader, userId);
+            return Task.FromResult(AuthenticateResult.Fail("Invalid role"));
         }
 
         var role = roleHeader;

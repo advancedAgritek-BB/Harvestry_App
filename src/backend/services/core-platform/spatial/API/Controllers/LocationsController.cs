@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Harvestry.Spatial.API.Controllers;
 
 [ApiController]
-[Route("api/sites/{siteId:guid}/locations")]
+[Route("api/v1/sites/{siteId:guid}/locations")]
 public sealed class LocationsController : ControllerBase
 {
     private readonly ISpatialHierarchyService _spatialHierarchyService;

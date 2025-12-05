@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
+using Microsoft.EntityFrameworkCore;
+using Harvestry.Identity.Domain.Entities;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,7 @@ namespace Harvestry.Identity.Infrastructure.Persistence;
 /// setting Row-Level Security (RLS) session variables, and providing
 /// transaction support for the identity service.
 /// </summary>
-public sealed class IdentityDbContext : IAsyncDisposable, IDisposable
+public class IdentityDbContext : DbContext
 {
     private const string CurrentUserKey = "app.current_user_id";
     private const string UserRoleKey = "app.user_role";
@@ -38,11 +39,11 @@ public sealed class IdentityDbContext : IAsyncDisposable, IDisposable
     private NpgsqlConnection? _connection;
     private bool _disposed;
 
-    public IdentityDbContext(NpgsqlDataSource dataSource, ILogger<IdentityDbContext> logger)
-    {
-        _dataSource = dataSource ?? throw new ArgumentNullException(nameof(dataSource));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    public DbSet<Site> Sites => Set<Site>();
+    public DbSet<UserSite> UserSites => Set<UserSite>();
+
+    public IdentityDbContext(DbContextOptions<IdentityDbContext> options) : base(options) { }
+
 
     /// <summary>
     /// Gets an open connection, opening it with retry semantics when necessary.
@@ -205,108 +206,31 @@ public sealed class IdentityDbContext : IAsyncDisposable, IDisposable
         };
     }
 
-    /// <summary>
-    /// Disposes resources synchronously. Note: DisposeAsync() is the preferred method
-    /// as it properly handles async connection cleanup. This synchronous method uses
-    /// blocking disposal which may not be optimal for all scenarios.
-    /// </summary>
     public void Dispose()
     {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-
-        // Dispose semaphore independently with its own exception handling
-        try
-        {
-            _connectionSemaphore.Dispose();
-        }
-        catch (ObjectDisposedException)
-        {
-            // Already disposed – no action required.
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Unexpected error while disposing connection semaphore");
-        }
-
-        // Dispose connection independently with its own exception handling
-        if (_connection is not null)
-        {
-            try
-            {
-                _connection.Close();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error while closing PostgreSQL connection during synchronous disposal");
-            }
-
-            try
-            {
-                _connection.Dispose();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error while disposing PostgreSQL connection during synchronous disposal");
-            }
-            finally
-            {
-                _connection = null;
-            }
-        }
+        base.Dispose();
+        DisposeSemaphore();
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (_disposed)
-        {
-            return;
-        }
+        await base.DisposeAsync();
+        DisposeSemaphore();
+    }
 
+    private void DisposeSemaphore()
+    {
+        if (_disposed) return;
         _disposed = true;
 
-        // Dispose semaphore independently with its own exception handling
         try
         {
             _connectionSemaphore.Dispose();
         }
-        catch (ObjectDisposedException)
-        {
-            // Already disposed – no action required.
-        }
+        catch (ObjectDisposedException) { }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Unexpected error while disposing connection semaphore");
-        }
-
-        // Dispose connection independently with its own exception handling
-        if (_connection is not null)
-        {
-            try
-            {
-                await _connection.CloseAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error while closing PostgreSQL connection during async disposal");
-            }
-
-            try
-            {
-                await _connection.DisposeAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error while disposing PostgreSQL connection during async disposal");
-            }
-            finally
-            {
-                _connection = null;
-            }
         }
     }
 }

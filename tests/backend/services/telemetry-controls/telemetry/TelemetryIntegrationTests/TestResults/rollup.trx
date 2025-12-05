@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="d39ae9fb-2c06-4bc9-9714-d57cf0636a43" name="@Brandons-MacBook-Pro 2025-10-03 14:21:48" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-10-03T14:21:48.9505900-05:00" queuing="2025-10-03T14:21:48.9505900-05:00" start="2025-10-03T14:21:47.7118540-05:00" finish="2025-10-03T14:21:48.9541460-05:00" />
+  <TestSettings name="default" id="b505354f-f43c-47a7-80e4-644eb20b1abc">
+    <Deployment runDeploymentRoot="_Brandons-MacBook-Pro_2025-10-03_14_21_48" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="7318f75b-9121-4a43-b797-b9dde7bc87f2" testId="599562c5-0889-c728-1b8c-8a0a35dcd744" testName="Harvestry.Telemetry.IntegrationTests.IngestionAndRollupTests.IngestBatch_PersistsRawReadings_And_RollupsQueryable" computerName="Brandons-MacBook-Pro" duration="00:00:00.6535951" startTime="2025-10-03T14:21:48.8941000-05:00" endTime="2025-10-03T14:21:48.8941090-05:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7318f75b-9121-4a43-b797-b9dde7bc87f2">
+      <Output>
+        <ErrorInfo>
+          <Message>Npgsql.PostgresException : 42P01: relation "sensor_readings_1min" does not exist
+
+POSITION: 126</Message>
+          <StackTrace>   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Harvestry.Telemetry.Infrastructure.Repositories.TelemetryQueryRepository.GetRollupsAsync(Guid streamId, DateTimeOffset start, DateTimeOffset end, RollupInterval interval, CancellationToken cancellationToken) in /Users/brandonburnette/Downloads/Harvestry_App/src/backend/services/telemetry-controls/telemetry/Infrastructure/Repositories/TelemetryQueryRepository.cs:line 128
+   at Harvestry.Telemetry.Infrastructure.Repositories.TelemetryQueryRepository.GetRollupsAsync(Guid streamId, DateTimeOffset start, DateTimeOffset end, RollupInterval interval, CancellationToken cancellationToken) in /Users/brandonburnette/Downloads/Harvestry_App/src/backend/services/telemetry-controls/telemetry/Infrastructure/Repositories/TelemetryQueryRepository.cs:line 143
+   at Harvestry.Telemetry.Infrastructure.Repositories.TelemetryQueryRepository.GetRollupsAsync(Guid streamId, DateTimeOffset start, DateTimeOffset end, RollupInterval interval, CancellationToken cancellationToken) in /Users/brandonburnette/Downloads/Harvestry_App/src/backend/services/telemetry-controls/telemetry/Infrastructure/Repositories/TelemetryQueryRepository.cs:line 143
+   at Harvestry.Telemetry.IntegrationTests.IngestionAndRollupTests.IngestBatch_PersistsRawReadings_And_RollupsQueryable() in /Users/brandonburnette/Downloads/Harvestry_App/tests/backend/services/telemetry-controls/telemetry/TelemetryIntegrationTests/IngestionAndRollupTests.cs:line 70
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Harvestry.Telemetry.IntegrationTests.IngestionAndRollupTests.IngestBatch_PersistsRawReadings_And_RollupsQueryable" storage="/users/brandonburnette/downloads/harvestry_app/tests/backend/services/telemetry-controls/telemetry/telemetryintegrationtests/bin/debug/net8.0/harvestry.telemetry.integrationtests.dll" id="599562c5-0889-c728-1b8c-8a0a35dcd744">
+      <Execution id="7318f75b-9121-4a43-b797-b9dde7bc87f2" />
+      <TestMethod codeBase="/Users/brandonburnette/Downloads/Harvestry_App/tests/backend/services/telemetry-controls/telemetry/TelemetryIntegrationTests/bin/Debug/net8.0/Harvestry.Telemetry.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Harvestry.Telemetry.IntegrationTests.IngestionAndRollupTests" name="IngestBatch_PersistsRawReadings_And_RollupsQueryable" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="599562c5-0889-c728-1b8c-8a0a35dcd744" executionId="7318f75b-9121-4a43-b797-b9dde7bc87f2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.4.1+b9eacec401 (64-bit .NET 8.0.10)
+[xUnit.net 00:00:00.03]   Discovering: Harvestry.Telemetry.IntegrationTests
+[xUnit.net 00:00:00.05]   Discovered:  Harvestry.Telemetry.IntegrationTests
+[xUnit.net 00:00:00.05]   Starting:    Harvestry.Telemetry.IntegrationTests
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (13ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p2='?', @p3='?' (DbType = Guid), @p4='?' (DbType = Guid), @p5='?' (DbType = Boolean), @p6='?' (DbType = Guid), @p7='?' (DbType = Object), @p8='?' (DbType = Guid), @p9='?' (DbType = Guid), @p10='?', @p11='?', @p12='?' (DbType = DateTime), @p13='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO sensor_streams (id, created_at, display_name, equipment_channel_id, equipment_id, is_active, location_id, metadata, room_id, site_id, stream_type, unit, updated_at, zone_id)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13);
+info: Harvestry.Telemetry.Application.Services.TelemetryIngestService[0]
+      Starting ingestion batch: SiteId=be81ac02-6059-457c-ab2c-9b477b095816, EquipmentId=bb9ef952-cf45-404d-a7cb-fe1e730227e5, Count=10
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@__ids_0='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']
+      SELECT s.id, s.created_at, s.display_name, s.equipment_channel_id, s.equipment_id, s.is_active, s.location_id, s.metadata, s.room_id, s.site_id, s.stream_type, s.unit, s.updated_at, s.zone_id
+      FROM sensor_streams AS s
+      WHERE s.id = ANY (@__ids_0)
+info: Harvestry.Telemetry.Application.Services.TelemetryIngestService[0]
+      Completed ingestion batch: Accepted=10, Rejected=0, Duplicates=0, ProcessingTime=200ms
+[xUnit.net 00:00:00.91]       Npgsql.PostgresException : 42P01: relation "sensor_readings_1min" does not exist
+[xUnit.net 00:00:00.91]       
+[xUnit.net 00:00:00.91]       POSITION: 126
+[xUnit.net 00:00:00.91]       Stack Trace:
+[xUnit.net 00:00:00.91]            at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+[xUnit.net 00:00:00.91]            at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource&lt;TResult&gt;.GetResult(Int16 token)
+[xUnit.net 00:00:00.91]            at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.91]            at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.91]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.91]            at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.91]         /Users/brandonburnette/Downloads/Harvestry_App/src/backend/services/telemetry-controls/telemetry/Infrastructure/Repositories/TelemetryQueryRepository.cs(128,0): at Harvestry.Telemetry.Infrastructure.Repositories.TelemetryQueryRepository.GetRollupsAsync(Guid streamId, DateTimeOffset start, DateTimeOffset end, RollupInterval interval, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.91]         /Users/brandonburnette/Downloads/Harvestry_App/src/backend/services/telemetry-controls/telemetry/Infrastructure/Repositories/TelemetryQueryRepository.cs(143,0): at Harvestry.Telemetry.Infrastructure.Repositories.TelemetryQueryRepository.GetRollupsAsync(Guid streamId, DateTimeOffset start, DateTimeOffset end, RollupInterval interval, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.91]         /Users/brandonburnette/Downloads/Harvestry_App/src/backend/services/telemetry-controls/telemetry/Infrastructure/Repositories/TelemetryQueryRepository.cs(143,0): at Harvestry.Telemetry.Infrastructure.Repositories.TelemetryQueryRepository.GetRollupsAsync(Guid streamId, DateTimeOffset start, DateTimeOffset end, RollupInterval interval, CancellationToken cancellationToken)
+[xUnit.net 00:00:00.91]         /Users/brandonburnette/Downloads/Harvestry_App/tests/backend/services/telemetry-controls/telemetry/TelemetryIntegrationTests/IngestionAndRollupTests.cs(70,0): at Harvestry.Telemetry.IntegrationTests.IngestionAndRollupTests.IngestBatch_PersistsRawReadings_And_RollupsQueryable()
+[xUnit.net 00:00:00.91]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:00.92]   Finished:    Harvestry.Telemetry.IntegrationTests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="Brandons-MacBook-Pro" outcome="Error" timestamp="2025-10-03T14:21:48.8927100-05:00">
+        <Text>[xUnit.net 00:00:00.91]     Harvestry.Telemetry.IntegrationTests.IngestionAndRollupTests.IngestBatch_PersistsRawReadings_And_RollupsQueryable [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

@@ -28,7 +28,7 @@ public sealed class ValveZoneMappingIntegrationTests : IntegrationTestBase
             Name = "Valve Room",
             RoomType = RoomType.Flower,
             RequestedByUserId = SpatialTestDataSeeder.ManagerUserId
-        }).ConfigureAwait(false);
+        });
 
         var zoneA = await hierarchyService.CreateLocationAsync(new CreateLocationRequest
         {
@@ -38,7 +38,7 @@ public sealed class ValveZoneMappingIntegrationTests : IntegrationTestBase
             Code = $"ZN-{Guid.NewGuid():N}".Substring(0, 6),
             Name = "Zone A",
             RequestedByUserId = SpatialTestDataSeeder.ManagerUserId
-        }).ConfigureAwait(false);
+        });
 
         var zoneB = await hierarchyService.CreateLocationAsync(new CreateLocationRequest
         {
@@ -48,7 +48,7 @@ public sealed class ValveZoneMappingIntegrationTests : IntegrationTestBase
             Code = $"ZN-{Guid.NewGuid():N}".Substring(0, 6),
             Name = "Zone B",
             RequestedByUserId = SpatialTestDataSeeder.ManagerUserId
-        }).ConfigureAwait(false);
+        });
 
         var equipment = await equipmentService.CreateAsync(new CreateEquipmentRequest
         {
@@ -58,7 +58,7 @@ public sealed class ValveZoneMappingIntegrationTests : IntegrationTestBase
             Code = $"VALVE-{Guid.NewGuid():N}".Substring(0, 8),
             TypeCode = "valve",
             CoreType = CoreEquipmentType.Valve
-        }).ConfigureAwait(false);
+        });
 
         // Act: Create mapping
         var mapping = await valveService.CreateAsync(
@@ -74,7 +74,7 @@ public sealed class ValveZoneMappingIntegrationTests : IntegrationTestBase
                 NormallyOpen = false,
                 InterlockGroup = "MIX-1",
                 Notes = "Initial mapping"
-            }).ConfigureAwait(false);
+            });
 
         Assert.Equal(equipment.Id, mapping.ValveEquipmentId);
         Assert.Equal(zoneA.Id, mapping.ZoneLocationId);
@@ -83,7 +83,7 @@ public sealed class ValveZoneMappingIntegrationTests : IntegrationTestBase
         Assert.Equal("MIX-1", mapping.InterlockGroup);
 
         // Verify retrieval by valve
-        var byValve = await valveService.GetByValveAsync(SpatialTestDataSeeder.SiteId, equipment.Id).ConfigureAwait(false);
+        var byValve = await valveService.GetByValveAsync(SpatialTestDataSeeder.SiteId, equipment.Id);
         Assert.Single(byValve);
         Assert.Equal(mapping.Id, byValve.Single().Id);
 
@@ -100,7 +100,7 @@ public sealed class ValveZoneMappingIntegrationTests : IntegrationTestBase
                 InterlockGroup = "MIX-PRIMARY",
                 Notes = "Switched to zone B",
                 Enabled = true
-            }).ConfigureAwait(false);
+            });
 
         Assert.Equal(zoneB.Id, updated.ZoneLocationId);
         Assert.Equal(2, updated.Priority);
@@ -109,14 +109,14 @@ public sealed class ValveZoneMappingIntegrationTests : IntegrationTestBase
         Assert.Equal("Switched to zone B", updated.Notes);
 
         // Fetch by zone should include new mapping
-        var byZone = await valveService.GetByZoneAsync(SpatialTestDataSeeder.SiteId, zoneB.Id).ConfigureAwait(false);
+        var byZone = await valveService.GetByZoneAsync(SpatialTestDataSeeder.SiteId, zoneB.Id);
         Assert.Single(byZone);
         Assert.Equal(mapping.Id, byZone.Single().Id);
 
         // Delete mapping
-        await valveService.DeleteAsync(SpatialTestDataSeeder.SiteId, mapping.Id, SpatialTestDataSeeder.ManagerUserId).ConfigureAwait(false);
+        await valveService.DeleteAsync(SpatialTestDataSeeder.SiteId, mapping.Id, SpatialTestDataSeeder.ManagerUserId);
 
-        var remaining = await valveService.GetByValveAsync(SpatialTestDataSeeder.SiteId, equipment.Id).ConfigureAwait(false);
+        var remaining = await valveService.GetByValveAsync(SpatialTestDataSeeder.SiteId, equipment.Id);
         Assert.Empty(remaining);
     }
 }

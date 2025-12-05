@@ -122,7 +122,7 @@ public sealed class ValveZoneMappingServiceTests
             NormallyOpen = true,
             InterlockGroup = "GROUP-A",
             Notes = "Primary zone"
-        }).ConfigureAwait(false);
+        });
 
         Assert.NotNull(inserted);
         Assert.Equal(response.Id, inserted!.Id);
@@ -322,7 +322,7 @@ public sealed class ValveZoneMappingServiceTests
             InterlockGroup = "GROUP-B",
             Notes = "Updated",
             Enabled = true
-        }).ConfigureAwait(false);
+        });
 
         Assert.Equal(newZoneId, response.ZoneLocationId);
         Assert.Equal("CH-2", response.ValveChannelCode);

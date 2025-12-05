@@ -1,9 +1,11 @@
 # FRP-03: Genetics, Strains & Batches - Implementation Plan
 
-**Status:** 🎯 READY TO START  
-**Estimated Effort:** 18-22 hours  
+**Status:** ✅ Completed (Historical reference)  
+**Actual Effort:** Within planned 18-22 hours window  
 **Prerequisites:** ✅ FRP-01 Complete (Identity, RLS, ABAC), ✅ FRP-02 Complete (Spatial, Equipment)  
-**Blocks:** FRP-07 (Inventory), FRP-08 (Processing), FRP-09 (Compliance)
+**Blocks Cleared:** Dependencies for FRP-07/08/09 are now unblocked by FRP-03 delivery
+
+> **Note:** This document preserves the original task breakdown. All checklist items have been delivered; refer to `FRP03_FINAL_STATUS_UPDATE.md` for the final outcome.
 
 ---
 
@@ -24,6 +26,7 @@ Establish a comprehensive genetics and strain management system with batch lifec
 - ✅ Batch lineage tracked correctly (parent-child relationships)
 - ✅ Mother plant health logs retrievable and reportable
 - ✅ Strain-specific blueprints associable to batches
+- ✅ Configurable stage templates + transitions drive lifecycle
 - ✅ Batch state machine enforces valid transitions
 - ✅ RLS blocks cross-site access to genetics data
 
@@ -104,6 +107,41 @@ strains (
 
 **Tables:**
 ```sql
+-- Batch Stage Definitions (site-configurable lifecycle stages)
+batch_stage_definitions (
+    id uuid PRIMARY KEY,
+    site_id uuid NOT NULL REFERENCES sites(id),
+    stage_key varchar(50) NOT NULL,
+    display_name varchar(100) NOT NULL,
+    description text,
+    sequence_order int NOT NULL,
+    is_terminal boolean DEFAULT FALSE,
+    requires_harvest_metrics boolean DEFAULT FALSE,
+    created_at timestamptz,
+    updated_at timestamptz,
+    created_by uuid NOT NULL REFERENCES users(id),
+    updated_by uuid NOT NULL REFERENCES users(id),
+    UNIQUE(site_id, stage_key),
+    UNIQUE(site_id, sequence_order)
+)
+
+-- Batch Stage Transitions (site-configurable stage flow)
+batch_stage_transitions (
+    id uuid PRIMARY KEY,
+    site_id uuid NOT NULL REFERENCES sites(id),
+    from_stage_id uuid NOT NULL REFERENCES batch_stage_definitions(id) ON DELETE CASCADE,
+    to_stage_id uuid NOT NULL REFERENCES batch_stage_definitions(id) ON DELETE CASCADE,
+    auto_advance boolean DEFAULT FALSE,
+    requires_approval boolean DEFAULT FALSE,
+    approval_role varchar(100),
+    created_at timestamptz,
+    updated_at timestamptz,
+    created_by uuid NOT NULL REFERENCES users(id),
+    updated_by uuid NOT NULL REFERENCES users(id),
+    UNIQUE(site_id, from_stage_id, to_stage_id)
+)
+> **Commissioning Option:** Offer a setup/commissioning package to help customers configure stage templates and transitions during onboarding, ensuring local compliance without custom code.
+
 -- Batches (groups of plants with shared genetics)
 batches (
     id uuid PRIMARY KEY,
@@ -113,15 +151,11 @@ batches (
     batch_name varchar(200),
     batch_type varchar(50) CHECK (batch_type IN ('seed', 'clone', 'tissue_culture', 'mother_plant')),
     source_type varchar(50) CHECK (source_type IN ('purchase', 'propagation', 'breeding', 'tissue_culture')),
-    source_batch_id uuid REFERENCES batches(id),
     parent_batch_id uuid REFERENCES batches(id),
     generation int DEFAULT 1,
     plant_count int NOT NULL,
     target_plant_count int,
-    current_stage varchar(50) CHECK (current_stage IN (
-        'germination', 'seedling', 'veg', 'pre_flower', 'flower', 
-        'harvest', 'cure', 'packaged', 'shipped', 'destroyed'
-    )),
+    current_stage_id uuid NOT NULL REFERENCES batch_stage_definitions(id),
     stage_started_at timestamptz,
     expected_harvest_date date,
     actual_harvest_date date,
@@ -138,20 +172,31 @@ batches (
     UNIQUE(site_id, batch_code)
 )
 
--- Batch Code Generation Settings (user-configurable per site)
-batch_code_settings (
+-- Batch Stage History (audit trail for stage changes)
+batch_stage_history (
+    id uuid PRIMARY KEY,
+    batch_id uuid NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+    from_stage_id uuid REFERENCES batch_stage_definitions(id),
+    to_stage_id uuid NOT NULL REFERENCES batch_stage_definitions(id),
+    changed_by uuid NOT NULL REFERENCES users(id),
+    changed_at timestamptz NOT NULL,
+    notes text
+)
+
+-- Batch Code Rules (jurisdiction-compliant, user-defined)
+batch_code_rules (
     id uuid PRIMARY KEY,
     site_id uuid NOT NULL REFERENCES sites(id),
-    prefix varchar(20) NOT NULL,
-    format varchar(50) NOT NULL DEFAULT '{prefix}-{year}-{sequence}',
-    sequence_start int DEFAULT 1,
-    sequence_padding int DEFAULT 4,
+    name varchar(100) NOT NULL,
+    rule_definition jsonb NOT NULL,
+    reset_policy varchar(50) CHECK (reset_policy IN ('never', 'annual', 'monthly', 'per_harvest')),
     is_active boolean DEFAULT TRUE,
     created_at timestamptz,
     updated_at timestamptz,
     created_by uuid NOT NULL REFERENCES users(id),
     updated_by uuid NOT NULL REFERENCES users(id),
-    UNIQUE(site_id, is_active) WHERE is_active = TRUE
+    UNIQUE(site_id, name),
+    UNIQUE(site_id) WHERE is_active = TRUE
 )
 
 -- Batch Events (state changes and activities)
@@ -216,12 +261,45 @@ mother_health_reminder_settings (
     reminder_frequency_days int NOT NULL DEFAULT 7,
     reminder_enabled boolean DEFAULT TRUE,
     escalation_days int DEFAULT 3,
-    notification_channels text[] DEFAULT ARRAY['email', 'slack'],
+    notification_channels text[] DEFAULT ARRAY[]::text[],
     created_at timestamptz,
     updated_at timestamptz,
     created_by uuid NOT NULL REFERENCES users(id),
     updated_by uuid NOT NULL REFERENCES users(id),
     UNIQUE(site_id)
+)
+
+-- Propagation Settings (site-wide propagation controls)
+propagation_settings (
+    id uuid PRIMARY KEY,
+    site_id uuid NOT NULL REFERENCES sites(id),
+    daily_limit int,
+    weekly_limit int,
+    mother_propagation_limit int,
+    requires_override_approval boolean DEFAULT TRUE,
+    approver_role varchar(100),
+    approver_policy jsonb,
+    created_at timestamptz,
+    updated_at timestamptz,
+    created_by uuid NOT NULL REFERENCES users(id),
+    updated_by uuid NOT NULL REFERENCES users(id),
+    UNIQUE(site_id)
+)
+
+-- Propagation Override Requests (approval workflow)
+propagation_override_requests (
+    id uuid PRIMARY KEY,
+    site_id uuid NOT NULL REFERENCES sites(id),
+    requested_by uuid NOT NULL REFERENCES users(id),
+    approver_id uuid REFERENCES users(id),
+    mother_plant_id uuid REFERENCES mother_plants(id),
+    batch_id uuid REFERENCES batches(id),
+    requested_quantity int NOT NULL,
+    reason text NOT NULL,
+    status varchar(30) CHECK (status IN ('pending', 'approved', 'rejected', 'expired')),
+    requested_on timestamptz NOT NULL,
+    decision_notes text,
+    resolved_on timestamptz
 )
 
 -- Mother Plant Health Logs
@@ -243,17 +321,25 @@ mother_health_logs (
 )
 ```
 
+> **Operational follow-up:** Notification channels remain stubbed until the communications platform lands. Track the reconnect work in the post-FRP backlog so email/Slack hooks can be enabled without schema changes.
+
 **RLS Policies:**
 ```sql
 -- Enable RLS on all tables
 ALTER TABLE genetics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE phenotypes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE strains ENABLE ROW LEVEL SECURITY;
+ALTER TABLE batch_stage_definitions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE batch_stage_transitions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE batches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE batch_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE batch_relationships ENABLE ROW LEVEL SECURITY;
+ALTER TABLE batch_stage_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mother_plants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mother_health_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE batch_code_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE propagation_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE propagation_override_requests ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can only access their site's genetics data
 CREATE POLICY genetics_site_access ON genetics
@@ -277,8 +363,15 @@ CREATE INDEX idx_batches_current_stage ON batches(current_stage) WHERE status = 
 CREATE INDEX idx_batch_events_batch_type ON batch_events(batch_id, event_type);
 CREATE INDEX idx_batch_relationships_parent ON batch_relationships(parent_batch_id);
 CREATE INDEX idx_batch_relationships_child ON batch_relationships(child_batch_id);
+CREATE INDEX idx_batch_stage_definitions_site_key ON batch_stage_definitions(site_id, stage_key);
+CREATE INDEX idx_batch_stage_definitions_order ON batch_stage_definitions(site_id, sequence_order);
+CREATE INDEX idx_batch_stage_transitions_site_from ON batch_stage_transitions(site_id, from_stage_id);
+CREATE INDEX idx_batch_stage_history_batch ON batch_stage_history(batch_id);
 CREATE INDEX idx_mother_plants_site_status ON mother_plants(site_id, status);
 CREATE INDEX idx_mother_health_logs_plant_date ON mother_health_logs(mother_plant_id, log_date);
+CREATE INDEX idx_batch_code_rules_site ON batch_code_rules(site_id) WHERE is_active = TRUE;
+CREATE INDEX idx_propagation_settings_site ON propagation_settings(site_id);
+CREATE INDEX idx_propagation_override_requests_status ON propagation_override_requests(site_id, status);
 ```
 
 ---
@@ -297,22 +390,36 @@ src/backend/services/core-platform/genetics/Domain/
 │   ├── Batch.cs
 │   ├── BatchEvent.cs
 │   ├── BatchRelationship.cs
+│   ├── BatchStageDefinition.cs
+│   ├── BatchStageTransition.cs
+│   ├── BatchStageHistory.cs
 │   ├── MotherPlant.cs
-│   └── MotherHealthLog.cs
+│   ├── MotherHealthLog.cs
+│   ├── BatchCodeRule.cs
+│   ├── PropagationSettings.cs
+│   └── PropagationOverrideRequest.cs
 ├── ValueObjects/
 │   ├── BatchCode.cs
 │   ├── PlantId.cs
 │   ├── GeneticProfile.cs
 │   ├── TerpeneProfile.cs
-│   └── HealthStatus.cs
+│   ├── HealthAssessment.cs
+│   ├── StageKey.cs
+│   ├── TargetEnvironment.cs
+│   └── ComplianceRequirements.cs
 └── Enums/
     ├── GeneticType.cs (Indica, Sativa, Hybrid, Autoflower, Hemp)
+    ├── YieldPotential.cs (Low, Medium, High, VeryHigh)
     ├── BatchType.cs (Seed, Clone, TissueCulture, MotherPlant)
-    ├── BatchStage.cs (Germination, Seedling, Veg, PreFlower, Flower, Harvest, Cure, Packaged, Shipped, Destroyed)
-    ├── BatchStatus.cs (Active, Quarantine, Hold, Destroyed, Completed)
+    ├── BatchSourceType.cs (Purchase, Propagation, Breeding, TissueCulture)
+    ├── BatchStatus.cs (Active, Quarantine, Hold, Destroyed, Completed, Transferred)
+    ├── MotherPlantStatus.cs (Active, Quarantine, Retired, Destroyed)
+    ├── HealthStatus.cs (Excellent, Good, Fair, Poor, Critical)
     ├── EventType.cs (Created, StageChange, LocationChange, etc.)
     ├── RelationshipType.cs (Split, Merge, Propagation, Transformation)
-    └── HealthStatus.cs (Excellent, Good, Fair, Poor, Critical)
+    ├── PressureLevel.cs (None, Low, Medium, High)
+    ├── PropagationOverrideStatus.cs (Pending, Approved, Rejected, Expired)
+    └── StandardBatchStage.cs (reference defaults provided during setup)
 ```
 
 **Key Domain Methods:**
@@ -349,26 +456,25 @@ public class Batch : AggregateRoot<Guid>
     public BatchCode BatchCode { get; private set; }
     public string BatchName { get; private set; }
     public BatchType BatchType { get; private set; }
-    public SourceType SourceType { get; private set; }
-    public Guid? SourceBatchId { get; private set; }
+    public BatchSourceType SourceType { get; private set; }
     public Guid? ParentBatchId { get; private set; }
     public int Generation { get; private set; }
     public int PlantCount { get; private set; }
     public int? TargetPlantCount { get; private set; }
-    public BatchStage CurrentStage { get; private set; }
-    public DateTime? StageStartedAt { get; private set; }
+    public BatchStageDefinition CurrentStage { get; private set; }
+    public DateTimeOffset StageStartedAt { get; private set; }
     public DateOnly? ExpectedHarvestDate { get; private set; }
     public DateOnly? ActualHarvestDate { get; private set; }
     public Guid? LocationId { get; private set; }
     public Guid? RoomId { get; private set; }
     public Guid? ZoneId { get; private set; }
     public BatchStatus Status { get; private set; }
-    
+
     private readonly List<BatchEvent> _events = new();
     public IReadOnlyCollection<BatchEvent> Events => _events.AsReadOnly();
-    
+
     // Methods
-    public void ChangeStage(BatchStage newStage, Guid userId, string notes = null);
+    public void ChangeStage(BatchStageDefinition targetStage, Guid userId, string? notes = null);
     public void UpdateLocation(Guid? locationId, Guid? roomId, Guid? zoneId, Guid userId);
     public void UpdatePlantCount(int newCount, Guid userId, string reason);
     public void Split(int plantCount, BatchCode newBatchCode, string newBatchName, Guid userId, bool isPartialSplit = true);
@@ -377,13 +483,45 @@ public class Batch : AggregateRoot<Guid>
     public void ReleaseFromQuarantine(Guid userId);
     public void Harvest(DateOnly harvestDate, Guid userId);
     public void Destroy(string reason, Guid userId);
-    public void AddEvent(EventType eventType, object eventData, Guid userId, string notes = null);
-    public bool CanTransitionTo(BatchStage newStage);
+    public void AddEvent(EventType eventType, object eventData, Guid userId, string? notes = null);
+    public bool CanTransitionTo(BatchStageDefinition targetStage, IReadOnlyCollection<BatchStageTransition> allowedTransitions);
     public bool CanSplit(int plantCountToSplit);
     public bool CanMerge(Batch otherBatch);
+    public bool RequiresPropagationOverride(int requestedCloneCount, PropagationSettings settings);
     public TimeSpan GetStageDuration();
-    public List<Batch> GetLineage();
-    public static BatchCode GenerateBatchCode(string prefix, string format, int sequence);
+    public IReadOnlyCollection<Batch> GetLineage();
+    public static BatchCode GenerateBatchCode(BatchCodeRule rule, IReadOnlyDictionary<string, object> context);
+}
+```
+
+**BatchStageDefinition.cs:**
+```csharp
+public class BatchStageDefinition : AggregateRoot<Guid>
+{
+    public Guid SiteId { get; private set; }
+    public StageKey StageKey { get; private set; }
+    public string DisplayName { get; private set; }
+    public string? Description { get; private set; }
+    public int SequenceOrder { get; private set; }
+    public bool IsTerminal { get; private set; }
+    public bool RequiresHarvestMetrics { get; private set; }
+
+    public void Update(string displayName, string? description, int order, bool isTerminal, bool requiresHarvestMetrics, Guid userId);
+}
+```
+
+**BatchStageTransition.cs:**
+```csharp
+public class BatchStageTransition : AggregateRoot<Guid>
+{
+    public Guid SiteId { get; private set; }
+    public Guid FromStageId { get; private set; }
+    public Guid ToStageId { get; private set; }
+    public bool AutoAdvance { get; private set; }
+    public bool RequiresApproval { get; private set; }
+    public string? ApprovalRole { get; private set; }
+
+    public void Update(bool autoAdvance, bool requiresApproval, string? approvalRole, Guid userId);
 }
 ```
 
@@ -401,26 +539,81 @@ public class MotherPlant : AggregateRoot<Guid>
     public DateOnly DateEstablished { get; private set; }
     public DateOnly? LastPropagationDate { get; private set; }
     public int PropagationCount { get; private set; }
-    public int? MaxPropagationCount { get; private set; }
-    
+
     private readonly List<MotherHealthLog> _healthLogs = new();
     public IReadOnlyCollection<MotherHealthLog> HealthLogs => _healthLogs.AsReadOnly();
-    
+
     // Methods
-    public void RecordHealthLog(HealthStatus status, string observations, string treatments, 
-        PestPressure pestPressure, DiseasePressure diseasePressure, string[] nutrientDeficiencies, 
-        string environmentalNotes, string[] photoUrls, Guid userId);
-    public void Propagate(Guid userId);
+    public void RecordHealthLog(HealthAssessment assessment, Guid userId);
+    public void RegisterPropagation(int propagatedCount, Guid userId);
     public void Retire(string reason, Guid userId);
     public void Reactivate(Guid userId);
     public void UpdateLocation(Guid? locationId, Guid? roomId, Guid userId);
-    public bool CanPropagate();
-    public bool IsOverdueForHealthCheck(int reminderFrequencyDays);
-    public HealthStatus GetCurrentHealthStatus();
+    public bool CanPropagate(PropagationSettings settings, int requestedCloneCount);
+    public PropagationOverrideRequest RequestPropagationOverride(PropagationSettings settings, int requestedCloneCount, string reason, Guid requestedBy);
+    public bool IsOverdueForHealthCheck(TimeSpan reminderFrequency);
+    public HealthAssessment GetLatestAssessment();
     public TimeSpan GetAge();
-    public DateOnly? GetNextHealthCheckDue(int reminderFrequencyDays);
+    public DateOnly? GetNextHealthCheckDue(TimeSpan reminderFrequency);
 }
 ```
+
+**PropagationSettings.cs:**
+```csharp
+public class PropagationSettings : AggregateRoot<Guid>
+{
+    public Guid SiteId { get; private set; }
+    public int? DailyLimit { get; private set; }
+    public int? WeeklyLimit { get; private set; }
+    public int? MotherPropagationLimit { get; private set; }
+    public bool RequiresOverrideApproval { get; private set; }
+    public string? ApproverRole { get; private set; }
+    public IReadOnlyDictionary<string, string>? ApproverPolicy { get; private set; } // site-specific ABAC mapping
+
+    public void UpdateLimits(int? dailyLimit, int? weeklyLimit, int? motherLimit, bool requiresApproval, string? approverRole, IReadOnlyDictionary<string, string>? approverPolicy, Guid updatedBy);
+    public bool IsWithinLimits(int requestedCount, DateOnly date, int motherPropagationCount);
+    public PropagationOverrideRequest CreateOverrideRequest(Guid requestedBy, Guid? motherPlantId, Guid? batchId, int requestedCount, string reason);
+}
+```
+
+**PropagationOverrideRequest.cs:**
+```csharp
+public class PropagationOverrideRequest : AggregateRoot<Guid>
+{
+    public Guid SiteId { get; private set; }
+    public Guid RequestedBy { get; private set; }
+    public Guid? MotherPlantId { get; private set; }
+    public Guid? BatchId { get; private set; }
+    public int RequestedQuantity { get; private set; }
+    public string Reason { get; private set; }
+    public PropagationOverrideStatus Status { get; private set; }
+    public DateTimeOffset RequestedOn { get; private set; }
+    public Guid? ApproverId { get; private set; }
+    public DateTimeOffset? ResolvedOn { get; private set; }
+    public string? DecisionNotes { get; private set; }
+
+    public void Approve(Guid approverId, string? notes);
+    public void Reject(Guid approverId, string? notes);
+    public void Expire();
+}
+```
+
+**HealthAssessment.cs (Value Object):**
+```csharp
+public readonly record struct HealthAssessment(
+    HealthStatus Status,
+    PressureLevel PestPressure,
+    PressureLevel DiseasePressure,
+    IReadOnlyCollection<string> NutrientDeficiencies,
+    string? Observations,
+    string? TreatmentsApplied,
+    string? EnvironmentalNotes,
+    IReadOnlyCollection<Uri> PhotoUrls
+);
+```
+
+> **Note:** Approver policies are stored as JSON so each site can align overrides with its custom role taxonomy. Apply existing ABAC roles when present; otherwise allow admins to seed arbitrary claims and map them to propagation approvals.
+
 
 ---
 
@@ -434,23 +627,49 @@ src/backend/services/core-platform/genetics/Application/
 ├── Services/
 │   ├── GeneticsManagementService.cs
 │   ├── BatchLifecycleService.cs
-│   └── MotherHealthService.cs
+│   ├── BatchStageConfigurationService.cs
+│   └── MotherHealthService.cs (health + propagation controls)
 ├── DTOs/
 │   ├── CreateGeneticsRequest.cs
+│   ├── UpdateGeneticsRequest.cs
+│   ├── CreatePhenotypeRequest.cs
+│   ├── UpdatePhenotypeRequest.cs
 │   ├── CreateStrainRequest.cs
+│   ├── UpdateStrainRequest.cs
 │   ├── CreateBatchRequest.cs
+│   ├── UpdateBatchRequest.cs
 │   ├── BatchStageChangeRequest.cs
 │   ├── BatchSplitRequest.cs
 │   ├── BatchMergeRequest.cs
+│   ├── BatchStageRequest.cs
+│   ├── BatchStageResponse.cs
+│   ├── BatchStageOrderUpdateRequest.cs
+│   ├── BatchStageTransitionRequest.cs
+│   ├── BatchStageTransitionResponse.cs
+│   ├── BatchCodeGenerationContext.cs
+│   ├── BatchCodeRuleRequest.cs
+│   ├── BatchCodeRuleResponse.cs
+│   ├── UpdatePropagationSettingsRequest.cs
+│   ├── PropagationSettingsResponse.cs
+│   ├── CreatePropagationOverrideRequest.cs
+│   ├── PropagationOverrideDecisionRequest.cs
+│   ├── PropagationOverrideResponse.cs
+│   ├── UpdateMotherPlantRequest.cs
+│   ├── RegisterPropagationRequest.cs
 │   ├── MotherPlantHealthLogRequest.cs
+│   ├── HealthAssessmentDto.cs
 │   ├── GeneticsResponse.cs
+│   ├── PhenotypeResponse.cs
 │   ├── StrainResponse.cs
 │   ├── BatchResponse.cs
 │   ├── BatchLineageResponse.cs
-│   └── MotherPlantResponse.cs
+│   ├── BatchEventResponse.cs
+│   ├── MotherPlantResponse.cs
+│   └── MotherPlantHealthSummaryResponse.cs
 └── Interfaces/
     ├── IGeneticsManagementService.cs
     ├── IBatchLifecycleService.cs
+    ├── IBatchStageConfigurationService.cs
     └── IMotherHealthService.cs
 ```
 
@@ -460,13 +679,24 @@ src/backend/services/core-platform/genetics/Application/
 ```csharp
 public interface IGeneticsManagementService
 {
-    Task<GeneticsResponse> CreateGeneticsAsync(CreateGeneticsRequest request, CancellationToken ct);
-    Task<PhenotypeResponse> CreatePhenotypeAsync(CreatePhenotypeRequest request, CancellationToken ct);
-    Task<StrainResponse> CreateStrainAsync(CreateStrainRequest request, CancellationToken ct);
+    Task<GeneticsResponse> CreateGeneticsAsync(Guid siteId, CreateGeneticsRequest request, Guid userId, CancellationToken ct);
+    Task<GeneticsResponse?> GetGeneticsByIdAsync(Guid siteId, Guid geneticsId, CancellationToken ct);
     Task<IReadOnlyList<GeneticsResponse>> GetGeneticsBySiteAsync(Guid siteId, CancellationToken ct);
+    Task<GeneticsResponse> UpdateGeneticsAsync(Guid siteId, Guid geneticsId, UpdateGeneticsRequest request, Guid userId, CancellationToken ct);
+    Task DeleteGeneticsAsync(Guid siteId, Guid geneticsId, Guid userId, CancellationToken ct);
+
+    Task<PhenotypeResponse> CreatePhenotypeAsync(Guid siteId, CreatePhenotypeRequest request, Guid userId, CancellationToken ct);
+    Task<PhenotypeResponse> UpdatePhenotypeAsync(Guid siteId, Guid phenotypeId, UpdatePhenotypeRequest request, Guid userId, CancellationToken ct);
+    Task DeletePhenotypeAsync(Guid siteId, Guid phenotypeId, Guid userId, CancellationToken ct);
+    Task<IReadOnlyList<PhenotypeResponse>> GetPhenotypesByGeneticsAsync(Guid geneticsId, CancellationToken ct);
+
+    Task<StrainResponse> CreateStrainAsync(Guid siteId, CreateStrainRequest request, Guid userId, CancellationToken ct);
+    Task<StrainResponse> UpdateStrainAsync(Guid siteId, Guid strainId, UpdateStrainRequest request, Guid userId, CancellationToken ct);
+    Task DeleteStrainAsync(Guid siteId, Guid strainId, Guid userId, CancellationToken ct);
     Task<IReadOnlyList<StrainResponse>> GetStrainsBySiteAsync(Guid siteId, CancellationToken ct);
-    Task<StrainResponse> GetStrainByIdAsync(Guid strainId, CancellationToken ct);
+
     Task<bool> CanDeleteGeneticsAsync(Guid geneticsId, CancellationToken ct);
+    Task<bool> CanDeleteStrainAsync(Guid strainId, CancellationToken ct);
 }
 ```
 
@@ -474,20 +704,43 @@ public interface IGeneticsManagementService
 ```csharp
 public interface IBatchLifecycleService
 {
-    Task<BatchResponse> CreateBatchAsync(CreateBatchRequest request, CancellationToken ct);
-    Task<BatchResponse> ChangeBatchStageAsync(Guid batchId, BatchStageChangeRequest request, CancellationToken ct);
-    Task<BatchResponse> UpdateBatchLocationAsync(Guid batchId, UpdateBatchLocationRequest request, CancellationToken ct);
-    Task<BatchResponse> UpdateBatchPlantCountAsync(Guid batchId, UpdatePlantCountRequest request, CancellationToken ct);
-    Task<BatchResponse> SplitBatchAsync(Guid batchId, BatchSplitRequest request, CancellationToken ct);
-    Task<BatchResponse> MergeBatchesAsync(BatchMergeRequest request, CancellationToken ct);
-    Task<BatchResponse> QuarantineBatchAsync(Guid batchId, string reason, CancellationToken ct);
-    Task<BatchResponse> HarvestBatchAsync(Guid batchId, DateOnly harvestDate, CancellationToken ct);
-    Task<BatchLineageResponse> GetBatchLineageAsync(Guid batchId, CancellationToken ct);
-    Task<IReadOnlyList<BatchResponse>> GetBatchesBySiteAsync(Guid siteId, BatchStatus? status, CancellationToken ct);
-    Task<IReadOnlyList<BatchEventResponse>> GetBatchEventsAsync(Guid batchId, CancellationToken ct);
-    Task<BatchCodeResponse> GenerateBatchCodeAsync(Guid siteId, CancellationToken ct);
-    Task<BatchCodeSettingsResponse> GetBatchCodeSettingsAsync(Guid siteId, CancellationToken ct);
-    Task<BatchCodeSettingsResponse> UpdateBatchCodeSettingsAsync(Guid siteId, UpdateBatchCodeSettingsRequest request, CancellationToken ct);
+    Task<BatchResponse> CreateBatchAsync(Guid siteId, CreateBatchRequest request, Guid userId, CancellationToken ct);
+    Task<BatchResponse> UpdateBatchAsync(Guid siteId, Guid batchId, UpdateBatchRequest request, Guid userId, CancellationToken ct);
+    Task<BatchResponse> ChangeBatchStageAsync(Guid siteId, Guid batchId, BatchStageChangeRequest request, Guid userId, CancellationToken ct);
+    Task<BatchResponse> UpdateBatchLocationAsync(Guid siteId, Guid batchId, UpdateBatchLocationRequest request, Guid userId, CancellationToken ct);
+    Task<BatchResponse> UpdateBatchPlantCountAsync(Guid siteId, Guid batchId, UpdatePlantCountRequest request, Guid userId, CancellationToken ct);
+    Task<BatchResponse> SplitBatchAsync(Guid siteId, Guid batchId, BatchSplitRequest request, Guid userId, CancellationToken ct);
+    Task<BatchResponse> MergeBatchesAsync(Guid siteId, BatchMergeRequest request, Guid userId, CancellationToken ct);
+    Task<BatchResponse> QuarantineBatchAsync(Guid siteId, Guid batchId, string reason, Guid userId, CancellationToken ct);
+    Task<BatchResponse> ReleaseBatchFromQuarantineAsync(Guid siteId, Guid batchId, Guid userId, CancellationToken ct);
+    Task<BatchResponse> HarvestBatchAsync(Guid siteId, Guid batchId, DateOnly harvestDate, Guid userId, CancellationToken ct);
+    Task<BatchResponse> DestroyBatchAsync(Guid siteId, Guid batchId, string reason, Guid userId, CancellationToken ct);
+    Task<BatchLineageResponse> GetBatchLineageAsync(Guid siteId, Guid batchId, CancellationToken ct);
+    Task<IReadOnlyList<BatchResponse>> GetBatchesBySiteAsync(Guid siteId, BatchStatus? status, Guid? stageId, CancellationToken ct);
+    Task<IReadOnlyList<BatchEventResponse>> GetBatchEventsAsync(Guid siteId, Guid batchId, CancellationToken ct);
+
+    Task<BatchCodeResponse> GenerateBatchCodeAsync(Guid siteId, BatchCodeGenerationContext context, Guid userId, CancellationToken ct);
+    Task<IReadOnlyList<BatchCodeRuleResponse>> GetBatchCodeRulesAsync(Guid siteId, CancellationToken ct);
+    Task<BatchCodeRuleResponse> UpsertBatchCodeRuleAsync(Guid siteId, Guid? ruleId, BatchCodeRuleRequest request, Guid userId, CancellationToken ct);
+    Task ArchiveBatchCodeRuleAsync(Guid siteId, Guid ruleId, Guid userId, CancellationToken ct);
+}
+```
+
+**IBatchStageConfigurationService:**
+```csharp
+public interface IBatchStageConfigurationService
+{
+    Task<IReadOnlyList<BatchStageResponse>> GetStagesAsync(Guid siteId, CancellationToken ct);
+    Task<BatchStageResponse> CreateStageAsync(Guid siteId, BatchStageRequest request, Guid userId, CancellationToken ct);
+    Task<BatchStageResponse> UpdateStageAsync(Guid siteId, Guid stageId, BatchStageRequest request, Guid userId, CancellationToken ct);
+    Task ReorderStagesAsync(Guid siteId, BatchStageOrderUpdateRequest request, Guid userId, CancellationToken ct);
+    Task DeleteStageAsync(Guid siteId, Guid stageId, Guid userId, CancellationToken ct);
+
+    Task<IReadOnlyList<BatchStageTransitionResponse>> GetTransitionsAsync(Guid siteId, CancellationToken ct);
+    Task<BatchStageTransitionResponse> UpsertTransitionAsync(Guid siteId, Guid? transitionId, BatchStageTransitionRequest request, Guid userId, CancellationToken ct);
+    Task DeleteTransitionAsync(Guid siteId, Guid transitionId, Guid userId, CancellationToken ct);
+
+    Task SeedDefaultStagesAsync(Guid siteId, IEnumerable<StandardBatchStage> defaults, Guid userId, CancellationToken ct);
 }
 ```
 
@@ -495,15 +748,24 @@ public interface IBatchLifecycleService
 ```csharp
 public interface IMotherHealthService
 {
-    Task<MotherPlantResponse> CreateMotherPlantAsync(CreateMotherPlantRequest request, CancellationToken ct);
-    Task<MotherPlantResponse> RecordHealthLogAsync(Guid motherPlantId, MotherPlantHealthLogRequest request, CancellationToken ct);
-    Task<MotherPlantResponse> PropagateMotherPlantAsync(Guid motherPlantId, Guid userId, CancellationToken ct);
+    Task<MotherPlantResponse> CreateMotherPlantAsync(Guid siteId, CreateMotherPlantRequest request, Guid userId, CancellationToken ct);
+    Task<MotherPlantResponse?> GetMotherPlantByIdAsync(Guid siteId, Guid motherPlantId, CancellationToken ct);
     Task<IReadOnlyList<MotherPlantResponse>> GetMotherPlantsBySiteAsync(Guid siteId, MotherPlantStatus? status, CancellationToken ct);
-    Task<IReadOnlyList<MotherHealthLogResponse>> GetHealthLogsAsync(Guid motherPlantId, CancellationToken ct);
-    Task<MotherPlantHealthSummaryResponse> GetHealthSummaryAsync(Guid motherPlantId, CancellationToken ct);
+    Task<MotherPlantResponse> UpdateMotherPlantAsync(Guid siteId, Guid motherPlantId, UpdateMotherPlantRequest request, Guid userId, CancellationToken ct);
+    Task<MotherPlantResponse> RecordHealthLogAsync(Guid siteId, Guid motherPlantId, MotherPlantHealthLogRequest request, Guid userId, CancellationToken ct);
+    Task<MotherPlantResponse> RegisterPropagationAsync(Guid siteId, Guid motherPlantId, int propagatedCount, Guid userId, CancellationToken ct);
+    Task<MotherPlantHealthSummaryResponse> GetHealthSummaryAsync(Guid siteId, Guid motherPlantId, CancellationToken ct);
+    Task<IReadOnlyList<MotherHealthLogResponse>> GetHealthLogsAsync(Guid siteId, Guid motherPlantId, CancellationToken ct);
     Task<IReadOnlyList<MotherPlantResponse>> GetOverdueForHealthCheckAsync(Guid siteId, CancellationToken ct);
+
+    Task<PropagationSettingsResponse> GetPropagationSettingsAsync(Guid siteId, CancellationToken ct);
+    Task<PropagationSettingsResponse> UpdatePropagationSettingsAsync(Guid siteId, UpdatePropagationSettingsRequest request, Guid userId, CancellationToken ct);
+    Task<PropagationOverrideResponse> RequestPropagationOverrideAsync(Guid siteId, CreatePropagationOverrideRequest request, Guid userId, CancellationToken ct);
+    Task<PropagationOverrideResponse> DecidePropagationOverrideAsync(Guid siteId, Guid overrideId, PropagationOverrideDecisionRequest request, Guid userId, CancellationToken ct);
+    Task<IReadOnlyList<PropagationOverrideResponse>> GetPropagationOverridesAsync(Guid siteId, PropagationOverrideStatus? status, CancellationToken ct);
+
     Task<MotherHealthReminderSettingsResponse> GetHealthReminderSettingsAsync(Guid siteId, CancellationToken ct);
-    Task<MotherHealthReminderSettingsResponse> UpdateHealthReminderSettingsAsync(Guid siteId, UpdateHealthReminderSettingsRequest request, CancellationToken ct);
+    Task<MotherHealthReminderSettingsResponse> UpdateHealthReminderSettingsAsync(Guid siteId, UpdateHealthReminderSettingsRequest request, Guid userId, CancellationToken ct);
 }
 ```
 
@@ -523,8 +785,14 @@ src/backend/services/core-platform/genetics/Infrastructure/Persistence/
 ├── BatchRepository.cs
 ├── BatchEventRepository.cs
 ├── BatchRelationshipRepository.cs
+├── BatchStageDefinitionRepository.cs
+├── BatchStageTransitionRepository.cs
+├── BatchStageHistoryRepository.cs
+├── BatchCodeRuleRepository.cs
 ├── MotherPlantRepository.cs
-└── MotherHealthLogRepository.cs
+├── MotherHealthLogRepository.cs
+├── PropagationSettingsRepository.cs
+└── PropagationOverrideRequestRepository.cs
 ```
 
 **Key Repository Methods:**
@@ -533,16 +801,74 @@ src/backend/services/core-platform/genetics/Infrastructure/Persistence/
 ```csharp
 public interface IBatchRepository : IRepository<Batch, Guid>
 {
-    Task<Batch?> GetByBatchCodeAsync(string batchCode, Guid siteId, CancellationToken ct);
+    Task<Batch?> GetByBatchCodeAsync(Guid siteId, string batchCode, CancellationToken ct);
     Task<IReadOnlyList<Batch>> GetBySiteAndStatusAsync(Guid siteId, BatchStatus? status, CancellationToken ct);
-    Task<IReadOnlyList<Batch>> GetByStrainAsync(Guid strainId, CancellationToken ct);
-    Task<IReadOnlyList<Batch>> GetByCurrentStageAsync(BatchStage stage, CancellationToken ct);
-    Task<IReadOnlyList<Batch>> GetByLocationAsync(Guid locationId, CancellationToken ct);
-    Task<IReadOnlyList<Batch>> GetChildrenAsync(Guid parentBatchId, CancellationToken ct);
-    Task<IReadOnlyList<Batch>> GetLineageAsync(Guid batchId, CancellationToken ct);
-    Task UpdateStageAsync(Guid batchId, BatchStage newStage, DateTime stageStartedAt, CancellationToken ct);
-    Task UpdateLocationAsync(Guid batchId, Guid? locationId, Guid? roomId, Guid? zoneId, CancellationToken ct);
-    Task UpdatePlantCountAsync(Guid batchId, int newCount, CancellationToken ct);
+    Task<IReadOnlyList<Batch>> GetByStrainAsync(Guid siteId, Guid strainId, CancellationToken ct);
+    Task<IReadOnlyList<Batch>> GetByStageAsync(Guid siteId, Guid stageId, CancellationToken ct);
+    Task<IReadOnlyList<Batch>> GetByLocationAsync(Guid siteId, Guid locationId, CancellationToken ct);
+    Task<IReadOnlyList<Batch>> GetChildrenAsync(Guid siteId, Guid parentBatchId, CancellationToken ct);
+    Task<IReadOnlyCollection<Batch>> GetLineageAsync(Guid siteId, Guid batchId, CancellationToken ct);
+    Task UpdateStageAsync(Guid siteId, Guid batchId, Guid newStageId, DateTimeOffset stageStartedAt, CancellationToken ct);
+    Task UpdateLocationAsync(Guid siteId, Guid batchId, Guid? locationId, Guid? roomId, Guid? zoneId, CancellationToken ct);
+    Task UpdatePlantCountAsync(Guid siteId, Guid batchId, int newCount, CancellationToken ct);
+}
+```
+
+**IBatchStageDefinitionRepository:**
+```csharp
+public interface IBatchStageDefinitionRepository : IRepository<BatchStageDefinition, Guid>
+{
+    Task<IReadOnlyList<BatchStageDefinition>> GetBySiteAsync(Guid siteId, CancellationToken ct);
+    Task<bool> ExistsWithKeyAsync(Guid siteId, StageKey key, CancellationToken ct);
+    Task ReorderAsync(Guid siteId, IReadOnlyCollection<(Guid StageId, int Order)> reorderedStages, Guid userId, CancellationToken ct);
+}
+```
+
+**IBatchStageTransitionRepository:**
+```csharp
+public interface IBatchStageTransitionRepository : IRepository<BatchStageTransition, Guid>
+{
+    Task<IReadOnlyList<BatchStageTransition>> GetBySiteAsync(Guid siteId, CancellationToken ct);
+    Task<bool> ExistsAsync(Guid siteId, Guid fromStageId, Guid toStageId, CancellationToken ct);
+}
+```
+
+**IBatchStageHistoryRepository:**
+```csharp
+public interface IBatchStageHistoryRepository : IRepository<BatchStageHistory, Guid>
+{
+    Task<IReadOnlyList<BatchStageHistory>> GetByBatchAsync(Guid siteId, Guid batchId, CancellationToken ct);
+}
+```
+
+**IBatchCodeRuleRepository:**
+```csharp
+public interface IBatchCodeRuleRepository
+{
+    Task<IReadOnlyList<BatchCodeRule>> GetBySiteAsync(Guid siteId, CancellationToken ct);
+    Task<BatchCodeRule?> GetByIdAsync(Guid siteId, Guid ruleId, CancellationToken ct);
+    Task<BatchCodeRule> UpsertAsync(BatchCodeRule rule, CancellationToken ct);
+    Task ArchiveAsync(Guid siteId, Guid ruleId, Guid userId, CancellationToken ct);
+}
+```
+
+**IPropagationSettingsRepository:**
+```csharp
+public interface IPropagationSettingsRepository
+{
+    Task<PropagationSettings?> GetBySiteAsync(Guid siteId, CancellationToken ct);
+    Task<PropagationSettings> UpsertAsync(PropagationSettings settings, CancellationToken ct);
+}
+```
+
+**IPropagationOverrideRequestRepository:**
+```csharp
+public interface IPropagationOverrideRequestRepository
+{
+    Task<IReadOnlyList<PropagationOverrideRequest>> GetBySiteAsync(Guid siteId, PropagationOverrideStatus? status, CancellationToken ct);
+    Task<PropagationOverrideRequest?> GetByIdAsync(Guid siteId, Guid overrideId, CancellationToken ct);
+    Task<PropagationOverrideRequest> AddAsync(PropagationOverrideRequest request, CancellationToken ct);
+    Task UpdateAsync(PropagationOverrideRequest request, CancellationToken ct);
 }
 ```
 
@@ -550,12 +876,13 @@ public interface IBatchRepository : IRepository<Batch, Guid>
 ```csharp
 public interface IMotherPlantRepository : IRepository<MotherPlant, Guid>
 {
-    Task<MotherPlant?> GetByPlantIdAsync(string plantId, Guid siteId, CancellationToken ct);
+    Task<MotherPlant?> GetByPlantIdAsync(Guid siteId, string plantId, CancellationToken ct);
     Task<IReadOnlyList<MotherPlant>> GetBySiteAndStatusAsync(Guid siteId, MotherPlantStatus? status, CancellationToken ct);
-    Task<IReadOnlyList<MotherPlant>> GetByStrainAsync(Guid strainId, CancellationToken ct);
-    Task<IReadOnlyList<MotherPlant>> GetByLocationAsync(Guid locationId, CancellationToken ct);
-    Task UpdatePropagationCountAsync(Guid motherPlantId, int newCount, DateOnly lastPropagationDate, CancellationToken ct);
-    Task<IReadOnlyList<MotherPlant>> GetOverdueForHealthCheckAsync(TimeSpan threshold, CancellationToken ct);
+    Task<IReadOnlyList<MotherPlant>> GetByStrainAsync(Guid siteId, Guid strainId, CancellationToken ct);
+    Task<IReadOnlyList<MotherPlant>> GetByLocationAsync(Guid siteId, Guid locationId, CancellationToken ct);
+    Task UpdatePropagationAsync(Guid siteId, Guid motherPlantId, int newCount, DateOnly lastPropagationDate, CancellationToken ct);
+    Task<IReadOnlyList<MotherPlant>> GetOverdueForHealthCheckAsync(Guid siteId, TimeSpan threshold, CancellationToken ct);
+    Task<int> GetPropagationCountForWindowAsync(Guid siteId, DateOnly windowStart, DateOnly windowEnd, CancellationToken ct);
 }
 ```
 
@@ -571,7 +898,10 @@ src/backend/services/core-platform/genetics/API/Controllers/
 ├── GeneticsController.cs
 ├── StrainsController.cs
 ├── BatchesController.cs
-└── MotherPlantsController.cs
+├── BatchStagesController.cs
+├── BatchCodeRulesController.cs
+├── MotherPlantsController.cs
+└── PropagationController.cs
 ```
 
 **Key Endpoints:**
@@ -607,31 +937,40 @@ public class BatchesController : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<BatchResponse>> CreateBatch(Guid siteId, CreateBatchRequest request);
-    
+
+    [HttpPut("{batchId}")]
+    public async Task<ActionResult<BatchResponse>> UpdateBatch(Guid siteId, Guid batchId, UpdateBatchRequest request);
+
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<BatchResponse>>> GetBatches(Guid siteId, [FromQuery] BatchStatus? status);
-    
+    public async Task<ActionResult<IReadOnlyList<BatchResponse>>> GetBatches(Guid siteId, [FromQuery] BatchStatus? status, [FromQuery] Guid? stageId);
+
     [HttpGet("{batchId}")]
     public async Task<ActionResult<BatchResponse>> GetBatch(Guid siteId, Guid batchId);
-    
+
     [HttpPost("{batchId}/stage-change")]
     public async Task<ActionResult<BatchResponse>> ChangeStage(Guid siteId, Guid batchId, BatchStageChangeRequest request);
-    
+
     [HttpPost("{batchId}/split")]
     public async Task<ActionResult<BatchResponse>> SplitBatch(Guid siteId, Guid batchId, BatchSplitRequest request);
-    
+
     [HttpPost("merge")]
     public async Task<ActionResult<BatchResponse>> MergeBatches(Guid siteId, BatchMergeRequest request);
-    
+
     [HttpPost("{batchId}/quarantine")]
     public async Task<ActionResult<BatchResponse>> QuarantineBatch(Guid siteId, Guid batchId, QuarantineRequest request);
-    
+
+    [HttpPost("{batchId}/release-quarantine")]
+    public async Task<ActionResult<BatchResponse>> ReleaseFromQuarantine(Guid siteId, Guid batchId, ReleaseQuarantineRequest request);
+
     [HttpPost("{batchId}/harvest")]
     public async Task<ActionResult<BatchResponse>> HarvestBatch(Guid siteId, Guid batchId, HarvestRequest request);
-    
+
+    [HttpPost("{batchId}/destroy")]
+    public async Task<ActionResult<BatchResponse>> DestroyBatch(Guid siteId, Guid batchId, DestroyRequest request);
+
     [HttpGet("{batchId}/lineage")]
     public async Task<ActionResult<BatchLineageResponse>> GetLineage(Guid siteId, Guid batchId);
-    
+
     [HttpGet("{batchId}/events")]
     public async Task<ActionResult<IReadOnlyList<BatchEventResponse>>> GetEvents(Guid siteId, Guid batchId);
 }
@@ -645,24 +984,105 @@ public class MotherPlantsController : ControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<MotherPlantResponse>> CreateMotherPlant(Guid siteId, CreateMotherPlantRequest request);
-    
+
+    [HttpPut("{motherPlantId}")]
+    public async Task<ActionResult<MotherPlantResponse>> UpdateMotherPlant(Guid siteId, Guid motherPlantId, UpdateMotherPlantRequest request);
+
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<MotherPlantResponse>>> GetMotherPlants(Guid siteId, [FromQuery] MotherPlantStatus? status);
-    
+
     [HttpGet("{motherPlantId}")]
     public async Task<ActionResult<MotherPlantResponse>> GetMotherPlant(Guid siteId, Guid motherPlantId);
-    
+
     [HttpPost("{motherPlantId}/health-log")]
     public async Task<ActionResult<MotherPlantResponse>> RecordHealthLog(Guid siteId, Guid motherPlantId, MotherPlantHealthLogRequest request);
-    
-    [HttpPost("{motherPlantId}/propagate")]
-    public async Task<ActionResult<MotherPlantResponse>> Propagate(Guid siteId, Guid motherPlantId);
-    
+
+    [HttpPost("{motherPlantId}/propagation/register")]
+    public async Task<ActionResult<MotherPlantResponse>> RegisterPropagation(Guid siteId, Guid motherPlantId, RegisterPropagationRequest request);
+
+    [HttpPost("{motherPlantId}/propagation/override")]
+    public async Task<ActionResult<PropagationOverrideResponse>> RequestOverride(Guid siteId, Guid motherPlantId, CreatePropagationOverrideRequest request);
+
     [HttpGet("{motherPlantId}/health-logs")]
     public async Task<ActionResult<IReadOnlyList<MotherHealthLogResponse>>> GetHealthLogs(Guid siteId, Guid motherPlantId);
-    
+
     [HttpGet("{motherPlantId}/health-summary")]
     public async Task<ActionResult<MotherPlantHealthSummaryResponse>> GetHealthSummary(Guid siteId, Guid motherPlantId);
+}
+```
+
+**BatchStagesController.cs:**
+```csharp
+[ApiController]
+[Route("api/sites/{siteId}/batch-stages")]
+public class BatchStagesController : ControllerBase
+{
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<BatchStageResponse>>> GetStages(Guid siteId);
+
+    [HttpPost]
+    public async Task<ActionResult<BatchStageResponse>> CreateStage(Guid siteId, BatchStageRequest request);
+
+    [HttpPut("{stageId}")]
+    public async Task<ActionResult<BatchStageResponse>> UpdateStage(Guid siteId, Guid stageId, BatchStageRequest request);
+
+    [HttpPost("reorder")]
+    public async Task<IActionResult> ReorderStages(Guid siteId, BatchStageOrderUpdateRequest request);
+
+    [HttpDelete("{stageId}")]
+    public async Task<IActionResult> DeleteStage(Guid siteId, Guid stageId);
+
+    [HttpGet("transitions")]
+    public async Task<ActionResult<IReadOnlyList<BatchStageTransitionResponse>>> GetTransitions(Guid siteId);
+
+    [HttpPost("transitions")]
+    public async Task<ActionResult<BatchStageTransitionResponse>> UpsertTransition(Guid siteId, BatchStageTransitionRequest request);
+
+    [HttpDelete("transitions/{transitionId}")]
+    public async Task<IActionResult> DeleteTransition(Guid siteId, Guid transitionId);
+}
+```
+
+**BatchCodeRulesController.cs:**
+```csharp
+[ApiController]
+[Route("api/sites/{siteId}/batch-code-rules")]
+public class BatchCodeRulesController : ControllerBase
+{
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<BatchCodeRuleResponse>>> GetRules(Guid siteId);
+
+    [HttpPost]
+    public async Task<ActionResult<BatchCodeRuleResponse>> CreateRule(Guid siteId, BatchCodeRuleRequest request);
+
+    [HttpPut("{ruleId}")]
+    public async Task<ActionResult<BatchCodeRuleResponse>> UpdateRule(Guid siteId, Guid ruleId, BatchCodeRuleRequest request);
+
+    [HttpDelete("{ruleId}")]
+    public async Task<IActionResult> ArchiveRule(Guid siteId, Guid ruleId);
+
+    [HttpPost("preview")]
+    public async Task<ActionResult<BatchCodeResponse>> Preview(Guid siteId, BatchCodeGenerationContext context);
+}
+```
+
+**PropagationController.cs:**
+```csharp
+[ApiController]
+[Route("api/sites/{siteId}/propagation")]
+public class PropagationController : ControllerBase
+{
+    [HttpGet("settings")]
+    public async Task<ActionResult<PropagationSettingsResponse>> GetSettings(Guid siteId);
+
+    [HttpPut("settings")]
+    public async Task<ActionResult<PropagationSettingsResponse>> UpdateSettings(Guid siteId, UpdatePropagationSettingsRequest request);
+
+    [HttpGet("overrides")]
+    public async Task<ActionResult<IReadOnlyList<PropagationOverrideResponse>>> GetOverrides(Guid siteId, [FromQuery] PropagationOverrideStatus? status);
+
+    [HttpPost("overrides/{overrideId}/decision")]
+    public async Task<ActionResult<PropagationOverrideResponse>> Decide(Guid siteId, Guid overrideId, PropagationOverrideDecisionRequest request);
 }
 ```
 
@@ -674,11 +1094,24 @@ public class MotherPlantsController : ControllerBase
 ```
 src/backend/services/core-platform/genetics/API/Validators/
 ├── CreateGeneticsRequestValidator.cs
+├── UpdateGeneticsRequestValidator.cs
 ├── CreateStrainRequestValidator.cs
+├── UpdateStrainRequestValidator.cs
 ├── CreateBatchRequestValidator.cs
+├── UpdateBatchRequestValidator.cs
+├── BatchStageRequestValidator.cs
+├── BatchStageOrderUpdateRequestValidator.cs
+├── BatchStageTransitionRequestValidator.cs
 ├── BatchStageChangeRequestValidator.cs
 ├── BatchSplitRequestValidator.cs
 ├── BatchMergeRequestValidator.cs
+├── BatchCodeRuleRequestValidator.cs
+├── BatchCodeGenerationContextValidator.cs
+├── UpdatePropagationSettingsRequestValidator.cs
+├── RegisterPropagationRequestValidator.cs
+├── CreatePropagationOverrideRequestValidator.cs
+├── PropagationOverrideDecisionRequestValidator.cs
+├── UpdateMotherPlantRequestValidator.cs
 └── MotherPlantHealthLogRequestValidator.cs
 ```
 
@@ -691,23 +1124,32 @@ src/backend/services/core-platform/genetics/API/Validators/
 src/backend/services/core-platform/genetics/Tests/Unit/
 ├── Domain/
 │   ├── GeneticsTests.cs
+│   ├── PhenotypeTests.cs
 │   ├── StrainTests.cs
 │   ├── BatchTests.cs
-│   └── MotherPlantTests.cs
+│   ├── BatchStageDefinitionTests.cs
+│   ├── BatchStageTransitionTests.cs
+│   ├── BatchStageHistoryTests.cs
+│   ├── BatchCodeRuleTests.cs
+│   ├── PropagationSettingsTests.cs
+│   └── PropagationOverrideRequestTests.cs
 └── Services/
     ├── GeneticsManagementServiceTests.cs
     ├── BatchLifecycleServiceTests.cs
+    ├── BatchStageConfigurationServiceTests.cs
+    ├── BatchCodeRuleServiceTests.cs
     └── MotherHealthServiceTests.cs
 ```
 
 **Test Scenarios:**
-- Genetics creation and validation
-- Strain creation with genetics and phenotype
-- Batch lifecycle state machine transitions
-- Batch splitting and merging logic
-- Mother plant health logging
-- Lineage tracking and relationships
-- RLS policy enforcement
+- Genetics + phenotype CRUD validation
+- Batch lifecycle transitions, regulatory stage coverage, and lineage
+- Stage definition CRUD, ordering, and transition rules
+- Batch code rule evaluation (rule parsing, reset policies, collision prevention)
+- Propagation limit enforcement vs override workflow
+- Mother plant health assessments and reminder scheduling
+- Approval status transitions for propagation overrides
+- RLS policy enforcement across all repositories
 
 ---
 
@@ -718,18 +1160,22 @@ src/backend/services/core-platform/genetics/Tests/Unit/
 src/backend/services/core-platform/genetics/Tests/Integration/
 ├── GeneticsManagementTests.cs
 ├── BatchLifecycleTests.cs
+├── BatchStageConfigurationTests.cs
+├── BatchCodeRuleTests.cs
 ├── MotherPlantTests.cs
-└── RlsGeneticsTests.cs
+├── PropagationControlTests.cs
+└── RlsGeneticsTests.cs (extended to cover propagation + batch-code RLS)
 ```
 
 **Test Scenarios:**
-- Create genetics → strain → batch (E2E)
-- Batch stage transitions with validation
-- Batch splitting creates proper relationships
-- Mother plant health tracking
-- RLS: Cross-site genetics access blocked
-- Lineage queries return correct relationships
-- Batch events are properly logged
+- Create genetics → strain → batch (E2E) with regulatory stage transitions
+- Stage definition CRUD + transition enforcement across lifecycle
+- Batch code rule evaluation + preview (jurisdiction-specific formatting)
+- Batch splitting/merging with lineage graph validation
+- Propagation limit enforcement, override request, approval, and audit trail
+- Mother plant health tracking plus reminder scheduling
+- RLS: cross-site access blocked for genetics, batches, rules, propagation data
+- Event log completeness for batch + propagation actions
 
 ---
 
@@ -738,23 +1184,23 @@ src/backend/services/core-platform/genetics/Tests/Integration/
 | Phase | Task | Est. Hours | Owner |
 |-------|------|------------|-------|
 | **1. Database** | Migration 1: Genetics tables | 1.5-2 | Backend |
-| | Migration 2: Batch tables | 1.5-2 | Backend |
-| **2. Domain** | 8 entity files | 2-2.5 | Backend |
-| | 5 value object files | 0.5-1 | Backend |
-| | 7 enum files | 0.5-1 | Backend |
-| | Domain logic methods | 1-1.5 | Backend |
-| **3. Application** | 3 service implementations | 1.5-2 | Backend |
-| | 12 DTO files | 1-1.5 | Backend |
-| | 3 interface files | 0.5 | Backend |
-| **4. Infrastructure** | DbContext + 8 repositories | 2-2.5 | Backend |
-| | RLS context integration | 0.5-1 | Backend |
+| | Migration 2: Batch + stage tables | 2-2.5 | Backend |
+| **2. Domain** | 14 entity files | 2.5-3 | Backend |
+| | 8 value object files | 0.75-1.25 | Backend |
+| | 12 enum/reference files | 0.5-1 | Backend |
+| | Domain logic methods | 1.5-2 | Backend |
+| **3. Application** | 4 service implementations | 2-2.5 | Backend |
+| | 28 DTO files | 2-2.5 | Backend |
+| | 4 interface files | 0.75 | Backend |
+| **4. Infrastructure** | DbContext + 11 repositories | 2.5-3 | Backend |
+| | RLS context integration | 0.75-1.25 | Backend |
 | | Connection/retry logic | 0.5 | Backend |
-| **5. API** | 4 controllers (~600 lines) | 2-2.5 | Backend |
+| **5. API** | 7 controllers (~850 lines) | 2.5-3 | Backend |
 | | Program.cs DI registration | 0.5 | Backend |
-| **6. Validators** | 7 validator files | 1 | Backend |
-| **7. Unit Tests** | 7 test files | 2-2.5 | Backend |
-| **8. Integration Tests** | 4 test files | 2-2.5 | Backend |
-| **TOTAL** | | **18-22** | |
+| **6. Validators** | 20 validator files | 1.5 | Backend |
+| **7. Unit Tests** | 15 test files | 3-3.5 | Backend |
+| **8. Integration Tests** | 6 test files | 2.5-3 | Backend |
+| **TOTAL** | | **24-28** | |
 
 ---
 
@@ -799,11 +1245,12 @@ src/backend/services/core-platform/genetics/Tests/Integration/
 
 ## 📝 DESIGN DECISIONS CONFIRMED
 
-1. **Batch Code Generation:** ✅ **Auto-generate with user-defined site/brand prefix** - Configurable per jurisdiction requirements
-2. **Mother Plant Limits:** ✅ **User-configurable max propagation count** - Enforced when configured
-3. **Health Log Frequency:** ✅ **Event-driven with user-configurable reminder frequency** - Flexible scheduling
-4. **Lineage Depth:** ✅ **Unlimited with performance monitoring** - Track all generations with query optimization
-5. **Batch Splitting:** ✅ **Both partial and complete splits with validation** - Flexible splitting with business rules
+1. **Batch Stage Templates:** ✅ **Site-configurable lifecycle stages & transitions** - Default templates provided; admins can tailor per jurisdiction or via commissioning services
+2. **Batch Code Generation:** ✅ **Rule-driven with user-defined expressions** - Teams define compliant patterns per jurisdiction (prefixes, sequence seeds, resets)
+3. **Propagation Limits:** ✅ **Site-wide limits with approval workflow** - Daily/weekly caps plus per-mother guardrails; overrides go through routed approvals
+4. **Health Log Frequency:** ✅ **Event-driven with user-configurable reminder cadence** - Reminders stored now, delivery hooks wired once comms platform ships
+5. **Lineage Depth:** ✅ **Unlimited with performance monitoring** - Track all generations with query optimization
+6. **Batch Splitting:** ✅ **Both partial and complete splits with validation** - Flexible splitting with business rules
 
 ---
 
@@ -831,4 +1278,3 @@ src/backend/services/core-platform/genetics/Tests/Integration/
 **Status:** 🎯 READY FOR REVIEW & APPROVAL  
 **Next Step:** Review plan → Get approval → Begin implementation  
 **Estimated Completion:** 18-22 hours from start
-

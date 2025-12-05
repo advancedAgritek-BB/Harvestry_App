@@ -107,13 +107,28 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         return await dbContext.GetOpenConnectionAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    protected async Task ExecuteSqlAsync(string sql, CancellationToken cancellationToken = default)
+    protected async Task ExecuteSqlAsync(string sql, object? parameters = null, CancellationToken cancellationToken = default)
     {
         var dbContext = ServiceProvider.GetRequiredService<IdentityDbContext>();
         await dbContext.SetRlsContextAsync(Guid.Empty, "service_account", null, cancellationToken).ConfigureAwait(false);
         await using var connection = await dbContext.GetOpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
+        
+        // Add parameters if provided
+        if (parameters != null)
+        {
+            var properties = parameters.GetType().GetProperties();
+            foreach (var prop in properties)
+            {
+                var value = prop.GetValue(parameters);
+                var parameter = command.CreateParameter();
+                parameter.ParameterName = $"@{prop.Name}";
+                parameter.Value = value ?? DBNull.Value;
+                command.Parameters.Add(parameter);
+            }
+        }
+        
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 

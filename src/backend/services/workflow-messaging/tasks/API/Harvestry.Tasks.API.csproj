@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Harvestry.Tasks.API</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Infrastructure\Harvestry.Tasks.Infrastructure.csproj" />
+    <ProjectReference Include="..\Application\Harvestry.Tasks.Application.csproj" />
+    <ProjectReference Include="..\Domain\Harvestry.Tasks.Domain.csproj" />
+    <ProjectReference Include="..\..\..\..\..\shared\kernel\Harvestry.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\..\..\..\..\shared\observability\Harvestry.Shared.Observability.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.1" />
+  </ItemGroup>
+</Project>

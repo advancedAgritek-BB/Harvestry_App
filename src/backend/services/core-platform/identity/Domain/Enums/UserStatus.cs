@@ -124,3 +124,39 @@ public enum LoginMethod
     /// </summary>
     ApiKey
 }
+
+/// <summary>
+/// METRC facility type - indicates the type of cannabis license held by the facility
+/// </summary>
+public enum FacilityType
+{
+    /// <summary>
+    /// Cultivation facility - grows cannabis plants
+    /// </summary>
+    Cultivator = 0,
+
+    /// <summary>
+    /// Processing/Manufacturing facility - produces cannabis products
+    /// </summary>
+    Processor = 1,
+
+    /// <summary>
+    /// Combined cultivation and processing facility
+    /// </summary>
+    CultivatorProcessor = 2,
+
+    /// <summary>
+    /// Testing laboratory
+    /// </summary>
+    Lab = 3,
+
+    /// <summary>
+    /// Dispensary/Retail (for reference, not implemented in Harvestry)
+    /// </summary>
+    Dispensary = 4,
+
+    /// <summary>
+    /// Transporter (for reference, not implemented in Harvestry)
+    /// </summary>
+    Transporter = 5
+}

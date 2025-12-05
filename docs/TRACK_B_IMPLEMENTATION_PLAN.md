@@ -1,8 +1,8 @@
 # Track B Implementation Plan — Core MVP (12 Weeks)
 
 **Version:** 1.1  
-**Date:** 2025-09-30  
-**Status:** 🚧 In Progress (FRP-01 Complete)  
+**Date:** 2025-10-07  
+**Status:** 🚧 In Progress (FRP-01-04 Complete)  
 **Pilot Site:** Denver Grow Co., Colorado (METRC)
 
 ---
@@ -19,15 +19,15 @@ Track B delivers the **Core MVP** with 12 FRPs across 12 weeks, incorporating th
 
 ---
 
-## Implementation Progress (as of 2025-09-30)
+## Implementation Progress (as of 2025-10-07)
 
-### Overall Status: 🚧 **11.1% Complete** (40/360 items)
+### Overall Status: 🚧 **31.7% Complete** (114/360 items)
 
 | Sprint | Weeks | FRPs | Status | Completion |
 |--------|-------|------|--------|------------|
 | **S1** | W0-W2 | FRP-01, W0 Foundation | 🚧 Partially Complete | **FRP-01:** 100% ✅ **W0:** 13.6% 🚧 |
-| **S2** | W3-W4 | FRP-02, FRP-03 | 🚧 **In Progress** | **FRP-02:** 95% 🚧 **FRP-03:** 0% ⏳ |
-| **S3** | W5-W6 | FRP-04, FRP-05 | ⏳ Not Started | 0% |
+| **S2** | W3-W4 | FRP-02, FRP-03 | ✅ **COMPLETE** | **FRP-02:** 100% ✅ **FRP-03:** 100% ✅ |
+| **S3** | W5-W6 | FRP-04, FRP-05 | 🚧 In Progress | **FRP-04:** 100% ✅ **FRP-05:** 0% ⏳ |
 | **S4** | W7-W8 | FRP-06, FRP-07 | ⏳ Not Started | 0% |
 | **S5** | W9-W10 | FRP-08, FRP-09 | ⏳ Not Started | 0% |
 | **S6** | W11-W12 | FRP-10, FRP-15 + Pilot | ⏳ Not Started | 0% |
@@ -37,9 +37,9 @@ Track B delivers the **Core MVP** with 12 FRPs across 12 weeks, incorporating th
 | FRP | Feature | Owner | Status | Items | Completion |
 |-----|---------|-------|--------|-------|------------|
 | **FRP-01** | Identity/RLS/ABAC | Core Platform | ✅ **COMPLETE** | 32/32 | **100%** |
-| **FRP-02** | Spatial/Equipment | Core Platform | 🚧 **IN PROGRESS** | 8/26 | **95%** (Plan refined - 28.5h est.) |
-| **FRP-03** | Genetics/Batches | Core Platform | ⏳ Not Started | 0/21 | 0% |
-| **FRP-04** | Tasks/Slack | Workflow & Messaging | ⏳ Not Started | 0/24 | 0% |
+| **FRP-02** | Spatial/Equipment | Core Platform | ✅ **COMPLETE** | 26/26 | **100%** |
+| **FRP-03** | Genetics/Batches | Core Platform | ✅ **COMPLETE** | 28/28 | **100%** (All requirements met) |
+| **FRP-04** | Tasks/Slack | Workflow & Messaging | ✅ **COMPLETE** | 28/28 | **100%** |
 | **FRP-05** | Telemetry | Telemetry & Controls | ⏳ Not Started | 0/30 | 0% |
 | **FRP-06** | Irrigation/HIL | Controls | ⏳ Not Started | 0/46 | 0% |
 | **FRP-07** | Inventory/GS1 | Core Platform | ⏳ Not Started | 0/30 | 0% |
@@ -52,7 +52,8 @@ Track B delivers the **Core MVP** with 12 FRPs across 12 weeks, incorporating th
 
 - ✅ **FRP-01 Complete:** September 29, 2025 (38% ahead of schedule!)
 - 🚧 **W0 Foundation:** In progress (golden harness, seed data, OTel)
-- 🎯 **Next:** FRP-02 + FRP-03 (W2-W3)
+- ✅ **FRP-04 Complete:** October 7, 2025 (task workflows, messaging, Slack notifications)
+- 🎯 **Next:** FRP-05 telemetry ingest slice kickoff (W6)
 - 🎯 **Critical:** FRP-06 HIL drills + firmware sign-off (W7-W8)
 - 🎯 **Pilot Go-Live:** Week 12 (target)
 
@@ -553,10 +554,10 @@ push:
 Workflow & Messaging/
 ├── Tasks/
 │   ├── Application/Services/
-│   │   ├── TaskLifecycleService.cs        # Create/start/complete
-│   │   └── TaskGatingResolver.cs          # Check SOPs
+│   │   ├── TaskLifecycleService.cs        # ✅ Create/start/complete
+│   │   └── TaskGatingResolver.cs          # ✅ Check SOPs
 │   └── Domain/Entities/
-│       ├── Task.cs, TaskDependency.cs
+│       ├── Task.cs, TaskDependency.cs     # ✅ Implemented
 │       └── Conversation.cs, Message.cs
 ├── Slack-Bridge/
 │   ├── Application/Services/

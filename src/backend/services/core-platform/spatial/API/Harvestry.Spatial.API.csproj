@@ -10,6 +10,8 @@
     <ProjectReference Include="..\Application\Harvestry.Spatial.Application.csproj" />
     <ProjectReference Include="..\Domain\Harvestry.Spatial.Domain.csproj" />
     <ProjectReference Include="..\..\..\..\..\shared\kernel\Harvestry.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\..\..\..\..\shared\observability\Harvestry.Shared.Observability.csproj" />
+    <ProjectReference Include="..\..\..\..\..\shared\security\Authentication\Harvestry.Shared.Authentication.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
@@ -17,5 +19,6 @@
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="8.0.1" />
   </ItemGroup>
 </Project>

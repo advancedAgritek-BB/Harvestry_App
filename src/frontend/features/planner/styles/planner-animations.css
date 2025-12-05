@@ -1,0 +1,219 @@
+/**
+ * Planner Animations
+ * 
+ * Custom animations for the Gantt chart planner
+ */
+
+/* Staggered reveal animation for phase bars */
+@keyframes phase-bar-reveal {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+.phase-bar-animate {
+  animation: phase-bar-reveal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Staggered delay utilities */
+.animate-delay-100 { animation-delay: 100ms; }
+.animate-delay-200 { animation-delay: 200ms; }
+.animate-delay-300 { animation-delay: 300ms; }
+.animate-delay-400 { animation-delay: 400ms; }
+.animate-delay-500 { animation-delay: 500ms; }
+
+/* Drag preview shadow effect */
+@keyframes drag-shadow-pulse {
+  0%, 100% {
+    box-shadow: 0 10px 40px -10px rgba(6, 182, 212, 0.3);
+  }
+  50% {
+    box-shadow: 0 15px 50px -10px rgba(6, 182, 212, 0.5);
+  }
+}
+
+.dragging-preview {
+  animation: drag-shadow-pulse 1s ease-in-out infinite;
+}
+
+/* Conflict indicator pulse */
+@keyframes conflict-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.conflict-indicator {
+  animation: conflict-pulse 2s ease-in-out infinite;
+}
+
+/* Today marker glow */
+@keyframes today-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px 2px rgba(6, 182, 212, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px 4px rgba(6, 182, 212, 0.5);
+  }
+}
+
+.today-marker {
+  animation: today-glow 3s ease-in-out infinite;
+}
+
+/* Capacity bar fill animation */
+@keyframes capacity-fill {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--capacity-height);
+  }
+}
+
+.capacity-bar-animate {
+  animation: capacity-fill 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Panel slide in */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.panel-slide-in {
+  animation: slide-in-right 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.panel-slide-out {
+  animation: slide-out-right 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Impact panel bounce in */
+@keyframes bounce-in {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.impact-panel-enter {
+  animation: bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Tooltip fade */
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tooltip-animate {
+  animation: tooltip-fade-in 0.15s ease-out forwards;
+}
+
+/* Hover scale for phase bars */
+.phase-bar-hover {
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.phase-bar-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* Smooth scroll behavior for timeline */
+.timeline-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Grid line fade for depth effect */
+.grid-lines {
+  background: linear-gradient(
+    to bottom,
+    rgba(51, 65, 85, 0.3) 0%,
+    rgba(51, 65, 85, 0.1) 100%
+  );
+}
+
+/* Loading skeleton animation */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(51, 65, 85, 0.3) 25%,
+    rgba(51, 65, 85, 0.5) 50%,
+    rgba(51, 65, 85, 0.3) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Zoom transition */
+.zoom-transition {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Selection highlight */
+@keyframes selection-ring {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.15);
+  }
+}
+
+.selection-ring {
+  animation: selection-ring 2s ease-in-out infinite;
+}
+

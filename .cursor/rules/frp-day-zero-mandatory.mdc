@@ -1,0 +1,482 @@
+# FRP Day Zero Validation - Mandatory Requirement
+
+**Status:** 🔴 **MANDATORY**  
+**Applies To:** All Feature Release Packages (FRP-01, FRP-02, FRP-03, etc.)  
+**Enforcement:** No Slice 1 implementation may begin without Day Zero completion and GO decision
+
+---
+
+## 📋 POLICY
+
+### Core Principle
+
+**Every FRP MUST complete a Day Zero infrastructure validation session before beginning implementation.**
+
+Day Zero validates that all infrastructure prerequisites are operational, identifies limitations early, and establishes fallback strategies **before** development time is invested.
+
+### Benefits
+
+- ✅ Prevents mid-implementation blockers
+- ✅ Surfaces infrastructure limitations early
+- ✅ Documents fallback strategies before commitment
+- ✅ Provides evidence-based GO/NO-GO decisions
+- ✅ Saves 4-10 hours of debugging blocked development
+- ✅ Enables stakeholder sign-off with confidence
+
+---
+
+## 🎯 MANDATORY REQUIREMENTS
+
+### 1. Day Zero Validation Scripts (REQUIRED)
+
+Every FRP must include automated validation scripts:
+
+**Required Scripts:**
+
+```
+scripts/
+├── frp[NN]-day-zero.sh                    # Master orchestration script
+├── db/
+│   └── validate-[feature]-database.sh     # Database-specific validation
+└── setup/
+    ├── setup-frp[NN]-environment.sh       # Environment variable template
+    └── create-day-zero-results.sh         # Results document generator
+```
+
+**Script Requirements:**
+
+- ✅ Automated execution (no manual steps in validation logic)
+- ✅ Color-coded output (green/yellow/red for pass/warning/fail)
+- ✅ Detailed logging to `logs/frp[NN]-day0-*.txt`
+- ✅ Automatic cleanup of test objects
+- ✅ Idempotent (safe to run multiple times)
+- ✅ Clear troubleshooting guidance in output
+
+---
+
+### 2. Day Zero Documentation (REQUIRED)
+
+Every FRP must include comprehensive Day Zero documentation:
+
+**Required Documents:**
+
+```
+docs/
+├── FRP[NN]_READINESS_REVIEW.md           # Comprehensive readiness assessment
+├── FRP[NN]_DAY_ZERO_CHECKLIST.md         # Detailed validation checklist
+├── FRP[NN]_DAY_ZERO_QUICKSTART.md        # Quick start execution guide
+└── FRP[NN]_DAY_ZERO_RESULTS.md           # Generated after validation
+```
+
+**Document Requirements:**
+
+- ✅ **Readiness Review** (200+ lines): Assessment of plan completeness, prerequisite status, risk analysis
+- ✅ **Checklist** (150+ lines): Step-by-step validation tasks organized by phase
+- ✅ **Quickstart** (100+ lines): 5-minute execution guide with troubleshooting
+- ✅ **Results** (generated): Comprehensive validation results with GO/NO-GO recommendation
+
+---
+
+### 3. Validation Scope (REQUIRED)
+
+Every Day Zero session must validate:
+
+#### Database Prerequisites
+
+- [ ] Required extensions enabled (TimescaleDB, PostGIS, etc.)
+- [ ] Feature-specific capabilities tested (partitioning, replication, etc.)
+- [ ] Permissions validated (CREATE, ALTER, REPLICATION, etc.)
+- [ ] Performance baseline established (if applicable)
+
+#### External Dependencies
+
+- [ ] Third-party services configured (MQTT, Slack, QBO, METRC, etc.)
+- [ ] API credentials provisioned and tested
+- [ ] Rate limits documented
+- [ ] Connectivity validated from staging environment
+
+#### Environment Configuration
+
+- [ ] All required environment variables identified
+- [ ] Secrets management strategy defined
+- [ ] Configuration templates created
+- [ ] Feature flags documented
+
+#### Infrastructure Capacity
+
+- [ ] Load test scripts created (if performance-critical)
+- [ ] Baseline performance measured
+- [ ] Scaling requirements documented
+- [ ] Monitoring/alerting configured
+
+#### Fallback Strategies
+
+- [ ] Limitations identified (managed services, permissions, etc.)
+- [ ] Fallback approaches designed for each limitation
+- [ ] Trade-offs documented (performance, latency, complexity)
+- [ ] Stakeholder approval obtained for fallbacks
+
+---
+
+### 4. GO/NO-GO Decision Criteria (REQUIRED)
+
+Every Day Zero must conclude with a clear decision:
+
+#### ✅ GO Criteria
+
+**All critical prerequisites met:**
+
+- Database features working
+- External dependencies configured
+- Environment variables set
+- Load test environment ready (if needed)
+- No critical blockers
+
+**Recommendation:** Proceed to Slice 1
+
+---
+
+#### ⚠️ GO WITH CONDITIONS Criteria
+
+**Core prerequisites met with acceptable fallbacks:**
+
+- Critical features working
+- Some features require fallbacks (documented and approved)
+- Manual steps required (documented and scheduled)
+- Performance targets may require scaling (plan in place)
+
+**Recommendation:** Proceed with documented conditions
+
+---
+
+#### 🛑 NO-GO Criteria
+
+**Critical blockers without workarounds:**
+
+- Essential database features unavailable
+- External dependencies unavailable (no fallback)
+- Infrastructure insufficient (no scaling path)
+- Security/compliance issues unresolved
+
+**Recommendation:** Fix blockers, re-run validation
+
+---
+
+### 5. Stakeholder Sign-Off (REQUIRED)
+
+Every Day Zero must obtain sign-off from:
+
+**Required Sign-Offs:**
+
+- [ ] **DevOps Lead** - Infrastructure ready, monitoring configured
+- [ ] **Database Team** - Database features validated, permissions granted
+- [ ] **[Feature] Squad Lead** - Understands plan, ready to execute
+- [ ] **Product Owner** - Approves any scope reductions or fallbacks
+
+**Optional (Feature-Dependent):**
+
+- [ ] **Security Team** - For features with security implications
+- [ ] **Compliance Team** - For regulated features (METRC, audit, etc.)
+- [ ] **Integration Partners** - For third-party integrations (Slack, QBO, etc.)
+
+---
+
+## 📅 EXECUTION TIMELINE
+
+### Day Zero: Infrastructure Validation (4-6 hours)
+
+**Scheduled BEFORE Slice 1 begins**
+
+**Morning (2-3 hours): Automated Validation**
+
+- Run master validation script
+- Review automated test results
+- Document any failures or warnings
+
+**Afternoon (2-3 hours): Manual Steps & Coordination**
+
+- Complete manual configuration (external services, etc.)
+- Execute load test baseline (if applicable)
+- Generate results document
+- Coordinate with stakeholders
+
+**End of Day: Decision**
+
+- Review results with stakeholders
+- Obtain sign-offs
+- Make GO/NO-GO decision
+- Document next steps
+
+### Day 1: Pre-Slice Setup + Slice 1 Start
+
+**Only begins after Day Zero GO decision**
+
+---
+
+## 🎨 TEMPLATE: Day Zero Master Script Structure
+
+```bash
+#!/bin/bash
+# FRP-[NN] Day Zero: Master Validation Script
+# Purpose: Validate all prerequisites before Slice 1
+# Usage: ./scripts/frp[NN]-day-zero.sh [connection_string]
+
+set -e
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+# Configuration
+CONN="${1:-${DATABASE_URL}}"
+RESULTS_FILE="logs/frp[NN]-day0-summary.txt"
+
+# Header
+echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${CYAN}║   FRP-[NN] DAY ZERO VALIDATION            ║${NC}"
+echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
+
+# Phase 1: Database Validation
+echo -e "${YELLOW}Phase 1: Database Validation${NC}"
+./scripts/db/validate-[feature]-database.sh "$CONN"
+PHASE1_STATUS=$?
+
+# Phase 2: External Dependencies
+echo -e "${YELLOW}Phase 2: External Dependencies${NC}"
+./scripts/[feature]/validate-external-deps.sh
+PHASE2_STATUS=$?
+
+# Phase 3: Environment Configuration
+echo -e "${YELLOW}Phase 3: Environment Configuration${NC}"
+./scripts/setup/validate-environment.sh
+PHASE3_STATUS=$?
+
+# Phase 4: Performance Baseline (if applicable)
+echo -e "${YELLOW}Phase 4: Performance Baseline${NC}"
+./scripts/[feature]/validate-performance.sh
+PHASE4_STATUS=$?
+
+# Generate Results
+./scripts/setup/create-day-zero-results.sh
+
+# GO/NO-GO Decision
+if [ $TOTAL_FAILED -eq 0 ]; then
+    echo -e "${GREEN}✓ GO: All validations passed!${NC}"
+    exit 0
+elif [ $TOTAL_WARNINGS -gt 0 ]; then
+    echo -e "${YELLOW}⚠ GO WITH CONDITIONS${NC}"
+    exit 0
+else
+    echo -e "${RED}✗ NO-GO: Critical failures${NC}"
+    exit 1
+fi
+```
+
+---
+
+## 🎨 TEMPLATE: Readiness Review Structure
+
+```markdown
+# FRP-[NN] Execution Readiness Review
+
+**Status:** [READY / READY WITH CONDITIONS / NOT READY]  
+**Overall Assessment:** [X]% Ready - [Summary]
+
+## 📋 EXECUTIVE SUMMARY
+
+### ✅ Strengths
+- [List what's ready and excellent]
+
+### ⚠️ Critical Gaps
+- [List what needs validation]
+
+### 🚧 Recommended Actions
+- [List Day Zero actions required]
+
+## 🔍 DETAILED ASSESSMENT
+
+### 1. Documentation Quality
+[Assess implementation plan, execution plan, current status]
+
+### 2. Prerequisites Status
+[List what's confirmed vs. needs validation]
+
+### 3. Technical Design Assessment
+[Assess database, domain, application, infrastructure layers]
+
+### 4. Risk Assessment
+[Identify risks and mitigation status]
+
+## 🚦 READINESS CHECKLIST
+
+### 🔴 CRITICAL - Must Complete Before Slice 1
+- [ ] [Critical validation item 1]
+- [ ] [Critical validation item 2]
+
+### 🟡 HIGH PRIORITY - Complete During Pre-Slice
+- [ ] [High priority item 1]
+
+### 🟢 MEDIUM PRIORITY - Can Parallel with Development
+- [ ] [Medium priority item 1]
+
+## ✅ FINAL VERDICT
+
+**Status:** [GO / GO WITH CONDITIONS / NO-GO]
+
+**Recommendation:** [Clear recommendation with rationale]
+```
+
+---
+
+## 📊 SUCCESS METRICS
+
+Track Day Zero effectiveness:
+
+### Process Metrics
+
+- **Completion Rate:** 100% of FRPs complete Day Zero before Slice 1
+- **Duration:** Average 4-6 hours per FRP
+- **Decision Time:** < 24 hours from validation to GO/NO-GO
+
+### Quality Metrics
+
+- **Blockers Prevented:** # of mid-implementation blockers avoided
+- **Time Saved:** Hours saved vs. discovering issues during development
+- **Fallback Usage:** % of FRPs requiring documented fallbacks
+
+### Outcome Metrics
+
+- **GO Rate:** % of FRPs that achieve GO (target: 70%+)
+- **GO With Conditions Rate:** % requiring fallbacks (target: 20-30%)
+- **NO-GO Rate:** % requiring fixes before proceeding (target: <10%)
+
+---
+
+## 🔄 CONTINUOUS IMPROVEMENT
+
+### After Each FRP Day Zero
+
+1. **Retrospective** (15 min)
+   - What worked well?
+   - What could be improved?
+   - Were any validations missing?
+
+2. **Update Templates** (as needed)
+   - Add new validation patterns discovered
+   - Update common fallback strategies
+   - Improve script efficiency
+
+3. **Share Learnings** (optional)
+   - Document reusable patterns
+   - Share with other squads
+   - Update this rule if needed
+
+---
+
+## 📝 EXAMPLES
+
+### FRP-05 (Reference Implementation) ✅
+
+**Location:** `scripts/frp05-day-zero.sh`, `docs/FRP05_DAY_ZERO_*.md`
+
+**Validation Scope:**
+
+- TimescaleDB extension, hypertables, compression, retention, aggregates
+- Logical replication for real-time push (with polling fallback)
+- MQTT broker configuration
+- Environment variables (10 required)
+- Load test baseline (10k msg/s target)
+
+**Outcome:** GO WITH CONDITIONS (logical replication fallback, MQTT manual config)
+
+**Time Investment:** 3 hours to build, 1 hour to execute, saved 6+ hours of blocked development
+
+---
+
+## ⚠️ ANTI-PATTERNS (DO NOT DO)
+
+### ❌ Starting Slice 1 Without Day Zero
+
+**Why:** Discovers blockers mid-implementation, wastes development time
+
+### ❌ Manual-Only Validation (No Scripts)
+
+**Why:** Not repeatable, inconsistent, time-consuming
+
+### ❌ Skipping Stakeholder Sign-Off
+
+**Why:** Miscommunication about readiness, unclear fallback approvals
+
+### ❌ No Fallback Strategies
+
+**Why:** NO-GO decision blocks progress unnecessarily
+
+### ❌ Day Zero During Slice 1
+
+**Why:** Defeats the purpose; should be BEFORE development
+
+---
+
+## 📞 ENFORCEMENT
+
+### Responsible Parties
+
+**Squad Lead:**
+
+- Schedules Day Zero session before Slice 1
+- Ensures scripts are created during planning
+- Obtains stakeholder sign-offs
+
+**DevOps:**
+
+- Reviews infrastructure requirements
+- Validates environment readiness
+- Signs off on GO/NO-GO decision
+
+**AI Agent:**
+
+- Creates Day Zero scripts and documentation during FRP planning
+- Executes validation scripts
+- Generates results documents
+
+### Compliance Check
+
+Before any Slice 1 PR is merged:
+
+- [ ] Day Zero validation scripts exist
+- [ ] Day Zero documentation complete
+- [ ] Validation executed with results documented
+- [ ] GO/NO-GO decision recorded
+- [ ] Stakeholder sign-offs obtained
+
+---
+
+## 🎯 SUMMARY
+
+**Day Zero is not optional. It is a mandatory quality gate for all FRPs.**
+
+**Key Points:**
+
+1. ✅ Creates validation scripts during FRP planning
+2. ✅ Executes Day Zero BEFORE Slice 1 begins
+3. ✅ Documents results with GO/NO-GO recommendation
+4. ✅ Obtains stakeholder sign-off
+5. ✅ Only proceeds to Slice 1 after GO decision
+
+**Expected ROI:**
+
+- **Investment:** 4-6 hours per FRP (script creation + execution)
+- **Savings:** 4-10+ hours of blocked development
+- **Confidence:** High - infrastructure unknowns surfaced early
+- **Quality:** Fewer mid-implementation surprises
+
+---
+
+**Rule Status:** 🔴 **MANDATORY**  
+**Effective Date:** October 2, 2025  
+**Last Updated:** October 2, 2025  
+**Owner:** Engineering Leadership + Squad Leads

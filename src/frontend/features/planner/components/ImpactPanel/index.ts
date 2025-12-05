@@ -1,0 +1,2 @@
+export { ImpactPanel } from './ImpactPanel';
+

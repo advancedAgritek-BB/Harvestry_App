@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Harvestry.Spatial.API.Controllers;
 
 [ApiController]
-[Route("api/sites/{siteId:guid}/rooms")]
+[Route("api/v1/sites/{siteId:guid}/rooms")]
 public sealed class RoomsController : ControllerBase
 {
     private readonly ISpatialHierarchyService _spatialHierarchyService;
@@ -55,9 +55,17 @@ public sealed class RoomsController : ControllerBase
         {
             return BadRequest(CreateProblem("Missing user identifier", "Provide an X-User-Id header with a valid GUID."));
         }
-
-        var rooms = await _spatialHierarchyService.GetRoomsBySiteAsync(siteId, cancellationToken).ConfigureAwait(false);
-        return Ok(rooms);
+        
+        try
+        {
+            // Authorization is performed by the service layer (same pattern as CreateRoom)
+            var rooms = await _spatialHierarchyService.GetRoomsBySiteAsync(siteId, cancellationToken).ConfigureAwait(false);
+            return Ok(rooms);
+        }
+        catch (TenantMismatchException)
+        {
+            return Forbid();
+        }
     }
 
     [HttpGet("{roomId:guid}")]
