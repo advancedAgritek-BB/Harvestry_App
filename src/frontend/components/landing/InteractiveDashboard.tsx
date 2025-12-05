@@ -652,3 +652,4 @@ export function InteractiveDashboard() {
     </div>
   );
 }
+

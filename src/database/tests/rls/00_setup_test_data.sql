@@ -114,3 +114,4 @@ UNION ALL
 SELECT 'User Site Assignments', COUNT(*) FROM public.user_sites WHERE user_id IN (SELECT id FROM public.users WHERE email LIKE '%@test.com');
 
 
+
