@@ -7,7 +7,7 @@ export { Screenshots } from './Screenshots';
 export { PersonaBenefits } from './PersonaBenefits';
 export { Integrations } from './Integrations';
 export { Testimonials } from './Testimonials';
-export { Pricing } from './Pricing';
+export { Pricing } from './pricing';
 export { FinalCTA } from './FinalCTA';
 export { Footer } from './Footer';
 

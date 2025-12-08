@@ -57,21 +57,6 @@ export function Hero() {
           }}
         />
 
-        {/* Floating particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {mounted && [...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-accent-emerald/30 rounded-full animate-float"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${8 + Math.random() * 4}s`,
-              }}
-            />
-          ))}
-        </div>
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -91,7 +76,7 @@ export function Hero() {
           >
             <span className="text-foreground inline-block hover:scale-[1.02] transition-transform cursor-default">The Modern</span>
             <br />
-            <span className="bg-gradient-to-r from-accent-emerald via-accent-cyan to-accent-emerald bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient inline-block">
+            <span className="bg-gradient-to-r from-accent-emerald via-accent-cyan to-accent-emerald bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient-slow inline-block pb-[0.1em]">
               Cultivation Operating System
             </span>
           </h1>
@@ -102,7 +87,7 @@ export function Hero() {
           >
             Unify your grow. Simplify compliance. Optimize everything.
             <br className="hidden sm:block" />
-            <span className="text-foreground/80">One platform</span> for ERP, telemetry, and prescriptive control.
+            <span className="text-foreground font-medium">One platform</span> for ERP, telemetry, and prescriptive control.
           </p>
 
           {/* CTAs with magnetic effect */}
@@ -123,9 +108,9 @@ export function Hero() {
             </MagneticButton>
             
             <MagneticButton as="button" strength={0.2}>
-              <span className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-foreground bg-surface border border-border rounded-xl overflow-hidden hover:border-accent-cyan/50 transition-colors duration-300">
-                <span className="absolute inset-0 bg-accent-cyan/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <Play className="h-5 w-5 text-accent-cyan group-hover:scale-110 transition-transform duration-300" />
+              <span className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-foreground bg-surface border border-border rounded-xl overflow-hidden hover:border-foreground/20 transition-colors duration-300">
+                <span className="absolute inset-0 bg-foreground/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <Play className="h-5 w-5 text-foreground/70 group-hover:text-foreground group-hover:scale-110 transition-all duration-300" />
                 <span className="relative">Watch Overview</span>
               </span>
             </MagneticButton>
@@ -138,7 +123,7 @@ export function Hero() {
             {[
               { icon: Shield, text: 'Compliance-Ready', color: 'accent-emerald' },
               { icon: Zap, text: 'Real-Time Telemetry', color: 'accent-amber' },
-              { icon: BarChart3, text: 'Enterprise-Grade', color: 'accent-cyan' },
+              { icon: BarChart3, text: 'Enterprise-Grade', color: 'accent-emerald' },
             ].map((item, index) => (
               <div 
                 key={item.text}

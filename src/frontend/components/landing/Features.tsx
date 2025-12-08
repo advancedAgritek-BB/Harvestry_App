@@ -172,16 +172,16 @@ export function Features() {
           ref={headerRef}
           className={`text-center mb-16 transition-all duration-700 ${headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-cyan/10 border border-accent-cyan/20 text-accent-cyan text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/5 border border-foreground/10 text-muted-foreground text-sm font-medium mb-6">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-cyan opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-cyan"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-emerald opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-emerald"></span>
             </span>
             Comprehensive Feature Set
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-5">
             Everything You Need to{' '}
-            <span className="bg-gradient-to-r from-accent-emerald via-accent-cyan to-accent-emerald bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient">
+            <span className="text-accent-emerald">
               Run Your Facility
             </span>
           </h2>

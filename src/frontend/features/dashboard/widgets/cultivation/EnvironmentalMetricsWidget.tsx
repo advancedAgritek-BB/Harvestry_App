@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Thermometer, Droplets, Sun, Wind, Activity, Wifi, WifiOff, Settings2, Lock } from 'lucide-react';
+import { Thermometer, Droplets, Sun, Wind, Activity, Wifi, WifiOff, Settings2 } from 'lucide-react';
 import { SensorSelectorModal } from './SensorSelectorModal';
 import { useCanConfigureSensors } from '@/stores/auth/authStore';
+import { simulationService, StreamType } from '@/features/telemetry/services/simulation.service';
 import {
   SensorAssignment,
   SensorMetricType,
@@ -161,6 +162,7 @@ function ClickableMetricCard({
 export function EnvironmentalMetricsWidget() {
   const [lightMode, setLightMode] = useState<'DLI' | 'PPFD'>('DLI');
   const [assignments, setAssignments] = useState<MetricAssignments>(defaultAssignments);
+  const [simulatedValues, setSimulatedValues] = useState<Record<string, number>>({});
   
   // Permission check for sensor configuration
   const canConfigureSensors = useCanConfigureSensors();
@@ -168,18 +170,74 @@ export function EnvironmentalMetricsWidget() {
   // Modal state
   const [activeModal, setActiveModal] = useState<SensorMetricType | null>(null);
   
-  // Mock fallback data - In real app, this comes from a hook/store
+  // Default fallback data
   const fallbackMetrics = {
-    Temperature: 75.4,
-    Humidity: 57,
-    VPD: 1.4,
-    DLI: 42,
-    PPFD: 950,
-    CO2: 1050,
-    EC: 2.2,
-    pH: 5.8,
-    VWC: 55,
+    Temperature: simulatedValues.Temperature ?? 75.4,
+    Humidity: simulatedValues.Humidity ?? 57,
+    VPD: simulatedValues.VPD ?? 1.4,
+    DLI: simulatedValues.DLI ?? 42,
+    PPFD: simulatedValues.PPFD ?? 950,
+    CO2: simulatedValues.CO2 ?? 1050,
+    EC: simulatedValues.EC ?? 2.2,
+    pH: simulatedValues.pH ?? 5.8,
+    VWC: simulatedValues.VWC ?? 55,
   };
+
+  // Start simulations on mount
+  useEffect(() => {
+    const startSimulations = async () => {
+      try {
+        // Start all relevant simulation types
+        await Promise.all([
+          simulationService.start(StreamType.Temperature),
+          simulationService.start(StreamType.Humidity),
+          simulationService.start(StreamType.Vpd),
+          simulationService.start(StreamType.LightPpfd),
+          simulationService.start(StreamType.Co2),
+          simulationService.start(StreamType.Ec),
+          simulationService.start(StreamType.Ph),
+          simulationService.start(StreamType.SoilMoisture),
+        ]);
+      } catch (err) {
+        console.error('Failed to start simulations:', err);
+      }
+    };
+
+    startSimulations();
+
+    // Poll for updates every second for smooth visuals
+    const interval = setInterval(async () => {
+      try {
+        const activeSims = await simulationService.getActive();
+        const newValues: Record<string, number> = {};
+        
+        activeSims.forEach(sim => {
+          // Map stream types to our metric keys
+          switch(sim.stream.streamType) {
+            case StreamType.Temperature: newValues.Temperature = sim.lastValue; break;
+            case StreamType.Humidity: newValues.Humidity = sim.lastValue; break;
+            case StreamType.Vpd: newValues.VPD = sim.lastValue; break;
+            case StreamType.LightPpfd: 
+              newValues.PPFD = sim.lastValue;
+              // Calculate DLI from PPFD: DLI = PPFD × hours × 3600 / 1,000,000
+              // Assuming 12-hour photoperiod for flowering
+              newValues.DLI = (sim.lastValue * 12 * 3600) / 1000000;
+              break;
+            case StreamType.Co2: newValues.CO2 = sim.lastValue; break;
+            case StreamType.Ec: newValues.EC = sim.lastValue; break;
+            case StreamType.Ph: newValues.pH = sim.lastValue; break;
+            case StreamType.SoilMoisture: newValues.VWC = sim.lastValue; break;
+          }
+        });
+        
+        setSimulatedValues(prev => ({ ...prev, ...newValues }));
+      } catch (err) {
+        console.error('Failed to poll active simulations:', err);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const co2Reading = getMetricReading('CO2', assignments.CO2, fallbackMetrics.CO2);
   const isCo2Warning = co2Reading.value < 900 || co2Reading.value > 1200;

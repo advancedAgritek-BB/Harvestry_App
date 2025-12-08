@@ -28,8 +28,8 @@ const footerLinks = {
     title: 'Resources',
     links: [
       { label: 'Documentation', href: '/docs' },
-      { label: 'API Reference', href: '/api' },
-      { label: 'Status', href: 'https://status.harvestry.io' },
+      { label: 'API Reference', href: '/api-reference' },
+      { label: 'Status', href: '/status' },
       { label: 'Support', href: '/support' },
       { label: 'Community', href: '/community' },
     ],

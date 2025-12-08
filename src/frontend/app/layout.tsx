@@ -1,6 +1,9 @@
 import '@/styles/globals.css';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { DemoSeeder } from '@/components/demo/DemoSeeder';
+import { DemoControlPanel } from '@/components/demo/DemoControlPanel';
+import { CalendlyWidget } from '@/components/common/CalendlyWidget';
 
 // Add Google Fonts
 import { Inter, JetBrains_Mono } from 'next/font/google';
@@ -32,7 +35,10 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground font-sans antialiased selection:bg-cyan-500/30 selection:text-primary">
         <ThemeProvider defaultTheme="dark">
           <AuthProvider>
+            <DemoSeeder />
             {children}
+            <DemoControlPanel />
+            <CalendlyWidget />
           </AuthProvider>
         </ThemeProvider>
       </body>

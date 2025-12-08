@@ -79,30 +79,51 @@ const ALERT_CONFIG = {
   critical: { 
     icon: AlertCircle, 
     color: 'text-rose-400', 
-    bg: 'bg-rose-500/15',
-    border: 'border-rose-500/30',
+    iconBg: 'bg-gradient-to-br from-rose-500/30 to-rose-600/20 ring-1 ring-rose-400/30',
+    cardBg: 'bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent',
+    accentBar: 'bg-rose-400',
+    shadow: 'shadow-lg shadow-rose-500/5 hover:shadow-rose-500/10',
     label: 'Critical'
   },
   warning: { 
     icon: AlertTriangle, 
     color: 'text-amber-400', 
-    bg: 'bg-amber-500/15',
-    border: 'border-amber-500/30',
+    iconBg: 'bg-gradient-to-br from-amber-500/30 to-amber-600/20 ring-1 ring-amber-400/30',
+    cardBg: 'bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent',
+    accentBar: 'bg-amber-400',
+    shadow: 'shadow-lg shadow-amber-500/5 hover:shadow-amber-500/10',
     label: 'Warning'
   },
   info: { 
     icon: Info, 
     color: 'text-sky-400', 
-    bg: 'bg-sky-500/15',
-    border: 'border-sky-500/30',
+    iconBg: 'bg-gradient-to-br from-sky-500/30 to-sky-600/20 ring-1 ring-sky-400/30',
+    cardBg: 'bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-transparent',
+    accentBar: 'bg-sky-400',
+    shadow: 'shadow-lg shadow-sky-500/5 hover:shadow-sky-500/10',
     label: 'Info'
   },
 };
 
 const TASK_CONFIG = {
-  critical: { color: 'bg-rose-400', glow: 'shadow-[0_0_8px_rgba(251,113,133,0.6)]' },
-  high: { color: 'bg-amber-400', glow: 'shadow-[0_0_6px_rgba(251,191,36,0.4)]' },
-  normal: { color: 'bg-cyan-400', glow: '' },
+  critical: { 
+    accentBar: 'bg-rose-400', 
+    cardBg: 'bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent',
+    shadow: 'shadow-lg shadow-rose-500/5 hover:shadow-rose-500/10',
+    glow: 'shadow-[0_0_8px_rgba(251,113,133,0.5)]' 
+  },
+  high: { 
+    accentBar: 'bg-amber-400', 
+    cardBg: 'bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent',
+    shadow: 'shadow-lg shadow-amber-500/5 hover:shadow-amber-500/10',
+    glow: 'shadow-[0_0_6px_rgba(251,191,36,0.4)]' 
+  },
+  normal: { 
+    accentBar: 'bg-cyan-400', 
+    cardBg: 'bg-gradient-to-r from-surface/40 to-transparent',
+    shadow: 'shadow-md shadow-black/10 hover:shadow-lg',
+    glow: '' 
+  },
 };
 
 export function ActionPanel({ 
@@ -136,26 +157,30 @@ export function ActionPanel({
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-foreground flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-amber-500/15">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500/25 to-amber-600/15 ring-1 ring-amber-400/20 shadow-lg shadow-amber-500/10">
                 <Bell className="w-5 h-5 text-amber-400" />
               </div>
               Alerts
             </h2>
             <span className={cn(
-              'px-2.5 py-1 rounded-lg text-sm font-medium',
-              totalAlerts > 0 ? 'bg-amber-500/15 text-amber-400' : 'bg-muted/50 text-muted-foreground'
+              'px-3 py-1.5 rounded-full text-sm font-semibold tabular-nums',
+              totalAlerts > 0 
+                ? 'bg-gradient-to-r from-amber-500/20 to-amber-600/10 text-amber-400 ring-1 ring-amber-400/20' 
+                : 'bg-white/5 text-muted-foreground'
             )}>
               {totalAlerts}
             </span>
           </div>
 
           {alerts.length === 0 ? (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-surface/30 border border-border">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              <span className="text-sm text-muted-foreground">No active alerts</span>
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 shadow-sm">
+              <div className="p-1.5 rounded-lg bg-emerald-500/20">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              </div>
+              <span className="text-sm text-emerald-400/80 font-medium">No active alerts</span>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {alerts.map((alert) => (
                 <AlertRow key={alert.id} alert={alert} />
               ))}
@@ -165,17 +190,20 @@ export function ActionPanel({
           {hasMoreAlerts && (
             <Link 
               href="/dashboard/cultivation"
-              className="flex items-center justify-center gap-1.5 mt-3 py-2 text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
+              className="group flex items-center justify-center gap-1.5 mt-4 py-2.5 text-sm font-medium text-amber-400/80 hover:text-amber-400 transition-all"
             >
-              View all {totalAlerts} alerts <ArrowRight className="w-4 h-4" />
+              View all {totalAlerts} alerts 
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           )}
         </div>
       )}
 
-      {/* Divider */}
+      {/* Divider - Gradient */}
       {showAlerts && showTasks && (
-        <div className="border-t border-border/30 mb-6" />
+        <div className="relative h-px mb-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        </div>
       )}
 
       {/* Tasks Section */}
@@ -183,26 +211,30 @@ export function ActionPanel({
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-foreground flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-violet-500/15">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/25 to-violet-600/15 ring-1 ring-violet-400/20 shadow-lg shadow-violet-500/10">
                 <ClipboardList className="w-5 h-5 text-violet-400" />
               </div>
               Tasks
             </h2>
             <span className={cn(
-              'px-2.5 py-1 rounded-lg text-sm font-medium',
-              totalTasks > 0 ? 'bg-violet-500/15 text-violet-400' : 'bg-muted/50 text-muted-foreground'
+              'px-3 py-1.5 rounded-full text-sm font-semibold tabular-nums',
+              totalTasks > 0 
+                ? 'bg-gradient-to-r from-violet-500/20 to-violet-600/10 text-violet-400 ring-1 ring-violet-400/20' 
+                : 'bg-white/5 text-muted-foreground'
             )}>
               {totalTasks}
             </span>
           </div>
 
           {tasks.length === 0 ? (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-surface/30 border border-border">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              <span className="text-sm text-muted-foreground">No pending tasks</span>
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 shadow-sm">
+              <div className="p-1.5 rounded-lg bg-emerald-500/20">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              </div>
+              <span className="text-sm text-emerald-400/80 font-medium">No pending tasks</span>
             </div>
           ) : (
-            <div className="space-y-3 flex-1 overflow-y-auto">
+            <div className="space-y-2.5 flex-1 overflow-y-auto">
               {tasks.map((task) => (
                 <TaskRow key={task.id} task={task} />
               ))}
@@ -212,9 +244,10 @@ export function ActionPanel({
           {hasMoreTasks && (
             <Link 
               href="/dashboard/tasks"
-              className="flex items-center justify-center gap-1.5 mt-3 py-2 text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
+              className="group flex items-center justify-center gap-1.5 mt-4 py-2.5 text-sm font-medium text-violet-400/80 hover:text-violet-400 transition-all"
             >
-              View all {totalTasks} tasks <ArrowRight className="w-4 h-4" />
+              View all {totalTasks} tasks 
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           )}
         </div>
@@ -230,26 +263,37 @@ function AlertRow({ alert }: { alert: AlertActionItem }) {
   const content = (
     <div
       className={cn(
-        'group flex items-center gap-4 p-4 rounded-xl border transition-all duration-200',
-        'hover:scale-[1.01] cursor-pointer',
-        'bg-gradient-to-r from-surface/50 to-transparent',
-        config.border
+        'group relative flex items-center gap-3.5 p-3.5 pl-4 rounded-xl',
+        'transition-all duration-300 cursor-pointer',
+        config.cardBg,
+        config.shadow,
+        'hover:-translate-y-0.5'
       )}
     >
-      <div className={cn('p-2.5 rounded-xl shrink-0', config.bg)}>
-        <Icon className={cn('w-5 h-5', config.color, alert.severity === 'critical' && 'animate-pulse')} />
+      {/* Left accent bar */}
+      <div className={cn(
+        'absolute left-0 top-2 bottom-2 w-1 rounded-full',
+        config.accentBar,
+        alert.severity === 'critical' && 'animate-pulse'
+      )} />
+      
+      <div className={cn(
+        'p-2 rounded-lg shrink-0 transition-transform group-hover:scale-105',
+        config.iconBg
+      )}>
+        <Icon className={cn('w-4 h-4', config.color, alert.severity === 'critical' && 'animate-pulse')} />
       </div>
       
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-semibold text-foreground leading-tight truncate group-hover:text-cyan-300 transition-colors">
+        <h4 className="text-sm font-semibold text-foreground leading-tight truncate group-hover:text-white transition-colors">
           {alert.title}
         </h4>
-        <p className="text-sm text-muted-foreground mt-0.5">
+        <p className="text-xs text-muted-foreground/80 mt-1">
           {alert.source} • {formatTimeAgo(alert.timestamp)}
         </p>
       </div>
 
-      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+      <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
     </div>
   );
 
@@ -266,60 +310,61 @@ function TaskRow({ task }: { task: TaskActionItem }) {
   const content = (
     <div
       className={cn(
-        'group flex items-center gap-4 p-4 rounded-xl border transition-all duration-200',
-        'hover:scale-[1.01] cursor-pointer',
-        'bg-gradient-to-r from-surface/50 to-transparent',
-        isSlaIssue ? 'border-amber-500/30' : 'border-border'
+        'group relative flex items-center gap-3.5 p-3.5 pl-4 rounded-xl',
+        'transition-all duration-300 cursor-pointer',
+        isSlaIssue ? TASK_CONFIG.critical.cardBg : priorityConfig.cardBg,
+        isSlaIssue ? TASK_CONFIG.critical.shadow : priorityConfig.shadow,
+        'hover:-translate-y-0.5'
       )}
     >
-      {/* Priority indicator */}
+      {/* Left accent bar */}
       <div className={cn(
-        'w-3 h-3 rounded-full shrink-0',
-        priorityConfig.color,
+        'absolute left-0 top-2 bottom-2 w-1 rounded-full',
+        priorityConfig.accentBar,
         priorityConfig.glow
       )} />
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
+        <div className="flex items-center gap-2 mb-1">
           {task.slaStatus === 'breached' && (
-            <span className="px-2 py-0.5 text-xs font-bold uppercase rounded-md bg-rose-500/20 text-rose-400">
+            <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-gradient-to-r from-rose-500/25 to-rose-600/15 text-rose-400 ring-1 ring-rose-400/30">
               Overdue
             </span>
           )}
         </div>
-        <h4 className="text-sm font-semibold text-foreground leading-tight truncate group-hover:text-cyan-300 transition-colors">
+        <h4 className="text-sm font-semibold text-foreground leading-tight truncate group-hover:text-white transition-colors">
           {task.title}
         </h4>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
-          <Clock className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70 mt-1">
+          <Clock className="w-3 h-3" />
           <span>{formatTimeAgo(task.timestamp)}</span>
-          <span className="text-muted-foreground/50">•</span>
+          <span className="text-muted-foreground/40">•</span>
           <span className="truncate">{task.source}</span>
         </div>
       </div>
 
       {/* Assignee */}
-      <div className="w-8 shrink-0 flex justify-center">
+      <div className="shrink-0 flex justify-center">
         {task.assignee ? (
           <div 
-            className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center ring-2 ring-border"
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center ring-2 ring-white/10 shadow-lg shadow-violet-500/20"
             title={`${task.assignee.firstName} ${task.assignee.lastName}`}
           >
-            <span className="text-xs font-bold text-foreground">
+            <span className="text-xs font-bold text-white">
               {task.assignee.firstName.charAt(0)}{task.assignee.lastName.charAt(0)}
             </span>
           </div>
         ) : (
           <div 
-            className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center ring-2 ring-amber-500/30"
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/10 flex items-center justify-center ring-1 ring-amber-400/30"
             title="Unassigned"
           >
-            <UserCircle2 className="w-4 h-4 text-amber-400/80" />
+            <UserCircle2 className="w-4 h-4 text-amber-400" />
           </div>
         )}
       </div>
 
-      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+      <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
     </div>
   );
 

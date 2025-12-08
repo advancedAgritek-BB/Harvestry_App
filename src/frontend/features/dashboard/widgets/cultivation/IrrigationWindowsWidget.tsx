@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, TooltipProps } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, TooltipProps, Brush } from 'recharts';
 import { cn } from '@/lib/utils';
 import { Plus, Droplets, AlertTriangle, Hand, Zap, Waves } from 'lucide-react';
+import { useChartHorizontalScroll } from '@/hooks/useChartHorizontalScroll';
 
 // Types
 type IrrigationPeriod = 'P1 - Ramp' | 'P2 - Maintenance' | 'P3 - Dryback' | 'All';
@@ -138,6 +139,17 @@ export function IrrigationWindowsWidget() {
   const [showShotModal, setShowShotModal] = useState(false);
   const [pendingQuickShot, setPendingQuickShot] = useState<number | null>(null); // Volume for confirmation
 
+  // Horizontal scroll hook for mouse wheel panning
+  const { 
+    containerRef: chartContainerRef, 
+    startIndex, 
+    endIndex, 
+    onBrushChange,
+  } = useChartHorizontalScroll({
+    dataLength: mockData.length,
+    scrollSensitivity: 1,
+  });
+
   const toggleZone = (zone: string) => {
     setSelectedZones(prev => 
       prev.includes(zone) 
@@ -219,8 +231,8 @@ export function IrrigationWindowsWidget() {
         <ChartLegend />
       </div>
 
-      {/* Dual Bar Chart */}
-      <div className="flex-1 min-h-0 relative">
+      {/* Dual Bar Chart - ref enables mouse wheel horizontal scrolling */}
+      <div ref={chartContainerRef} className="flex-1 min-h-0 relative">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={mockData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -247,6 +259,17 @@ export function IrrigationWindowsWidget() {
             {/* Bar 2: End VWC */}
             <Bar yAxisId="vwc" dataKey="endVwc" name="End VWC %" fill={COLORS.vwc} radius={[4, 4, 0, 0]} barSize={20} fillOpacity={0.6} />
             
+            {/* Brush for scrolling - controlled by useChartHorizontalScroll hook */}
+            <Brush 
+              dataKey="time" 
+              height={25} 
+              stroke="hsl(var(--border))"
+              fill="hsl(var(--surface))"
+              tickFormatter={() => ''}
+              startIndex={startIndex}
+              endIndex={endIndex}
+              onChange={onBrushChange}
+            />
           </BarChart>
         </ResponsiveContainer>
         

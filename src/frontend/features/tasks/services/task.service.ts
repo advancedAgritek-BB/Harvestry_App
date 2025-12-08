@@ -9,6 +9,7 @@ import type {
   TaskStatus,
   TaskAssignee,
 } from '../types/task.types';
+import { MOCK_TASKS } from '@/lib/demo-data';
 
 export interface TaskFilterOptions {
   status?: TaskStatus;
@@ -52,6 +53,7 @@ export interface AssignTaskRequest {
 }
 
 const API_BASE = '/api/v1';
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true';
 
 /**
  * Get tasks for a site
@@ -60,6 +62,22 @@ export async function getTasks(
   siteId: string,
   filters: TaskFilterOptions = {}
 ): Promise<TaskListResponse> {
+  if (USE_MOCK) {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    let filtered = [...MOCK_TASKS];
+    
+    if (filters.status) {
+      filtered = filtered.filter(t => t.status === filters.status);
+    }
+    if (filters.priority) {
+      filtered = filtered.filter(t => t.priority === filters.priority);
+    }
+    
+    return { tasks: filtered, total: filtered.length };
+  }
+
   const params = new URLSearchParams(
     Object.fromEntries(
       Object.entries(filters)
@@ -79,6 +97,12 @@ export async function getTasks(
  * Get a single task
  */
 export async function getTask(siteId: string, taskId: string): Promise<Task> {
+  if (USE_MOCK) {
+    const task = MOCK_TASKS.find(t => t.id === taskId);
+    if (!task) throw new Error('Task not found');
+    return task;
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/tasks/${taskId}`);
   if (!response.ok) throw new Error('Failed to fetch task');
   return response.json();
@@ -91,6 +115,25 @@ export async function createTask(
   siteId: string,
   request: CreateTaskRequest
 ): Promise<Task> {
+  if (USE_MOCK) {
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      title: request.title,
+      description: request.description,
+      priority: request.priority || 'normal',
+      status: 'ready',
+      slaStatus: 'ok',
+      dueAt: request.dueDate || new Date().toISOString(),
+      category: 'general',
+      location: 'Unknown', // Default
+      ...request
+    };
+    // Note: We can't persist to MOCK_TASKS permanently here as it's a const export,
+    // but for a real mock service we would push to a local array.
+    // Since we are just mocking for demo display, returning it is enough for optimistic UI.
+    return newTask;
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/tasks`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -108,6 +151,12 @@ export async function updateTask(
   taskId: string,
   request: UpdateTaskRequest
 ): Promise<Task> {
+  if (USE_MOCK) {
+    const task = MOCK_TASKS.find(t => t.id === taskId);
+    if (!task) throw new Error('Task not found');
+    return { ...task, ...request };
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/tasks/${taskId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -125,6 +174,12 @@ export async function assignTask(
   taskId: string,
   request: AssignTaskRequest
 ): Promise<Task> {
+  if (USE_MOCK) {
+    const task = MOCK_TASKS.find(t => t.id === taskId);
+    if (!task) throw new Error('Task not found');
+    return { ...task, assignee: { id: request.userId || 'u1', firstName: 'Mock', lastName: 'User' } };
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/tasks/${taskId}/assign`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -138,6 +193,12 @@ export async function assignTask(
  * Start a task
  */
 export async function startTask(siteId: string, taskId: string): Promise<Task> {
+  if (USE_MOCK) {
+    const task = MOCK_TASKS.find(t => t.id === taskId);
+    if (!task) throw new Error('Task not found');
+    return { ...task, status: 'in_progress', startedAt: new Date().toISOString() };
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/tasks/${taskId}/start`, {
     method: 'POST',
   });
@@ -149,6 +210,12 @@ export async function startTask(siteId: string, taskId: string): Promise<Task> {
  * Complete a task
  */
 export async function completeTask(siteId: string, taskId: string): Promise<Task> {
+  if (USE_MOCK) {
+    const task = MOCK_TASKS.find(t => t.id === taskId);
+    if (!task) throw new Error('Task not found');
+    return { ...task, status: 'completed', completedAt: new Date().toISOString() };
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/tasks/${taskId}/complete`, {
     method: 'POST',
   });
@@ -164,6 +231,12 @@ export async function cancelTask(
   taskId: string,
   reason?: string
 ): Promise<Task> {
+  if (USE_MOCK) {
+    const task = MOCK_TASKS.find(t => t.id === taskId);
+    if (!task) throw new Error('Task not found');
+    return { ...task, status: 'closed' };
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/tasks/${taskId}/cancel`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -177,6 +250,10 @@ export async function cancelTask(
  * Get overdue tasks
  */
 export async function getOverdueTasks(siteId: string): Promise<Task[]> {
+  if (USE_MOCK) {
+    return MOCK_TASKS.filter(t => new Date(t.dueAt) < new Date() && t.status !== 'completed');
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/tasks/overdue`);
   if (!response.ok) throw new Error('Failed to fetch overdue tasks');
   return response.json();
@@ -190,6 +267,12 @@ export async function addWatcher(
   taskId: string,
   userId: string
 ): Promise<Task> {
+  if (USE_MOCK) {
+    const task = MOCK_TASKS.find(t => t.id === taskId);
+    if (!task) throw new Error('Task not found');
+    return task;
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/tasks/${taskId}/watchers`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -207,6 +290,12 @@ export async function removeWatcher(
   taskId: string,
   userId: string
 ): Promise<Task> {
+  if (USE_MOCK) {
+    const task = MOCK_TASKS.find(t => t.id === taskId);
+    if (!task) throw new Error('Task not found');
+    return task;
+  }
+
   const response = await fetch(
     `${API_BASE}/sites/${siteId}/tasks/${taskId}/watchers/${userId}`,
     { method: 'DELETE' }
@@ -228,6 +317,10 @@ export async function getTaskHistory(
   changedAt: string;
   reason?: string;
 }>> {
+  if (USE_MOCK) {
+    return [];
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/tasks/${taskId}/history`);
   if (!response.ok) throw new Error('Failed to fetch task history');
   return response.json();
@@ -237,8 +330,15 @@ export async function getTaskHistory(
  * Get site users for assignee picker
  */
 export async function getSiteUsers(siteId: string): Promise<TaskAssignee[]> {
+  if (USE_MOCK) {
+    return [
+      { id: 'u1', firstName: 'Marcus', lastName: 'Johnson', role: 'Grower' },
+      { id: 'u2', firstName: 'Sarah', lastName: 'Chen', role: 'Lead Grower' },
+      { id: 'u3', firstName: 'David', lastName: 'Martinez', role: 'Technician' },
+    ];
+  }
+
   const response = await fetch(`${API_BASE}/sites/${siteId}/users`);
   if (!response.ok) throw new Error('Failed to fetch site users');
   return response.json();
 }
-

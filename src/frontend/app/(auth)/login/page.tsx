@@ -3,12 +3,14 @@
 /**
  * Login Page
  * 
- * User authentication page with email/password login.
+ * Premium authentication page with animated background effects,
+ * glass morphism styling, and smooth entrance animations.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Leaf, Eye, EyeOff, ArrowRight, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 
 export default function LoginPage() {
@@ -16,13 +18,20 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const { signIn, isLoading: authLoading } = useAuth();
   
+  const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const expired = searchParams.get('expired') === 'true';
   const redirectTo = searchParams.get('redirect') || '/dashboard';
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +46,6 @@ export default function LoginPage() {
         return;
       }
       
-      // Successful login - redirect
       router.push(redirectTo);
     } catch {
       setError('An unexpected error occurred. Please try again.');
@@ -49,160 +57,313 @@ export default function LoginPage() {
   const loading = isLoading || authLoading;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5" />
-      
-      <div className="relative w-full max-w-md px-6 py-12">
-        {/* Logo & Title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
-            <svg
-              className="w-8 h-8 text-emerald-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            Harvestry
-          </h1>
-          <p className="text-slate-400 mt-2">
-            Sign in to your account
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 bg-background">
+        {/* Gradient Orbs */}
+        <div 
+          className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-accent-emerald/20 rounded-full blur-[120px] animate-pulse-slow"
+        />
+        <div 
+          className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-accent-cyan/15 rounded-full blur-[140px] animate-pulse-slow"
+          style={{ animationDelay: '1s' }}
+        />
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent-violet/5 rounded-full blur-[150px]"
+        />
+        
+        {/* Grid Pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px',
+          }}
+        />
 
-        {/* Session Expired Notice */}
-        {expired && (
-          <div className="mb-6 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
-            <p className="text-sm text-amber-200 text-center">
-              Your session has expired. Please sign in again.
+        {/* Floating Particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {mounted && [...Array(15)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-accent-emerald/40 rounded-full animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${10 + Math.random() * 5}s`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Login Card */}
+      <div 
+        className={`relative w-full max-w-md mx-4 transition-all duration-700 ${
+          mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}
+      >
+        {/* Glass Card */}
+        <div className="glass-card rounded-2xl p-8 sm:p-10">
+          {/* Logo & Header */}
+          <div 
+            className={`text-center mb-8 transition-all duration-700 delay-100 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`}
+          >
+            <Link href="/" className="inline-flex items-center gap-3 group mb-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-accent-emerald/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <Leaf className="relative h-10 w-10 text-accent-emerald group-hover:scale-110 transition-transform duration-300" />
+              </div>
+              <span className="text-2xl font-bold tracking-tight">
+                <span className="text-foreground">Harvestry</span>
+                <span className="text-accent-emerald">.io</span>
+              </span>
+            </Link>
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              Welcome back
+            </h1>
+            <p className="text-muted-foreground">
+              Sign in to your account to continue
             </p>
           </div>
-        )}
 
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-              <p className="text-sm text-red-200 text-center">{error}</p>
+          {/* Session Expired Notice */}
+          {expired && (
+            <div 
+              className={`mb-6 p-4 rounded-xl bg-accent-amber/10 border border-accent-amber/20 flex items-center gap-3 transition-all duration-700 delay-150 ${
+                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}
+            >
+              <AlertCircle className="h-5 w-5 text-accent-amber flex-shrink-0" />
+              <p className="text-sm text-accent-amber">
+                Your session has expired. Please sign in again.
+              </p>
             </div>
           )}
 
-          {/* Email Field */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-slate-300 mb-2"
-            >
-              Email address
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              className="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors disabled:opacity-50"
-              placeholder="you@company.com"
-            />
-          </div>
-
-          {/* Password Field */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-slate-300"
-              >
-                Password
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
-              >
-                Forgot password?
-              </Link>
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-accent-rose/10 border border-accent-rose/20 flex items-center gap-3 animate-fade-in">
+              <AlertCircle className="h-5 w-5 text-accent-rose flex-shrink-0" />
+              <p className="text-sm text-accent-rose">{error}</p>
             </div>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              className="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors disabled:opacity-50"
-              placeholder="••••••••"
-            />
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email Field */}
+            <div 
+              className={`transition-all duration-700 delay-200 ${
+                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}
+            >
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-muted-foreground mb-2"
+              >
+                Email address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-surface/50 border border-border text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent-emerald/50 focus:border-accent-emerald transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="you@company.com"
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div 
+              className={`transition-all duration-700 delay-300 ${
+                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-muted-foreground"
+                >
+                  Password
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-accent-emerald hover:text-accent-emerald/80 transition-colors font-medium"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  className="w-full pl-12 pr-12 py-3.5 rounded-xl bg-surface/50 border border-border text-foreground placeholder-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent-emerald/50 focus:border-accent-emerald transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Remember Me */}
+            <div 
+              className={`flex items-center gap-3 transition-all duration-700 delay-400 ${
+                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}
+            >
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  id="remember-me"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <label
+                  htmlFor="remember-me"
+                  className={`flex items-center justify-center w-5 h-5 rounded-md border-2 cursor-pointer transition-all duration-200 ${
+                    rememberMe 
+                      ? 'bg-accent-emerald border-accent-emerald' 
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                >
+                  {rememberMe && (
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </label>
+              </div>
+              <label 
+                htmlFor="remember-me"
+                className="text-sm text-muted-foreground cursor-pointer select-none"
+              >
+                Remember me for 30 days
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <div 
+              className={`pt-2 transition-all duration-700 delay-500 ${
+                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}
+            >
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative w-full py-4 px-6 rounded-xl bg-accent-emerald text-white font-semibold overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent-emerald/20 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent-emerald/50 focus:ring-offset-2 focus:ring-offset-background"
+              >
+                {/* Animated gradient on hover */}
+                <span className="absolute inset-0 bg-gradient-to-r from-accent-emerald via-emerald-400 to-accent-emerald bg-[length:200%_auto] opacity-0 group-hover:opacity-100 animate-gradient transition-opacity duration-500" />
+                
+                {/* Button content */}
+                <span className="relative flex items-center justify-center gap-2">
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      Sign in
+                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+                    </>
+                  )}
+                </span>
+              </button>
+            </div>
+          </form>
+
+          {/* Divider */}
+          <div 
+            className={`relative my-8 transition-all duration-700 delay-500 ${
+              mounted ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-surface/80 text-muted-foreground">
+                New to Harvestry?
+              </span>
+            </div>
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          {/* Sign Up Link */}
+          <div 
+            className={`transition-all duration-700 delay-700 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`}
           >
-            {loading ? (
-              <>
-                <svg
-                  className="animate-spin h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Signing in...
-              </>
-            ) : (
-              'Sign in'
-            )}
-          </button>
-        </form>
-
-        {/* Sign Up Link */}
-        <p className="mt-8 text-center text-sm text-slate-400">
-          Don&apos;t have an account?{' '}
-          <Link
-            href="/signup"
-            className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
-          >
-            Get started
-          </Link>
-        </p>
+            <Link
+              href="/signup"
+              className="group flex items-center justify-center gap-2 w-full py-4 px-6 rounded-xl border border-border bg-surface/30 text-foreground font-semibold hover:border-accent-emerald/50 hover:bg-surface/50 transition-all duration-300"
+            >
+              Create an account
+              <ArrowRight className="h-5 w-5 text-accent-emerald group-hover:translate-x-1 transition-transform duration-300" />
+            </Link>
+          </div>
+        </div>
 
         {/* Footer */}
-        <p className="mt-8 text-center text-xs text-slate-500">
+        <p 
+          className={`mt-8 text-center text-sm text-muted-foreground transition-all duration-700 delay-700 ${
+            mounted ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
           By signing in, you agree to our{' '}
-          <Link href="/terms" className="text-slate-400 hover:text-slate-300">
+          <Link href="/terms" className="text-foreground/80 hover:text-foreground transition-colors underline-offset-4 hover:underline">
             Terms of Service
           </Link>{' '}
           and{' '}
-          <Link href="/privacy" className="text-slate-400 hover:text-slate-300">
+          <Link href="/privacy" className="text-foreground/80 hover:text-foreground transition-colors underline-offset-4 hover:underline">
             Privacy Policy
           </Link>
         </p>
@@ -224,6 +385,3 @@ function getErrorMessage(message: string): string {
   
   return errorMap[message] || message;
 }
-
-
-

@@ -5,6 +5,7 @@ import { TankCard, TankData } from '@/features/dashboard/widgets/irrigation/Tank
 import { NowPlayingWidget } from '@/features/dashboard/widgets/irrigation/NowPlayingWidget';
 import { UpcomingScheduleWidget } from '@/features/dashboard/widgets/irrigation/UpcomingScheduleWidget';
 import { SystemHealthWidget } from '@/features/dashboard/widgets/irrigation/SystemHealthWidget';
+import { IrrigationDashboard } from '@/features/irrigation';
 
 export default function IrrigationOverviewPage() {
   // Mock Data for Tanks
@@ -92,7 +93,12 @@ export default function IrrigationOverviewPage() {
   return (
     <div className="flex flex-col gap-6 max-w-[1600px] mx-auto">
       
-      {/* 1. Tank Hero Row (Grid Layout) */}
+      {/* 1. Zone Control (Interactive) */}
+      <section>
+        <IrrigationDashboard />
+      </section>
+
+      {/* 2. Tank Hero Row (Grid Layout) */}
       <section className="w-full">
         <div className="flex items-center justify-between mb-3 px-1">
           <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Nutrient Delivery Systems</h2>
@@ -107,13 +113,13 @@ export default function IrrigationOverviewPage() {
         </div>
       </section>
 
-      {/* 2. Operations Row (Now Playing + Schedule) */}
+      {/* 3. Operations Row (Now Playing + Schedule) */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[220px]">
         <NowPlayingWidget />
         <UpcomingScheduleWidget />
       </section>
 
-      {/* 3. System Health Footer */}
+      {/* 4. System Health Footer */}
       <section className="mt-auto">
         <SystemHealthWidget />
       </section>
@@ -121,4 +127,3 @@ export default function IrrigationOverviewPage() {
     </div>
   );
 }
-

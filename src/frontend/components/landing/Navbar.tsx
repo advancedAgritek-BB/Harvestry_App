@@ -6,10 +6,10 @@ import { Menu, X, ArrowRight, Leaf } from 'lucide-react';
 import { clsx } from 'clsx';
 
 const navLinks = [
-  { label: 'Features', href: '#features' },
-  { label: 'Solutions', href: '#solutions' },
-  { label: 'Integrations', href: '#integrations' },
-  { label: 'Pricing', href: '#pricing' },
+  { label: 'Features', href: '/#features' },
+  { label: 'Solutions', href: '/#solutions' },
+  { label: 'Integrations', href: '/#integrations' },
+  { label: 'Pricing', href: '/#pricing' },
 ];
 
 export function Navbar() {
@@ -22,7 +22,7 @@ export function Navbar() {
       setIsScrolled(window.scrollY > 20);
       
       // Update active section based on scroll position
-      const sections = navLinks.map(link => link.href.replace('#', ''));
+      const sections = navLinks.map(link => link.href.replace('/#', ''));
       for (const section of sections.reverse()) {
         const element = document.getElementById(section);
         if (element) {
@@ -65,7 +65,7 @@ export function Navbar() {
           {/* Desktop Navigation with animated underline */}
           <div className="hidden lg:flex items-center gap-2">
             {navLinks.map((link) => {
-              const isActive = activeSection === link.href.replace('#', '');
+              const isActive = activeSection === link.href.replace('/#', '');
               return (
                 <Link
                   key={link.href}
@@ -97,7 +97,7 @@ export function Navbar() {
               Sign In
             </Link>
             <Link
-              href="#demo"
+              href="/#demo"
               className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold text-white bg-accent-emerald rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent-emerald/20"
             >
               {/* Animated gradient on hover */}
@@ -163,7 +163,7 @@ export function Navbar() {
                   Sign In
                 </Link>
                 <Link
-                  href="#demo"
+                  href="/#demo"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="mx-4 inline-flex items-center justify-center gap-2 px-5 py-3 text-base font-semibold text-white bg-accent-emerald hover:bg-accent-emerald/90 rounded-lg transition-all duration-300"
                 >

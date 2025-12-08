@@ -139,16 +139,16 @@ export function PersonaBenefits() {
             headerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           )}
         >
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent-violet/10 border border-accent-violet/20 text-accent-violet text-sm font-medium mb-8">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-foreground/5 border border-foreground/10 text-muted-foreground text-sm font-medium mb-8">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-violet opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-violet"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-emerald opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-emerald"></span>
             </span>
             Built for Every Role
           </div>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 tracking-tight">
             Tailored for{' '}
-            <span className="bg-gradient-to-r from-accent-violet via-accent-cyan to-accent-emerald bg-clip-text text-transparent">
+            <span className="text-accent-emerald">
               Your Role
             </span>
           </h2>

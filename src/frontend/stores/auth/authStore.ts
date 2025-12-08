@@ -2,7 +2,7 @@
  * Auth Store
  * 
  * Zustand store for managing user authentication and authorization.
- * Handles user roles, site permissions, and feature flag access.
+ * Handles user roles, site permissions, feature flag access, and pricing tiers.
  */
 
 import { create } from 'zustand';
@@ -22,6 +22,8 @@ export enum UserRole {
   Viewer = 'Viewer'
 }
 
+export type PricingTier = 'monitor' | 'foundation' | 'growth' | 'enterprise';
+
 export interface SitePermissions {
   siteId: string;
   siteName: string;
@@ -39,10 +41,102 @@ export interface User {
   sitePermissions: SitePermissions[];
 }
 
+// ============================================================================
+// TIER FEATURE MAP
+// ============================================================================
+
+export type TierFeature = 
+  | 'dashboard'
+  | 'monitoring'
+  | 'historical_data'
+  | 'batch_tracking'
+  | 'sop_engine'
+  | 'inventory'
+  | 'task_management'
+  | 'control'
+  | 'automation'
+  | 'compliance'
+  | 'financials'
+  | 'production_planning'
+  | 'labels'
+  | 'ai_autosteer'
+  | 'ai_insights'
+  | 'multi_site'
+  | 'custom_bi'
+  | 'sso';
+
+/**
+ * Map of pricing tiers to enabled features.
+ * Each tier includes all features from lower tiers.
+ */
+export const TIER_FEATURES: Record<PricingTier, TierFeature[]> = {
+  monitor: [
+    'dashboard',
+    'monitoring',
+  ],
+  foundation: [
+    'dashboard',
+    'monitoring',
+    'historical_data',
+    'batch_tracking',
+    'sop_engine',
+    'inventory',
+    'task_management',
+  ],
+  growth: [
+    'dashboard',
+    'monitoring',
+    'historical_data',
+    'batch_tracking',
+    'sop_engine',
+    'inventory',
+    'task_management',
+    'control',
+    'automation',
+    'compliance',
+    'financials',
+    'production_planning',
+    'labels',
+  ],
+  enterprise: [
+    'dashboard',
+    'monitoring',
+    'historical_data',
+    'batch_tracking',
+    'sop_engine',
+    'inventory',
+    'task_management',
+    'control',
+    'automation',
+    'compliance',
+    'financials',
+    'production_planning',
+    'labels',
+    'ai_autosteer',
+    'ai_insights',
+    'multi_site',
+    'custom_bi',
+    'sso',
+  ],
+};
+
+/**
+ * Human-readable tier labels
+ */
+export const TIER_LABELS: Record<PricingTier, string> = {
+  monitor: 'Monitor (Free)',
+  foundation: 'Foundation',
+  growth: 'Growth',
+  enterprise: 'Enterprise',
+};
+
 export interface AuthState {
   // Current user
   user: User | null;
   isAuthenticated: boolean;
+  
+  // Pricing tier (for demo purposes)
+  currentTier: PricingTier;
   
   // Selected site context
   currentSiteId: string | null;
@@ -55,6 +149,10 @@ export interface AuthState {
   setCurrentSite: (siteId: string | null) => void;
   setLoading: (loading: boolean) => void;
   logout: () => void;
+  
+  // Tier management (for demo)
+  setCurrentTier: (tier: PricingTier) => void;
+  hasFeature: (feature: TierFeature) => boolean;
   
   // Permission checks
   isSuperAdmin: () => boolean;
@@ -127,6 +225,7 @@ export const useAuthStore = create<AuthState>()(
       user: DEV_MOCK_USER,
       isAuthenticated: !!DEV_MOCK_USER,
       currentSiteId: DEV_MOCK_USER?.sitePermissions[0]?.siteId || null,
+      currentTier: 'growth', // Default to Growth for demo
       isLoading: !DEV_MOCK_USER, // Loading until auth provider initializes
       
       // Actions
@@ -173,6 +272,14 @@ export const useAuthStore = create<AuthState>()(
           currentSiteId: null,
           isLoading: false
         });
+      },
+      
+      // Tier management
+      setCurrentTier: (tier) => set({ currentTier: tier }),
+      
+      hasFeature: (feature) => {
+        const { currentTier } = get();
+        return TIER_FEATURES[currentTier].includes(feature);
       },
       
       // Permission checks
@@ -299,7 +406,8 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
-        currentSiteId: state.currentSiteId
+        currentSiteId: state.currentSiteId,
+        currentTier: state.currentTier,
       })
     }
   )
@@ -326,6 +434,14 @@ export const useCanConfigureSensors = (siteId?: string) =>
 /** Hook to check feature flag management permission */
 export const useCanManageFeatureFlags = () => 
   useAuthStore((state) => state.canManageFeatureFlags());
+
+/** Hook to get current pricing tier */
+export const useCurrentTier = () => 
+  useAuthStore((state) => state.currentTier);
+
+/** Hook to check if a feature is available in current tier */
+export const useHasFeature = (feature: TierFeature) => 
+  useAuthStore((state) => state.hasFeature(feature));
 
 // ============================================================================
 // DASHBOARD PERMISSION HOOKS
@@ -403,4 +519,3 @@ export const useDashboardPermissions = () => {
     userRole: user?.role ?? null,
   };
 };
-

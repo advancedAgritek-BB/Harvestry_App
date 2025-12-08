@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useThemeStore } from '@/stores/app/themeStore';
+import { useAuthStore, TierFeature, TIER_FEATURES } from '@/stores/auth/authStore';
 
 interface NavItem {
   label: string;
@@ -26,17 +27,19 @@ interface NavItem {
   href: string;
   count?: number;
   accent?: 'cyan' | 'amber' | 'violet';
+  /** Required tier feature - if not set, always visible */
+  requiredFeature?: TierFeature;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Home', icon: Home, href: '/dashboard/overview' },
-  { label: 'Planner', icon: CalendarDays, href: '/dashboard/planner' },
-  { label: 'Tasks', icon: ClipboardCheck, href: '/dashboard/tasks' },
-  { label: 'Cultivation', icon: Flower2, href: '/dashboard/cultivation' },
-  { label: 'Irrigation', icon: Droplets, href: '/dashboard/irrigation' },
-  { label: 'Recipes', icon: BookOpen, href: '/dashboard/recipes' },
-  { label: 'Inventory', icon: Package, href: '/inventory', accent: 'amber' },
-  { label: 'Analytics', icon: BarChart2, href: '/dashboard/analytics', accent: 'amber' },
+  { label: 'Planner', icon: CalendarDays, href: '/dashboard/planner', requiredFeature: 'production_planning' },
+  { label: 'Tasks', icon: ClipboardCheck, href: '/dashboard/tasks', requiredFeature: 'task_management' },
+  { label: 'Cultivation', icon: Flower2, href: '/dashboard/cultivation', requiredFeature: 'monitoring' },
+  { label: 'Irrigation', icon: Droplets, href: '/dashboard/irrigation', requiredFeature: 'control' },
+  { label: 'Recipes', icon: BookOpen, href: '/dashboard/recipes', requiredFeature: 'sop_engine' },
+  { label: 'Inventory', icon: Package, href: '/inventory', accent: 'amber', requiredFeature: 'inventory' },
+  { label: 'Analytics', icon: BarChart2, href: '/dashboard/analytics', accent: 'amber', requiredFeature: 'historical_data' },
   { label: 'Admin', icon: Cog, href: '/admin', accent: 'violet' },
 ];
 
@@ -61,6 +64,11 @@ const ACCENT_STYLES = {
 export function Sidebar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useThemeStore();
+  // Subscribe to currentTier directly so component re-renders when tier changes
+  const currentTier = useAuthStore((state) => state.currentTier);
+  
+  // Check if a feature is available in the current tier
+  const hasFeature = (feature: TierFeature) => TIER_FEATURES[currentTier].includes(feature);
 
   return (
     <aside className="w-20 h-screen flex flex-col items-center py-6 bg-surface border-r border-border z-50 flex-shrink-0">
@@ -74,6 +82,11 @@ export function Sidebar() {
       {/* Main Navigation */}
       <nav className="flex-1 flex flex-col gap-6 w-full px-2">
         {NAV_ITEMS.map((item) => {
+          // Hide items that require a feature not available in the current tier
+          if (item.requiredFeature && !hasFeature(item.requiredFeature)) {
+            return null;
+          }
+          
           // Home is active for exact match, others match on prefix
           const isActive = item.href === '/dashboard/overview' 
             ? pathname === '/dashboard/overview' || pathname === '/dashboard'

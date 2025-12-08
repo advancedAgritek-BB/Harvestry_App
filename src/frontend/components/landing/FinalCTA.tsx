@@ -31,7 +31,7 @@ export function FinalCTA() {
         {/* Headline */}
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
           Ready to Transform{' '}
-          <span className="bg-gradient-to-r from-accent-emerald via-accent-cyan to-accent-emerald bg-[length:200%_auto] bg-clip-text text-transparent animate-gradient">
+          <span className="text-accent-emerald">
             Your Cultivation?
           </span>
         </h2>
@@ -44,7 +44,7 @@ export function FinalCTA() {
 
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-          <MagneticButton as="a" href="mailto:demo@harvestry.io?subject=Demo Request" strength={0.2}>
+          <MagneticButton as="a" href="https://calendly.com/bburnette-advancedagritek/harvestry-io-demo" target="_blank" rel="noopener noreferrer" strength={0.2}>
             <span className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 text-base font-semibold text-white bg-accent-emerald rounded-xl overflow-hidden">
               {/* Animated gradient */}
               <span className="absolute inset-0 bg-gradient-to-r from-accent-emerald via-emerald-400 to-accent-emerald bg-[length:200%_auto] animate-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -57,8 +57,8 @@ export function FinalCTA() {
           </MagneticButton>
           
           <MagneticButton as="a" href="mailto:sales@harvestry.io?subject=Contact Sales" strength={0.2}>
-            <span className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-foreground bg-surface border border-border rounded-xl transition-all duration-300 hover:border-accent-cyan/50 hover:bg-elevated">
-              <span className="absolute inset-0 bg-accent-cyan/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
+            <span className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-foreground bg-surface border border-border rounded-xl transition-all duration-300 hover:border-foreground/20 hover:bg-elevated">
+              <span className="absolute inset-0 bg-foreground/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
               <span className="relative">Contact Sales</span>
             </span>
           </MagneticButton>

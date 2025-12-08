@@ -54,12 +54,12 @@ export function Integrations() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-amber/10 border border-accent-amber/20 text-accent-amber text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/5 border border-foreground/10 text-muted-foreground text-sm font-medium mb-6">
             Integration Ecosystem
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Connects to{' '}
-            <span className="bg-gradient-to-r from-accent-amber to-accent-emerald bg-clip-text text-transparent">
+            <span className="text-accent-emerald">
               Your Existing Stack
             </span>
           </h2>
@@ -111,7 +111,7 @@ export function Integrations() {
         <div className="mt-12 text-center">
           <p className="text-sm text-muted-foreground">
             Need a custom integration?{' '}
-            <a href="#demo" className="text-accent-cyan hover:underline">
+            <a href="#demo" className="text-accent-emerald hover:text-accent-emerald/80 hover:underline transition-colors">
               Talk to our team
             </a>{' '}
             about our API access.

@@ -5,4 +5,5 @@
  */
 
 export { ThemeProvider } from './ThemeProvider';
-
+export { FeatureGate, FeatureGateInline, FeatureGateBadge } from './FeatureGate';
+export { ComingSoonPlaceholder } from './ComingSoonPlaceholder';

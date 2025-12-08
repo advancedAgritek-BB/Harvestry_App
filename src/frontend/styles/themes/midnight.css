@@ -45,13 +45,13 @@
   --text-muted: rgb(var(--text-muted-rgb));
   --text-subtle: rgb(var(--text-subtle-rgb));
   
-  /* Semantic Accents - Bright for dark backgrounds */
-  --accent-cyan-rgb: 6 182 212;
-  --accent-emerald-rgb: 16 185 129;
-  --accent-amber-rgb: 245 158 11;
-  --accent-rose-rgb: 244 63 94;
-  --accent-sky-rgb: 14 165 233;
-  --accent-violet-rgb: 139 92 246;
+  /* Semantic Accents - Balanced premium palette */
+  --accent-cyan-rgb: 56 189 193;       /* Soft teal - vibrant but refined */
+  --accent-emerald-rgb: 45 180 135;    /* Rich emerald - brand primary */
+  --accent-amber-rgb: 234 179 76;      /* Warm gold - elegant accent */
+  --accent-rose-rgb: 232 95 115;       /* Coral rose - refined warning */
+  --accent-sky-rgb: 82 170 210;        /* Ocean blue - approachable */
+  --accent-violet-rgb: 156 120 196;    /* Soft purple - elegant secondary */
   
   --accent-cyan: rgb(var(--accent-cyan-rgb));
   --accent-emerald: rgb(var(--accent-emerald-rgb));
@@ -111,12 +111,12 @@ html[data-theme="dark"] {
   --text-muted: rgb(var(--text-muted-rgb));
   --text-subtle: rgb(var(--text-subtle-rgb));
   
-  --accent-cyan-rgb: 6 182 212;
-  --accent-emerald-rgb: 16 185 129;
-  --accent-amber-rgb: 245 158 11;
-  --accent-rose-rgb: 244 63 94;
-  --accent-sky-rgb: 14 165 233;
-  --accent-violet-rgb: 139 92 246;
+  --accent-cyan-rgb: 56 189 193;       /* Soft teal - vibrant but refined */
+  --accent-emerald-rgb: 45 180 135;    /* Rich emerald - brand primary */
+  --accent-amber-rgb: 234 179 76;      /* Warm gold - elegant accent */
+  --accent-rose-rgb: 232 95 115;       /* Coral rose - refined warning */
+  --accent-sky-rgb: 82 170 210;        /* Ocean blue - approachable */
+  --accent-violet-rgb: 156 120 196;    /* Soft purple - elegant secondary */
   
   --accent-cyan: rgb(var(--accent-cyan-rgb));
   --accent-emerald: rgb(var(--accent-emerald-rgb));
@@ -126,8 +126,8 @@ html[data-theme="dark"] {
   --accent-violet: rgb(var(--accent-violet-rgb));
 
   --bg-surface-alpha: rgba(15, 21, 36, 0.8);
-  --accent-cyan-alpha: rgba(6, 182, 212, 0.1);
-  --accent-rose-alpha: rgba(244, 63, 94, 0.1);
+  --accent-cyan-alpha: rgba(56, 189, 193, 0.1);
+  --accent-rose-alpha: rgba(232, 95, 115, 0.1);
   
   --scrollbar-thumb: rgba(255, 255, 255, 0.1);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
@@ -193,4 +193,198 @@ html[data-theme="dark"] body,
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
+}
+
+/* ============================================
+   Premium Soft-Fill Card Utilities
+   ============================================ */
+
+/* Soft-fill cards - No borders, gradient backgrounds with shadows */
+.card-soft {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.card-soft:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Accent-colored soft cards */
+.card-soft-cyan {
+  background: linear-gradient(135deg, rgba(56, 189, 193, 0.1) 0%, rgba(56, 189, 193, 0.02) 50%, transparent 100%);
+  box-shadow: 0 4px 12px rgba(56, 189, 193, 0.05);
+}
+
+.card-soft-cyan:hover {
+  box-shadow: 0 8px 24px rgba(56, 189, 193, 0.1);
+}
+
+.card-soft-emerald {
+  background: linear-gradient(135deg, rgba(45, 180, 135, 0.1) 0%, rgba(45, 180, 135, 0.02) 50%, transparent 100%);
+  box-shadow: 0 4px 12px rgba(45, 180, 135, 0.05);
+}
+
+.card-soft-emerald:hover {
+  box-shadow: 0 8px 24px rgba(45, 180, 135, 0.1);
+}
+
+.card-soft-rose {
+  background: linear-gradient(135deg, rgba(232, 95, 115, 0.1) 0%, rgba(232, 95, 115, 0.02) 50%, transparent 100%);
+  box-shadow: 0 4px 12px rgba(232, 95, 115, 0.05);
+}
+
+.card-soft-rose:hover {
+  box-shadow: 0 8px 24px rgba(232, 95, 115, 0.1);
+}
+
+.card-soft-amber {
+  background: linear-gradient(135deg, rgba(234, 179, 76, 0.1) 0%, rgba(234, 179, 76, 0.02) 50%, transparent 100%);
+  box-shadow: 0 4px 12px rgba(234, 179, 76, 0.05);
+}
+
+.card-soft-amber:hover {
+  box-shadow: 0 8px 24px rgba(234, 179, 76, 0.1);
+}
+
+.card-soft-violet {
+  background: linear-gradient(135deg, rgba(156, 120, 196, 0.1) 0%, rgba(156, 120, 196, 0.02) 50%, transparent 100%);
+  box-shadow: 0 4px 12px rgba(156, 120, 196, 0.05);
+}
+
+.card-soft-violet:hover {
+  box-shadow: 0 8px 24px rgba(156, 120, 196, 0.1);
+}
+
+/* Left accent bar utility */
+.accent-bar-left {
+  position: relative;
+}
+
+.accent-bar-left::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 3px;
+  border-radius: 9999px;
+}
+
+.accent-bar-left-cyan::before {
+  background: rgb(var(--accent-cyan-rgb));
+}
+
+.accent-bar-left-emerald::before {
+  background: rgb(var(--accent-emerald-rgb));
+}
+
+.accent-bar-left-rose::before {
+  background: rgb(var(--accent-rose-rgb));
+}
+
+.accent-bar-left-amber::before {
+  background: rgb(var(--accent-amber-rgb));
+}
+
+.accent-bar-left-violet::before {
+  background: rgb(var(--accent-violet-rgb));
+}
+
+/* Gradient divider utility */
+.divider-gradient {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+}
+
+/* Icon container with glow effect */
+.icon-glow {
+  padding: 0.625rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.icon-glow-cyan {
+  background: linear-gradient(135deg, rgba(56, 189, 193, 0.25) 0%, rgba(56, 189, 193, 0.1) 100%);
+  box-shadow: 0 4px 12px rgba(56, 189, 193, 0.15);
+}
+
+.icon-glow-emerald {
+  background: linear-gradient(135deg, rgba(45, 180, 135, 0.25) 0%, rgba(45, 180, 135, 0.1) 100%);
+  box-shadow: 0 4px 12px rgba(45, 180, 135, 0.15);
+}
+
+.icon-glow-rose {
+  background: linear-gradient(135deg, rgba(232, 95, 115, 0.25) 0%, rgba(232, 95, 115, 0.1) 100%);
+  box-shadow: 0 4px 12px rgba(232, 95, 115, 0.15);
+}
+
+.icon-glow-amber {
+  background: linear-gradient(135deg, rgba(234, 179, 76, 0.25) 0%, rgba(234, 179, 76, 0.1) 100%);
+  box-shadow: 0 4px 12px rgba(234, 179, 76, 0.15);
+}
+
+.icon-glow-violet {
+  background: linear-gradient(135deg, rgba(156, 120, 196, 0.25) 0%, rgba(156, 120, 196, 0.1) 100%);
+  box-shadow: 0 4px 12px rgba(156, 120, 196, 0.15);
+}
+
+/* Status indicator with ambient glow */
+.status-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+}
+
+.status-dot-healthy {
+  background: rgb(var(--accent-emerald-rgb));
+  box-shadow: 0 0 10px rgba(45, 180, 135, 0.5);
+}
+
+.status-dot-warning {
+  background: rgb(var(--accent-amber-rgb));
+  box-shadow: 0 0 10px rgba(234, 179, 76, 0.5);
+}
+
+.status-dot-critical {
+  background: rgb(var(--accent-rose-rgb));
+  box-shadow: 0 0 12px rgba(232, 95, 115, 0.6);
+  animation: pulse 2s infinite;
+}
+
+/* Badge/pill with soft fill */
+.badge-soft {
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-soft-cyan {
+  background: linear-gradient(135deg, rgba(56, 189, 193, 0.2) 0%, rgba(56, 189, 193, 0.1) 100%);
+  color: rgb(var(--accent-cyan-rgb));
+}
+
+.badge-soft-emerald {
+  background: linear-gradient(135deg, rgba(45, 180, 135, 0.2) 0%, rgba(45, 180, 135, 0.1) 100%);
+  color: rgb(var(--accent-emerald-rgb));
+}
+
+.badge-soft-rose {
+  background: linear-gradient(135deg, rgba(232, 95, 115, 0.2) 0%, rgba(232, 95, 115, 0.1) 100%);
+  color: rgb(var(--accent-rose-rgb));
+}
+
+.badge-soft-amber {
+  background: linear-gradient(135deg, rgba(234, 179, 76, 0.2) 0%, rgba(234, 179, 76, 0.1) 100%);
+  color: rgb(var(--accent-amber-rgb));
+}
+
+.badge-soft-violet {
+  background: linear-gradient(135deg, rgba(156, 120, 196, 0.2) 0%, rgba(156, 120, 196, 0.1) 100%);
+  color: rgb(var(--accent-violet-rgb));
 }

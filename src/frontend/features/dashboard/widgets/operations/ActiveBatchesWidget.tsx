@@ -45,43 +45,89 @@ const MOCK_BATCHES: Batch[] = [
 ];
 
 const STAGE_CONFIG = {
-  clone: { icon: Sprout, color: 'text-cyan-400', bg: 'bg-cyan-500/15' },
-  veg: { icon: Leaf, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-  flower: { icon: Flower, color: 'text-rose-400', bg: 'bg-rose-500/15' },
-  drying: { icon: Package, color: 'text-amber-400', bg: 'bg-amber-500/15' },
+  clone: { 
+    icon: Sprout, 
+    color: 'text-cyan-400', 
+    iconBg: 'bg-gradient-to-br from-cyan-500/30 to-cyan-600/20 ring-1 ring-cyan-400/30',
+    cardBg: 'bg-gradient-to-r from-cyan-500/10 via-cyan-500/5 to-transparent',
+    shadow: 'shadow-md shadow-cyan-500/10',
+    accentBar: 'bg-cyan-400',
+  },
+  veg: { 
+    icon: Leaf, 
+    color: 'text-emerald-400', 
+    iconBg: 'bg-gradient-to-br from-emerald-500/30 to-emerald-600/20 ring-1 ring-emerald-400/30',
+    cardBg: 'bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent',
+    shadow: 'shadow-md shadow-emerald-500/10',
+    accentBar: 'bg-emerald-400',
+  },
+  flower: { 
+    icon: Flower, 
+    color: 'text-rose-400', 
+    iconBg: 'bg-gradient-to-br from-rose-500/30 to-rose-600/20 ring-1 ring-rose-400/30',
+    cardBg: 'bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent',
+    shadow: 'shadow-md shadow-rose-500/10',
+    accentBar: 'bg-rose-400',
+  },
+  drying: { 
+    icon: Package, 
+    color: 'text-amber-400', 
+    iconBg: 'bg-gradient-to-br from-amber-500/30 to-amber-600/20 ring-1 ring-amber-400/30',
+    cardBg: 'bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent',
+    shadow: 'shadow-md shadow-amber-500/10',
+    accentBar: 'bg-amber-400',
+  },
 };
 
 export function ActiveBatchesWidget() {
   return (
-    <div className="flex flex-col space-y-3">
+    <div className="flex flex-col space-y-2.5">
       {MOCK_BATCHES.map((batch) => {
         const config = STAGE_CONFIG[batch.stage];
         const Icon = config.icon;
+        const isHealthWarning = batch.health < 90;
         
         return (
           <div
             key={batch.id}
-            className="flex items-center gap-3 p-3 rounded-xl bg-surface/30 hover:bg-surface/50 border border-border hover:border-border/80 cursor-pointer group transition-all duration-200"
+            className={cn(
+              "group relative flex items-center gap-3 p-3 pl-4 rounded-xl",
+              "cursor-pointer transition-all duration-300",
+              config.cardBg,
+              config.shadow,
+              "hover:shadow-lg hover:-translate-y-0.5"
+            )}
           >
-            <div className={cn('p-2 rounded-lg', config.bg)}>
+            {/* Left accent bar */}
+            <div className={cn(
+              'absolute left-0 top-2 bottom-2 w-1 rounded-full',
+              config.accentBar
+            )} />
+
+            <div className={cn(
+              'p-2 rounded-lg transition-transform group-hover:scale-105',
+              config.iconBg
+            )}>
               <Icon className={cn('w-4 h-4', config.color)} />
             </div>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-cyan-300 transition-colors">
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-white transition-colors">
                   {batch.name}
                 </h4>
                 <span className={cn(
-                  'text-sm font-mono px-2 py-0.5 rounded-md',
-                  batch.health < 90 ? 'text-amber-400 bg-amber-500/15' : 'text-emerald-400 bg-emerald-500/15'
+                  'text-xs font-mono font-semibold tabular-nums px-2 py-1 rounded-full',
+                  isHealthWarning 
+                    ? 'bg-gradient-to-r from-amber-500/20 to-amber-600/10 text-amber-400 ring-1 ring-amber-400/30' 
+                    : 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 text-emerald-400 ring-1 ring-emerald-400/30'
                 )}>
                   {batch.health}%
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground mt-0.5">
+              <div className="flex items-center justify-between text-xs text-muted-foreground/70 mt-1">
                 <span>{batch.strain}</span>
-                <span>Day {batch.daysInStage}</span>
+                <span className={cn("font-medium", config.color, "opacity-70")}>Day {batch.daysInStage}</span>
               </div>
             </div>
           </div>
@@ -89,9 +135,9 @@ export function ActiveBatchesWidget() {
       })}
 
       {MOCK_BATCHES.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-6 text-center">
-          <p className="text-sm text-muted-foreground mb-3">No active batches</p>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 rounded-lg transition-all shadow-lg shadow-cyan-500/20">
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <p className="text-sm text-muted-foreground/70 mb-4">No active batches</p>
+          <button className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 rounded-xl transition-all shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/40 hover:-translate-y-0.5">
             <Plus className="w-4 h-4" />
             Start Batch
           </button>

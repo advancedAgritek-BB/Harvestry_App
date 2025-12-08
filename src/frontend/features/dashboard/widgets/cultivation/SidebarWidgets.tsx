@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Bell, CheckCircle2, User, Zap, Target, AlertOctagon } from 'lucide-react';
+import { simulationService, StreamType } from '@/features/telemetry/services/simulation.service';
+import { useAlertsStore } from '@/stores/alertsStore';
 
 // --- Active Alerts Widget ---
-const MOCK_ALERTS = [
-  { id: 1, title: 'Zone B pressure low', desc: 'Sensor: 0-612 — Flow pulses below threshold', severity: 'critical', time: '2m ago' },
-  { id: 2, title: 'Controller link loss', desc: 'Rina recovered - Confirm sensors', severity: 'warning', time: '15m ago' },
-];
-
 export function ActiveAlertsListWidget() {
+  const alerts = useAlertsStore((state) => state.alerts);
+  const dismissAlert = useAlertsStore((state) => state.dismissAlert);
+  
+  // Filter to only show non-dismissed alerts
+  const activeAlerts = alerts.filter(a => !a.dismissed).slice(0, 5);
+
   return (
     <div className="flex flex-col h-full min-h-[200px] bg-surface/50 border border-border rounded-xl p-3">
        <div className="flex items-center justify-between mb-3">
@@ -16,50 +21,146 @@ export function ActiveAlertsListWidget() {
            <Bell className="w-4 h-4 text-rose-500" />
            Active Alerts
          </h3>
-         <span className="px-2 py-0.5 bg-muted rounded-full text-xs font-bold text-foreground">{MOCK_ALERTS.length}</span>
+         <span className="px-2 py-0.5 bg-muted rounded-full text-xs font-bold text-foreground">{activeAlerts.length}</span>
        </div>
 
        <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
-         {MOCK_ALERTS.map(alert => (
-           <div key={alert.id} className="group p-3 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
-             <div className="flex items-center gap-2 mb-1.5">
-                <span className={cn(
-                  "px-1.5 py-0.5 text-[10px] font-bold uppercase rounded tracking-wide",
-                  alert.severity === 'critical' ? "bg-rose-500 text-foreground" : "bg-amber-500 text-black"
-                )}>
-                  {alert.severity}
-                </span>
-                <span className="text-xs text-muted-foreground ml-auto">{alert.time}</span>
-             </div>
-             <h4 className="text-sm font-bold text-foreground leading-tight mb-1 truncate">{alert.title}</h4>
-             <p className="text-xs text-muted-foreground leading-snug mb-2 line-clamp-2">{alert.desc}</p>
-             
-             {/* Actions */}
-             <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                <button className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-muted hover:bg-emerald-500/20 hover:text-emerald-400 text-xs text-foreground/70 transition-colors">
-                  <CheckCircle2 className="w-3 h-3" /> Ack
-                </button>
-                <button className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-muted hover:bg-blue-500/20 hover:text-blue-400 text-xs text-foreground/70 transition-colors">
-                  <User className="w-3 h-3" /> Delegate
-                </button>
-             </div>
+         {activeAlerts.length === 0 ? (
+           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+             No active alerts
            </div>
-         ))}
+         ) : (
+           activeAlerts.map(alert => (
+             <div key={alert.id} className="group p-3 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
+               <div className="flex items-center gap-2 mb-1.5">
+                  <span className={cn(
+                    "px-1.5 py-0.5 text-[10px] font-bold uppercase rounded tracking-wide",
+                    alert.severity === 'critical' ? "bg-rose-500 text-foreground" : 
+                    alert.severity === 'warning' ? "bg-amber-500 text-black" :
+                    "bg-cyan-500 text-black"
+                  )}>
+                    {alert.severity}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {formatTimeAgo(alert.timestamp)}
+                  </span>
+               </div>
+               <h4 className="text-sm font-bold text-foreground leading-tight mb-1 truncate">{alert.title}</h4>
+               <p className="text-xs text-muted-foreground leading-snug mb-2 line-clamp-2">{alert.source}</p>
+               
+               {/* Actions */}
+               <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => dismissAlert(alert.id)}
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-muted hover:bg-emerald-500/20 hover:text-emerald-400 text-xs text-foreground/70 transition-colors"
+                  >
+                    <CheckCircle2 className="w-3 h-3" /> Ack
+                  </button>
+                  <button className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-muted hover:bg-blue-500/20 hover:text-blue-400 text-xs text-foreground/70 transition-colors">
+                    <User className="w-3 h-3" /> Delegate
+                  </button>
+               </div>
+             </div>
+           ))
+         )}
        </div>
     </div>
   );
 }
 
+function formatTimeAgo(timestamp: string): string {
+  const diff = Date.now() - new Date(timestamp).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 // --- Targets vs Current Widget ---
-const TARGETS = [
-  { metric: 'Temp', current: '75.4 °F', target: '74–78', range: [74, 78], val: 75.4 },
-  { metric: 'RH', current: '57 %', target: '55–60', range: [55, 60], val: 57 },
-  { metric: 'CO₂', current: '1050', target: '900–1.2k', range: [900, 1200], val: 1050 }, 
-  { metric: 'PPFD', current: '900', target: '850–950', range: [850, 950], val: 900 },
-  { metric: 'EC', current: '2.2', target: '2.0–2.4', range: [2.0, 2.4], val: 2.2 },
+interface TargetRow {
+  metric: string;
+  current: string;
+  target: string;
+  range: [number, number];
+  val: number;
+}
+
+const DEFAULT_TARGETS: TargetRow[] = [
+  { metric: 'Temp', current: '75.4 °F', target: '72–82', range: [72, 82], val: 75.4 },
+  { metric: 'RH', current: '57 %', target: '50–65', range: [50, 65], val: 57 },
+  { metric: 'CO₂', current: '1050', target: '900–1.2k', range: [900, 1150], val: 1050 }, 
+  { metric: 'PPFD', current: '900', target: '850–1050', range: [850, 1050], val: 900 },
+  { metric: 'EC', current: '2.2', target: '1.8–2.4', range: [1.8, 2.4], val: 2.2 },
 ];
 
 export function TargetsVsCurrentWidget() {
+  const [targets, setTargets] = useState<TargetRow[]>(DEFAULT_TARGETS);
+
+  // Poll simulation for current values
+  useEffect(() => {
+    const pollValues = async () => {
+      try {
+        const activeSims = await simulationService.getActive();
+        
+        if (activeSims.length === 0) return;
+
+        setTargets(prev => {
+          const updated = [...prev];
+          
+          activeSims.forEach(sim => {
+            switch(sim.stream.streamType) {
+              case StreamType.Temperature: {
+                const idx = updated.findIndex(t => t.metric === 'Temp');
+                if (idx >= 0) {
+                  updated[idx] = { ...updated[idx], val: sim.lastValue, current: `${sim.lastValue.toFixed(1)} °F` };
+                }
+                break;
+              }
+              case StreamType.Humidity: {
+                const idx = updated.findIndex(t => t.metric === 'RH');
+                if (idx >= 0) {
+                  updated[idx] = { ...updated[idx], val: sim.lastValue, current: `${sim.lastValue.toFixed(0)} %` };
+                }
+                break;
+              }
+              case StreamType.Co2: {
+                const idx = updated.findIndex(t => t.metric === 'CO₂');
+                if (idx >= 0) {
+                  updated[idx] = { ...updated[idx], val: sim.lastValue, current: `${sim.lastValue.toFixed(0)}` };
+                }
+                break;
+              }
+              case StreamType.LightPpfd: {
+                const idx = updated.findIndex(t => t.metric === 'PPFD');
+                if (idx >= 0) {
+                  updated[idx] = { ...updated[idx], val: sim.lastValue, current: `${sim.lastValue.toFixed(0)}` };
+                }
+                break;
+              }
+              case StreamType.Ec: {
+                const idx = updated.findIndex(t => t.metric === 'EC');
+                if (idx >= 0) {
+                  updated[idx] = { ...updated[idx], val: sim.lastValue, current: `${sim.lastValue.toFixed(1)}` };
+                }
+                break;
+              }
+            }
+          });
+          
+          return updated;
+        });
+      } catch (err) {
+        // Silently fail
+      }
+    };
+
+    pollValues();
+    const interval = setInterval(pollValues, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="flex flex-col h-full min-h-[200px] bg-surface/50 border border-border rounded-xl p-3">
       <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -73,7 +174,7 @@ export function TargetsVsCurrentWidget() {
             <span className="text-right">Current</span>
             <span className="text-right">Target</span>
          </div>
-         {TARGETS.map((row, i) => {
+         {targets.map((row, i) => {
            const isOutOfSpec = row.val < row.range[0] || row.val > row.range[1];
            
            return (
@@ -88,7 +189,7 @@ export function TargetsVsCurrentWidget() {
                onClick={() => console.log("Edit target", row.metric)}
              >
                <span className={cn("text-xs font-bold", isOutOfSpec ? "text-amber-200" : "text-muted-foreground")}>{row.metric}</span>
-               <span className={cn("text-sm font-bold text-right", isOutOfSpec ? "text-amber-100" : "text-foreground")}>{row.current}</span>
+               <span className={cn("text-sm font-bold text-right tabular-nums", isOutOfSpec ? "text-amber-100" : "text-foreground")}>{row.current}</span>
                <span className={cn("text-xs font-medium text-right font-mono", isOutOfSpec ? "text-amber-300/70" : "text-muted-foreground")}>{row.target}</span>
              </div>
            );

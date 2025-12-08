@@ -194,20 +194,23 @@ export function OperationsOverview() {
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-background via-background to-surface/30">
-      {/* Header */}
-      <header className="h-14 border-b border-border flex items-center px-6 justify-between bg-surface/50 backdrop-blur-xl shrink-0">
+      {/* Header - Refined with gradient accent */}
+      <header className="h-14 flex items-center px-6 justify-between bg-gradient-to-r from-surface/60 via-surface/40 to-transparent backdrop-blur-xl shrink-0 relative">
+        {/* Subtle bottom gradient line instead of border */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        
         <div className="flex items-center gap-4">
           <h1 className="font-bold text-lg tracking-tight text-foreground">
             Operations Overview
           </h1>
-          <span className="text-sm text-muted-foreground">Evergreen Facility</span>
+          <span className="text-sm text-muted-foreground/70">Evergreen Facility</span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs font-medium text-emerald-400">Live</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 ring-1 ring-emerald-400/20 shadow-sm shadow-emerald-500/10">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+            <span className="text-xs font-semibold text-emerald-400">Live</span>
           </div>
-          <span className="text-xs text-muted-foreground">Updated just now</span>
+          <span className="text-xs text-muted-foreground/60">Updated just now</span>
         </div>
       </header>
 
@@ -286,7 +289,10 @@ export function OperationsOverview() {
 
         {/* Right Zone - Action Panel (~35%) - Permission Gated */}
         {(canViewAlerts || canViewTasks) && (
-          <aside className="w-[420px] border-l border-border bg-surface/30 p-6 overflow-hidden flex flex-col">
+          <aside className="w-[420px] relative p-6 overflow-hidden flex flex-col bg-gradient-to-br from-surface/40 via-surface/20 to-transparent">
+            {/* Left edge gradient line */}
+            <div className="absolute top-0 bottom-0 left-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+            
             <ActionPanel 
               items={visibleActionItems}
               showAlerts={canViewAlerts}
@@ -314,24 +320,48 @@ interface WidgetPanelProps {
 
 const ACCENT_COLORS = {
   cyan: {
-    bg: 'bg-cyan-500/15',
+    bg: 'bg-cyan-500/20',
+    iconBg: 'bg-gradient-to-br from-cyan-500/30 to-cyan-600/20',
+    iconRing: 'ring-1 ring-cyan-400/30',
+    iconShadow: 'shadow-lg shadow-cyan-500/20',
     text: 'text-cyan-400',
-    border: 'border-cyan-500/20',
+    cardGradient: 'from-cyan-500/10 via-surface/40 to-surface/20',
+    cardShadow: 'shadow-lg shadow-cyan-500/5',
+    hoverShadow: 'hover:shadow-xl hover:shadow-cyan-500/10',
+    headerBg: 'bg-gradient-to-r from-cyan-500/10 to-transparent',
   },
   emerald: {
-    bg: 'bg-emerald-500/15',
+    bg: 'bg-emerald-500/20',
+    iconBg: 'bg-gradient-to-br from-emerald-500/30 to-emerald-600/20',
+    iconRing: 'ring-1 ring-emerald-400/30',
+    iconShadow: 'shadow-lg shadow-emerald-500/20',
     text: 'text-emerald-400',
-    border: 'border-emerald-500/20',
+    cardGradient: 'from-emerald-500/10 via-surface/40 to-surface/20',
+    cardShadow: 'shadow-lg shadow-emerald-500/5',
+    hoverShadow: 'hover:shadow-xl hover:shadow-emerald-500/10',
+    headerBg: 'bg-gradient-to-r from-emerald-500/10 to-transparent',
   },
   amber: {
-    bg: 'bg-amber-500/15',
+    bg: 'bg-amber-500/20',
+    iconBg: 'bg-gradient-to-br from-amber-500/30 to-amber-600/20',
+    iconRing: 'ring-1 ring-amber-400/30',
+    iconShadow: 'shadow-lg shadow-amber-500/20',
     text: 'text-amber-400',
-    border: 'border-amber-500/20',
+    cardGradient: 'from-amber-500/10 via-surface/40 to-surface/20',
+    cardShadow: 'shadow-lg shadow-amber-500/5',
+    hoverShadow: 'hover:shadow-xl hover:shadow-amber-500/10',
+    headerBg: 'bg-gradient-to-r from-amber-500/10 to-transparent',
   },
   violet: {
-    bg: 'bg-violet-500/15',
+    bg: 'bg-violet-500/20',
+    iconBg: 'bg-gradient-to-br from-violet-500/30 to-violet-600/20',
+    iconRing: 'ring-1 ring-violet-400/30',
+    iconShadow: 'shadow-lg shadow-violet-500/20',
     text: 'text-violet-400',
-    border: 'border-violet-500/20',
+    cardGradient: 'from-violet-500/10 via-surface/40 to-surface/20',
+    cardShadow: 'shadow-lg shadow-violet-500/5',
+    hoverShadow: 'hover:shadow-xl hover:shadow-violet-500/10',
+    headerBg: 'bg-gradient-to-r from-violet-500/10 to-transparent',
   },
 };
 
@@ -339,32 +369,48 @@ function WidgetPanel({ icon: Icon, title, href, accentColor, badge, children }: 
   const colors = ACCENT_COLORS[accentColor];
 
   return (
-    <div className="flex flex-col rounded-2xl bg-surface/40 border border-border overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border/50">
+    <div className={`
+      group flex flex-col rounded-2xl overflow-hidden
+      bg-gradient-to-br ${colors.cardGradient}
+      backdrop-blur-sm ${colors.cardShadow}
+      transition-all duration-300 ${colors.hoverShadow}
+    `}>
+      {/* Header with gradient accent */}
+      <div className={`
+        flex items-center justify-between p-4
+        ${colors.headerBg}
+      `}>
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-xl ${colors.bg}`}>
+          <div className={`
+            p-2.5 rounded-xl transition-transform group-hover:scale-105
+            ${colors.iconBg} ${colors.iconRing} ${colors.iconShadow}
+          `}>
             <Icon className={`w-5 h-5 ${colors.text}`} />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
             {title}
           </h3>
           {badge && (
-            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border border-amber-500/20">
+            <span className="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full bg-gradient-to-r from-amber-500/25 to-orange-500/15 text-amber-300 ring-1 ring-amber-400/30 shadow-sm shadow-amber-500/20">
               {badge}
             </span>
           )}
         </div>
         <Link
           href={href}
-          className="flex items-center gap-1 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+          className={`
+            flex items-center gap-1.5 text-sm font-medium
+            ${colors.text} opacity-70 hover:opacity-100
+            transition-all duration-200
+            group-hover:gap-2
+          `}
         >
-          View <ArrowRight className="w-4 h-4" />
+          View <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
       
       {/* Content */}
-      <div className="p-4">
+      <div className="p-4 pt-2">
         {children}
       </div>
     </div>

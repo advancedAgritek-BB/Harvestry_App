@@ -244,7 +244,7 @@ export function InteractiveDashboard() {
     <div 
       ref={containerRef} 
       className="relative"
-      style={{ height: '200vh' }} // Extended scroll space for all phases
+      style={{ height: '300vh' }} // Extended scroll space for all phases - gives ~25% viewport per widget
     >
       {/* Backdrop - fades with dashboard */}
       {isFixed && dashboardOpacity > 0 && (
@@ -481,23 +481,6 @@ export function InteractiveDashboard() {
         <div className="absolute -inset-6 bg-gradient-to-r from-accent-emerald/15 via-accent-cyan/15 to-accent-violet/15 blur-3xl opacity-50 rounded-3xl -z-10" />
 
         <div className="relative">
-          {/* Connection lines SVG */}
-          <svg 
-            className="absolute inset-0 w-full h-full pointer-events-none z-30 transition-opacity duration-500"
-            style={{ opacity: scrollProgress > 0.25 ? Math.min(0.7, (scrollProgress - 0.25) * 2) : 0 }}
-          >
-            <line x1="18%" y1="52%" x2="35%" y2="72%" stroke="url(#lg1)" strokeWidth="2" strokeDasharray="4,3" className="animate-dash" />
-            <line x1="38%" y1="52%" x2="58%" y2="52%" stroke="url(#lg2)" strokeWidth="2" strokeDasharray="4,3" className="animate-dash" />
-            <line x1="68%" y1="52%" x2="82%" y2="52%" stroke="url(#lg3)" strokeWidth="2" strokeDasharray="4,3" className="animate-dash" />
-            <line x1="72%" y1="72%" x2="85%" y2="72%" stroke="url(#lg4)" strokeWidth="2" strokeDasharray="4,3" className="animate-dash" />
-            <defs>
-              <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#10b981" stopOpacity="0.8" /><stop offset="100%" stopColor="#10b981" stopOpacity="0.4" /></linearGradient>
-              <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" /><stop offset="100%" stopColor="#f59e0b" stopOpacity="0.8" /></linearGradient>
-              <linearGradient id="lg3" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" /><stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.8" /></linearGradient>
-              <linearGradient id="lg4" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#10b981" stopOpacity="0.6" /><stop offset="100%" stopColor="#06b6d4" stopOpacity="0.6" /></linearGradient>
-            </defs>
-          </svg>
-
           {/* Main dashboard container */}
           <div className="relative rounded-2xl overflow-visible border border-border/50 shadow-2xl shadow-black/50 bg-surface">
             {/* Browser chrome */}

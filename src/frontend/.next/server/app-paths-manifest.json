@@ -1,4 +1,8 @@
 {
-  "/not-found": "app/not-found.js",
-  "/page": "app/page.js"
+  "/api/v1/simulation/active/route": "app/api/v1/simulation/active/route.js",
+  "/dashboard/cultivation/page": "app/dashboard/cultivation/page.js",
+  "/(marketing)/docs/page": "app/(marketing)/docs/page.js",
+  "/(marketing)/status/page": "app/(marketing)/status/page.js",
+  "/(marketing)/support/page": "app/(marketing)/support/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js"
 }

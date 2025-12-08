@@ -3,38 +3,7 @@
 import React from 'react';
 import { AlertTriangle, AlertCircle, Info, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface Alert {
-  id: string;
-  title: string;
-  source: string;
-  severity: 'critical' | 'warning' | 'info';
-  timestamp: string;
-}
-
-const MOCK_ALERTS: Alert[] = [
-  {
-    id: '1',
-    title: 'HVAC-01 Malfunction',
-    source: 'Environment',
-    severity: 'critical',
-    timestamp: '2023-11-26T14:30:00',
-  },
-  {
-    id: '2',
-    title: 'Humidity High (72%)',
-    source: 'Room B',
-    severity: 'warning',
-    timestamp: '2023-11-26T14:15:00',
-  },
-  {
-    id: '3',
-    title: 'Water Tank Refilled',
-    source: 'Irrigation',
-    severity: 'info',
-    timestamp: '2023-11-26T13:45:00',
-  },
-];
+import { useAlertsStore } from '@/stores/alertsStore';
 
 const SEVERITY_CONFIG = {
   critical: { 
@@ -61,9 +30,26 @@ const SEVERITY_CONFIG = {
 };
 
 export function AlertsWidget() {
+  const { alerts, dismissAlert } = useAlertsStore();
+  
+  // Show active (not dismissed) alerts, sorted by timestamp desc
+  const activeAlerts = alerts
+    .filter(a => !a.dismissed)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 5); // Limit to top 5
+
+  if (activeAlerts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[100px] text-muted-foreground/50">
+        <Info className="w-8 h-8 mb-2 opacity-50" />
+        <span className="text-sm">No active alerts</span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-2">
-      {MOCK_ALERTS.map((alert) => {
+      {activeAlerts.map((alert) => {
         const config = SEVERITY_CONFIG[alert.severity];
         const Icon = config.icon;
 
@@ -95,6 +81,7 @@ export function AlertsWidget() {
 
             <button 
               title="Dismiss"
+              onClick={() => dismissAlert(alert.id)}
               className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-foreground/10 rounded-lg text-muted-foreground hover:text-foreground transition-all"
             >
               <X className="w-3 h-3" />
