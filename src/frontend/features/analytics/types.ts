@@ -72,3 +72,18 @@ export interface DashboardWidget {
   title: string;
   visualizationType: string;
 }
+
+export interface CreateDashboardDto {
+  name: string;
+  description?: string;
+  layoutConfig: DashboardWidget[];
+  isPublic: boolean;
+}
+
+export interface UpdateDashboardDto {
+  name: string;
+  description?: string;
+  layoutConfig: DashboardWidget[];
+  isPublic: boolean;
+}
+
