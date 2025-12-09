@@ -6,7 +6,6 @@ import { pricingTiers, capacityTiers } from './pricingData';
 import { PricingCard } from './PricingCard';
 import { TCOComparison } from './TCOComparison';
 import { AddOns } from './AddOns';
-import { StackComparisonHero } from './StackComparisonHero';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 export function Pricing() {
@@ -89,8 +88,6 @@ export function Pricing() {
           </div>
         </div>
 
-        {/* Stack Comparison Hero - Context before price */}
-        <StackComparisonHero />
 
         {/* Pricing Grid - 4 tiers (responsive: 1 → 2 → 4 columns) */}
         <div
