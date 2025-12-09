@@ -519,7 +519,7 @@ function DesktopInteractiveDashboard() {
             </div>
             
 {/* Dashboard content */}
-                            <div className="aspect-[16/8] relative bg-gradient-to-br from-background via-surface to-elevated overflow-hidden">
+                            <div className="aspect-[16/8] relative bg-gradient-to-br from-background via-surface to-elevated overflow-visible">
               <div className="absolute inset-0 p-6">
                 <div className="h-full flex gap-4">
                   {/* Sidebar */}
