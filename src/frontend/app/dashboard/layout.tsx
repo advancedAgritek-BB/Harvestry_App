@@ -2,6 +2,7 @@
 
 import { Header, Sidebar } from '@/components/navigation';
 import { AuthGuard } from '@/components/auth';
+import { DemoControlPanel } from '@/components/demo/DemoControlPanel';
 
 export default function DashboardLayout({
   children,
@@ -30,6 +31,9 @@ export default function DashboardLayout({
             </div>
           </main>
         </div>
+        
+        {/* Demo tier switcher - SuperAdmin only */}
+        <DemoControlPanel />
       </div>
     </AuthGuard>
   );

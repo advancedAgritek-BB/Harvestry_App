@@ -1,0 +1,22 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG PROJECT_PATH
+WORKDIR /source
+
+# Copy the entire source tree to ensure shared projects are available
+COPY . .
+
+# Restore and publish the specific project
+# The PROJECT_PATH argument must be the path to the .csproj file from the root
+RUN dotnet publish "${PROJECT_PATH}" -c Release -o /app
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app .
+
+# Expose ports (adjust as needed)
+EXPOSE 8080
+EXPOSE 80
+
+# The entrypoint is 'dotnet', the command (DLL name) is passed via docker-compose
+ENTRYPOINT ["dotnet"]

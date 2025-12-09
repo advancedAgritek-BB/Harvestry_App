@@ -29,6 +29,9 @@ dist/
 build/
 bin/
 obj/
+.next/
+out/
+*.tsbuildinfo
 
 # Temporary files
 tmp/

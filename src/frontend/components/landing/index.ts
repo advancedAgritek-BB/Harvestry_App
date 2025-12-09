@@ -15,3 +15,10 @@ export { Footer } from './Footer';
 export { AnimatedSection, StaggerContainer } from './AnimatedSection';
 export { MagneticButton } from './MagneticButton';
 
+// Interactive dashboard (auto-detects mobile/desktop)
+export { InteractiveDashboard } from './InteractiveDashboard';
+
+// Mobile-specific components
+export { MobileDashboardCarousel } from './MobileDashboardCarousel';
+export { MobileProblemSolution } from './MobileProblemSolution';
+

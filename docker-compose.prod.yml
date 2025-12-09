@@ -1,0 +1,80 @@
+version: '3.9'
+
+services:
+  # =============================================================================
+  # INFRASTRUCTURE (From development compose, tuned for basic prod/staging)
+  # =============================================================================
+  
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: harvestry-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: harvestry_prod
+      POSTGRES_USER: ${POSTGRES_USER:-harvestry_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-prod-data:/var/lib/postgresql/data
+      - ./src/database/scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-harvestry_user} -d harvestry_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: harvestry-redis
+    restart: always
+    volumes:
+      - redis-prod-data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+
+  # =============================================================================
+  # APPLICATIONS
+  # =============================================================================
+
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: harvestry-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://api.harvestry.com # Update with real domain/IP
+    depends_on:
+      - identity-api
+
+  identity-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        PROJECT_PATH: src/backend/services/core-platform/identity/API/Harvestry.Identity.API.csproj
+    container_name: harvestry-identity-api
+    restart: always
+    command: ["Harvestry.Identity.API.dll"]
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=harvestry_prod;Username=${POSTGRES_USER:-harvestry_user};Password=${POSTGRES_PASSWORD}"
+      ConnectionStrings__Redis: "redis:6379"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # Add other services similarly:
+  # genetics-api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.backend
+  #     args:
+  #       PROJECT_PATH: src/backend/services/core-platform/genetics/API/Harvestry.Genetics.API.csproj
+  #   command: ["Harvestry.Genetics.API.dll"]
+  #   depends_on: [postgres, redis]
+
+volumes:
+  postgres-prod-data:
+  redis-prod-data:

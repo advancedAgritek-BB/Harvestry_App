@@ -2,7 +2,6 @@ import '@/styles/globals.css';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { DemoSeeder } from '@/components/demo/DemoSeeder';
-import { DemoControlPanel } from '@/components/demo/DemoControlPanel';
 import { CalendlyWidget } from '@/components/common/CalendlyWidget';
 
 // Add Google Fonts
@@ -37,7 +36,6 @@ export default function RootLayout({
           <AuthProvider>
             <DemoSeeder />
             {children}
-            <DemoControlPanel />
             <CalendlyWidget />
           </AuthProvider>
         </ThemeProvider>

@@ -1,35 +1,57 @@
 'use client';
 
 import { 
-  MessageSquare, 
   Mail, 
   Smartphone,
   Wifi,
   Cloud,
-  Server
+  Server,
+  type LucideIcon
 } from 'lucide-react';
+import { 
+  MetrcLogo, 
+  BioTrackLogo, 
+  QuickBooksLogo, 
+  SlackLogo 
+} from '@/components/icons';
+import { type ComponentType } from 'react';
 
-const integrationCategories = [
+type BrandLogoComponent = ComponentType<{ className?: string }>;
+
+interface Integration {
+  name: string;
+  description?: string;
+  icon?: LucideIcon;
+  BrandLogo?: BrandLogoComponent;
+}
+
+interface IntegrationCategory {
+  title: string;
+  description: string;
+  integrations: Integration[];
+}
+
+const integrationCategories: IntegrationCategory[] = [
   {
     title: 'Compliance Systems',
     description: 'Stay compliant automatically',
     integrations: [
-      { name: 'METRC', description: 'Multi-state compliance sync', logo: '🏛️' },
-      { name: 'BioTrack', description: 'Alternative state reporting', logo: '📊' },
+      { name: 'METRC', BrandLogo: MetrcLogo },
+      { name: 'BioTrack', BrandLogo: BioTrackLogo },
     ],
   },
   {
     title: 'Accounting',
     description: 'Financial data that flows',
     integrations: [
-      { name: 'QuickBooks Online', description: 'Item-level & GL Summary', logo: '📒' },
+      { name: 'QuickBooks', description: 'Item-level & GL Summary', BrandLogo: QuickBooksLogo },
     ],
   },
   {
     title: 'Communication',
     description: 'Stay connected',
     integrations: [
-      { name: 'Slack', icon: MessageSquare, description: 'Two-way task mirroring' },
+      { name: 'Slack', description: 'Two-way task mirroring', BrandLogo: SlackLogo },
       { name: 'Email', icon: Mail, description: 'All alert severities' },
       { name: 'SMS', icon: Smartphone, description: 'Critical alerts only' },
     ],
@@ -85,9 +107,9 @@ export function Integrations() {
                     key={integration.name}
                     className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-xl flex-shrink-0">
-                      {integration.logo ? (
-                        <span>{integration.logo}</span>
+                    <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
+                      {integration.BrandLogo ? (
+                        <integration.BrandLogo className="h-6 w-6" />
                       ) : integration.icon ? (
                         <integration.icon className="h-5 w-5 text-muted-foreground" />
                       ) : null}
@@ -96,9 +118,11 @@ export function Integrations() {
                       <div className="font-medium text-sm truncate">
                         {integration.name}
                       </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {integration.description}
-                      </div>
+                      {integration.description && (
+                        <div className="text-xs text-muted-foreground truncate">
+                          {integration.description}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -121,5 +145,3 @@ export function Integrations() {
     </section>
   );
 }
-
-

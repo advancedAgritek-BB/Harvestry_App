@@ -1,10 +1,9 @@
 @import './themes/midnight.css';
+@import './components/landing.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import './components/landing.css';
 
 /* Inventory Module Styles */
 @layer components {

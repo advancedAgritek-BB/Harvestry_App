@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { Shield, Leaf, CheckSquare, ListTodo, Activity, Droplets, Server, Clock, Lock, Database, FileSpreadsheet, AlertTriangle, RefreshCw, ArrowRight, Check, X } from 'lucide-react';
+import { useMobileBreakpoint } from '@/hooks/device';
+import { MobileDashboardCarousel } from './MobileDashboardCarousel';
+import { MobileProblemSolution } from './MobileProblemSolution';
 
 // Problem/Solution data
 const PROBLEMS = [
@@ -121,6 +124,23 @@ function InfoTooltip({ widgetKey, position }: InfoTooltipProps) {
 }
 
 export function InteractiveDashboard() {
+  const { isMobile } = useMobileBreakpoint();
+  
+  // On mobile, show the carousel + static problem/solution instead of scroll-hijack
+  if (isMobile) {
+    return (
+      <div className="relative">
+        <MobileDashboardCarousel />
+        <MobileProblemSolution />
+      </div>
+    );
+  }
+
+  // Desktop: Full scroll-hijack interactive experience
+  return <DesktopInteractiveDashboard />;
+}
+
+function DesktopInteractiveDashboard() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeWidget, setActiveWidget] = useState<WidgetKey | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
