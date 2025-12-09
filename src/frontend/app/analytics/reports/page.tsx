@@ -1,5 +1,8 @@
 'use client';
 
+// Skip static generation - requires QueryClient at runtime
+export const dynamic = 'force-dynamic';
+
 import { useReports } from '@/features/analytics/hooks/useReports';
 import Link from 'next/link';
 import React from 'react';
@@ -42,3 +45,4 @@ export default function ReportsListPage() {
     </div>
   );
 }
+
