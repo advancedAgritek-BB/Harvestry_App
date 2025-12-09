@@ -576,7 +576,7 @@ function DesktopInteractiveDashboard() {
                                             <div key={i} className="flex-1 bg-accent-emerald/30 rounded-t" style={{ height: `${h}%` }} />
                                           ))}
                                         </div>
-                                        {isActive('chart') && <InfoTooltip widgetKey="chart" position="bottom" />}
+                                        {isActive('chart') && <InfoTooltip widgetKey="chart" position="top" />}
                                       </div>
                       
                       {/* Side widgets */}
