@@ -613,14 +613,8 @@ function DesktopInteractiveDashboard() {
           <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-accent-emerald/10 rounded-2xl blur-2xl animate-pulse-slow" />
         </div>
 
-        {/* Trust Badges - appear when first widget pops */}
-        <div 
-          className="mt-4 transition-all duration-700"
-          style={{ 
-            opacity: scrollProgress > 0.1 ? Math.min(1, (scrollProgress - 0.1) * 3) : 0,
-            transform: scrollProgress > 0.1 ? 'translateY(0)' : 'translateY(20px)'
-          }}
-        >
+        {/* Trust Badges - always visible with dashboard */}
+        <div className="mt-4">
           <p className="text-center text-sm font-medium text-muted-foreground mb-4">
             Enterprise-grade infrastructure trusted by leading cultivators
           </p>
