@@ -46,13 +46,13 @@ const TRUST_COLORS: Record<string, { bg: string; text: string }> = {
 const WIDGET_INFO = {
   rooms: {
     label: 'Spatial Management',
-    description: 'Track every room, zone, and growing area in real-time',
+    description: 'Track every room, zone, rack, and bin in real-time',
     icon: Shield,
     color: 'accent-emerald',
   },
   plants: {
     label: 'Plant Lifecycle',
-    description: 'Monitor 847 plants from seed to sale with full traceability',
+    description: 'Track every plant from seed to sale with full traceability',
     icon: Leaf,
     color: 'accent-cyan',
   },
@@ -76,7 +76,7 @@ const WIDGET_INFO = {
   },
   environment: {
     label: 'Environmental Control',
-    description: 'VPD, temperature, and humidity optimization',
+    description: 'Optimize climate, CO₂, lighting, and fertigation for peak yields',
     icon: Droplets,
     color: 'accent-cyan',
   },
