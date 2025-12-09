@@ -61,12 +61,12 @@ export function PricingCard({ tier, isAnnual, index }: PricingCardProps) {
             <div
               className={`relative px-4 py-1.5 rounded-full text-sm font-semibold ${
                 tier.popular
-                  ? 'bg-accent-emerald text-white'
+                  ? 'bg-accent-emerald text-white shadow-lg shadow-accent-emerald/30'
                   : isFree
-                  ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30'
+                  ? 'bg-background/95 backdrop-blur-md text-accent-cyan border border-accent-cyan/40 shadow-md'
                   : isFoundation
-                  ? 'bg-accent-sky/20 text-accent-sky border border-accent-sky/30'
-                  : 'bg-accent-violet/20 text-accent-violet border border-accent-violet/30'
+                  ? 'bg-background/95 backdrop-blur-md text-accent-sky border border-accent-sky/40 shadow-md'
+                  : 'bg-background/95 backdrop-blur-md text-accent-violet border border-accent-violet/40 shadow-md'
               }`}
             >
               {tier.badge}
