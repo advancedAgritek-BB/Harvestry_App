@@ -61,14 +61,16 @@ export function Hero() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="text-center max-w-4xl mx-auto">
-          {/* Badge with shimmer effect */}
-          <div 
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-emerald/10 border border-accent-emerald/20 text-accent-emerald text-sm font-medium mb-8 overflow-hidden relative transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+          {/* Early Access Badge - Links to Waitlist */}
+          <Link 
+            href="/waitlist"
+            className={`group inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-accent-emerald/10 border border-accent-emerald/30 text-accent-emerald text-sm font-medium mb-8 overflow-hidden relative transition-all duration-700 hover:bg-accent-emerald/20 hover:border-accent-emerald/50 hover:scale-105 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent-emerald/20 to-transparent animate-shimmer" />
-            <Sparkles className="h-4 w-4 relative" />
-            <span className="relative">Now Available for Cultivators</span>
-          </div>
+            <Sparkles className="h-4 w-4 relative group-hover:scale-110 transition-transform" />
+            <span className="relative">Join the Waitlist — Be First in Line</span>
+            <ArrowRight className="h-4 w-4 relative group-hover:translate-x-1 transition-transform" />
+          </Link>
 
           {/* Headline with staggered reveal */}
           <h1 
