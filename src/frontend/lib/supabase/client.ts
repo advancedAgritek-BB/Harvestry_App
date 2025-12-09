@@ -6,8 +6,10 @@
  */
 
 import { createBrowserClient } from '@supabase/ssr';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
+
+// Use ReturnType to infer the correct client type from createBrowserClient
+type SupabaseClientType = ReturnType<typeof createBrowserClient<Database>>;
 
 /**
  * Check if Supabase is configured.
@@ -39,7 +41,7 @@ export function isMockAuthEnabled(): boolean {
  * 
  * Returns null if Supabase is not configured and mock auth is enabled.
  */
-export function createClient(): SupabaseClient<Database> | null {
+export function createClient(): SupabaseClientType | null {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -65,9 +67,9 @@ export function createClient(): SupabaseClient<Database> | null {
  * Singleton instance for convenience.
  * Use createClient() directly if you need a fresh instance.
  */
-let clientInstance: SupabaseClient<Database> | null | undefined = undefined;
+let clientInstance: SupabaseClientType | null | undefined = undefined;
 
-export function getSupabaseClient(): SupabaseClient<Database> | null {
+export function getSupabaseClient(): SupabaseClientType | null {
   if (clientInstance === undefined) {
     clientInstance = createClient();
   }
