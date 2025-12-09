@@ -15,7 +15,7 @@ interface UseChartHorizontalScrollOptions {
 
 interface UseChartHorizontalScrollReturn {
   /** Ref to attach to the chart container div */
-  containerRef: RefObject<HTMLDivElement | null>;
+  containerRef: RefObject<HTMLDivElement>;
   /** Start index of visible data range */
   startIndex: number;
   /** End index of visible data range */

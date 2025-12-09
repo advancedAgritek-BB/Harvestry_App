@@ -9,7 +9,9 @@ import {
   XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { SyncState } from '../../types';
+import type { SyncStatus } from '../../types';
+
+type SyncState = SyncStatus;
 
 interface SyncStatusBadgeProps {
   status: SyncState;

@@ -214,7 +214,7 @@ export default function SchedulesPage() {
   const activeSuggestions = suggestions.filter(s => !dismissedSuggestions.has(s.id));
 
   const handleDismissSuggestion = (id: string) => {
-    setDismissedSuggestions(prev => new Set([...prev, id]));
+    setDismissedSuggestions(prev => new Set([...Array.from(prev), id]));
   };
 
   return (

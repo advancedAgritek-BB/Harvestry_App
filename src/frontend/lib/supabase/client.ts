@@ -5,7 +5,8 @@
  * Uses the @supabase/ssr package for proper cookie handling with Next.js.
  */
 
-import { createBrowserClient, type SupabaseClient } from '@supabase/ssr';
+import { createBrowserClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
 /**

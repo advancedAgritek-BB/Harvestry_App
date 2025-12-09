@@ -7,12 +7,12 @@
  * This page is reached via the redirect URL in the password reset email.
  */
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/providers/AuthProvider';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { updatePassword, session } = useAuth();
@@ -314,5 +314,10 @@ export default function ResetPasswordPage() {
   );
 }
 
-
-
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900">Loading...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}

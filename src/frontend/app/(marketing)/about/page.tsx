@@ -1,11 +1,7 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Building2 } from 'lucide-react';
 import { ComingSoonPlaceholder } from '@/components/common';
-
-export const metadata: Metadata = {
-  title: 'About Us | Harvestry',
-  description: 'Learn about Harvestry\'s mission to revolutionize cultivation operations.',
-};
 
 export default function AboutPage() {
   return (

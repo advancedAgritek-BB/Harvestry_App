@@ -23,7 +23,35 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { InventoryLot, LotStatus, ProductType } from '@/features/inventory/types';
+import type { LotStatus, ProductType } from '@/features/inventory/types';
+
+// Display-specific lot type for this page's mock data
+interface LotDisplayItem {
+  id: string;
+  siteId: string;
+  lotNumber: string;
+  barcode: string;
+  productType: ProductType;
+  strainId?: string;
+  strainName?: string;
+  quantity: number;
+  uom: string;
+  originalQuantity: number;
+  locationId?: string;
+  locationPath?: string;
+  status: LotStatus;
+  syncStatus: 'synced' | 'pending' | 'error' | 'stale' | 'not_required';
+  harvestDate?: string;
+  packageDate?: string;
+  expirationDate?: string;
+  thcPercent?: number;
+  cbdPercent?: number;
+  metrcId?: string;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  updatedBy: string;
+}
 
 const STATUS_CONFIG: Record<LotStatus, { label: string; color: string; icon: React.ElementType }> = {
   available: { label: 'Available', color: 'text-emerald-400 bg-emerald-500/10', icon: CheckCircle },
@@ -32,7 +60,10 @@ const STATUS_CONFIG: Record<LotStatus, { label: string; color: string; icon: Rea
   pending_coa: { label: 'Pending COA', color: 'text-cyan-400 bg-cyan-500/10', icon: Clock },
   coa_failed: { label: 'COA Failed', color: 'text-rose-400 bg-rose-500/10', icon: XCircle },
   reserved: { label: 'Reserved', color: 'text-violet-400 bg-violet-500/10', icon: Tag },
+  allocated: { label: 'Allocated', color: 'text-indigo-400 bg-indigo-500/10', icon: Tag },
   in_transit: { label: 'In Transit', color: 'text-blue-400 bg-blue-500/10', icon: ArrowUpDown },
+  in_production: { label: 'In Production', color: 'text-orange-400 bg-orange-500/10', icon: Clock },
+  consumed: { label: 'Consumed', color: 'text-muted-foreground bg-muted/50', icon: CheckCircle },
   destroyed: { label: 'Destroyed', color: 'text-muted-foreground bg-muted/50', icon: XCircle },
 };
 
@@ -41,10 +72,11 @@ const SYNC_STATUS_COLORS = {
   pending: 'bg-amber-400 animate-pulse',
   error: 'bg-rose-400',
   stale: 'bg-muted-foreground',
+  not_required: 'bg-slate-400',
 };
 
 // Mock data for demo
-const MOCK_LOTS: InventoryLot[] = Array.from({ length: 25 }, (_, i) => ({
+const MOCK_LOTS: LotDisplayItem[] = Array.from({ length: 25 }, (_, i) => ({
   id: `lot-${i + 1}`,
   siteId: 'site-1',
   lotNumber: `LOT-2025-${String(i + 1).padStart(4, '0')}`,
@@ -77,7 +109,7 @@ function LotRow({
   onSelect,
   onView,
 }: { 
-  lot: InventoryLot; 
+  lot: LotDisplayItem; 
   selected: boolean;
   onSelect: (selected: boolean) => void;
   onView: () => void;

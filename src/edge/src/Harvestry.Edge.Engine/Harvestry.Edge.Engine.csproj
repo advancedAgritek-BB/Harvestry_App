@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Harvestry.Edge.HAL\Harvestry.Edge.HAL.csproj" />
+    <ProjectReference Include="..\Harvestry.Edge.Storage\Harvestry.Edge.Storage.csproj" />
+    <ProjectReference Include="..\Harvestry.Edge.Adapters.Mqtt\Harvestry.Edge.Adapters.Mqtt.csproj" />
+    <ProjectReference Include="..\Harvestry.Edge.Adapters.Modbus\Harvestry.Edge.Adapters.Modbus.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

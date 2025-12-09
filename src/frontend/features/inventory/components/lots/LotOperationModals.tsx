@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { X, Scissors, Layers, Plus, Minus, MapPin, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { InventoryLot, AdjustmentReasonCode } from '../../types';
+import type { InventoryLot, AdjustmentReasonCodeValue } from '../../types';
 
 interface ModalProps {
   isOpen: boolean;
@@ -22,7 +22,7 @@ interface LotMergeModalProps extends ModalProps {
 
 interface LotAdjustModalProps extends ModalProps {
   lot: InventoryLot;
-  onAdjust: (quantityChange: number, reasonCode: AdjustmentReasonCode, notes?: string) => Promise<void>;
+  onAdjust: (quantityChange: number, reasonCode: AdjustmentReasonCodeValue, notes?: string) => Promise<void>;
 }
 
 interface LotTransferModalProps extends ModalProps {
@@ -30,7 +30,7 @@ interface LotTransferModalProps extends ModalProps {
   onTransfer: (destinationLocationId: string, quantity: number) => Promise<void>;
 }
 
-const REASON_CODES: { value: AdjustmentReasonCode; label: string }[] = [
+const REASON_CODES: { value: AdjustmentReasonCodeValue; label: string }[] = [
   { value: 'damage', label: 'Damage' },
   { value: 'theft', label: 'Theft/Loss' },
   { value: 'spoilage', label: 'Spoilage' },
@@ -213,7 +213,7 @@ export function LotSplitModal({ isOpen, onClose, lot, onSplit }: LotSplitModalPr
 export function LotAdjustModal({ isOpen, onClose, lot, onAdjust }: LotAdjustModalProps) {
   const [adjustmentType, setAdjustmentType] = useState<'add' | 'remove'>('remove');
   const [quantity, setQuantity] = useState(0);
-  const [reasonCode, setReasonCode] = useState<AdjustmentReasonCode>('cycle_count');
+  const [reasonCode, setReasonCode] = useState<AdjustmentReasonCodeValue>('cycle_count');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -303,7 +303,7 @@ export function LotAdjustModal({ isOpen, onClose, lot, onAdjust }: LotAdjustModa
           <label className="block text-sm font-medium text-foreground mb-2">Reason</label>
           <select
             value={reasonCode}
-            onChange={(e) => setReasonCode(e.target.value as AdjustmentReasonCode)}
+            onChange={(e) => setReasonCode(e.target.value as AdjustmentReasonCodeValue)}
             className="w-full px-3 py-2 bg-muted/30 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:border-cyan-500/30"
           >
             {REASON_CODES.map((rc) => (

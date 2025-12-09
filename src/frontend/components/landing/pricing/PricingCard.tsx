@@ -102,9 +102,20 @@ export function PricingCard({ tier, isAnnual, index }: PricingCardProps) {
           <p className="text-sm font-medium text-muted-foreground">{tier.tagline}</p>
         </div>
 
+        {/* Anchor Pricing - Show competitor equivalent */}
+        {tier.competitorEquivalent && (
+          <div className="mb-2 text-xs">
+            <span className="text-muted-foreground">Replaces </span>
+            <span className="line-through text-accent-amber font-medium">
+              ${tier.competitorEquivalent.total.toLocaleString()}+/mo
+            </span>
+            <span className="text-muted-foreground"> stack</span>
+          </div>
+        )}
+
         {/* Price */}
         <div className="mb-4">
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1 flex-wrap">
             {isCustom ? (
               <span className="text-2xl font-bold">Custom Pricing</span>
             ) : isFree ? (
@@ -115,13 +126,18 @@ export function PricingCard({ tier, isAnnual, index }: PricingCardProps) {
                 <span className="text-lg text-muted-foreground">/mo</span>
               </>
             )}
-            {isAnnual && monthlySavings > 0 && !isCustom && !isFree && (
-              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-accent-emerald/10 text-accent-emerald font-medium whitespace-nowrap">
-                Save ${monthlySavings}/mo
+            {tier.competitorEquivalent && !isCustom && !isFree && (
+              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-accent-emerald/10 text-accent-emerald font-semibold whitespace-nowrap">
+                Save {tier.competitorEquivalent.savingsPercent}%
               </span>
             )}
           </div>
           <p className="text-sm text-muted-foreground mt-1">{tier.priceNote}</p>
+          {isAnnual && monthlySavings > 0 && !isCustom && !isFree && (
+            <p className="text-xs text-accent-emerald mt-1">
+              + Save ${monthlySavings}/mo with annual billing
+            </p>
+          )}
         </div>
 
         {/* Capacity & Hardware Level */}
@@ -138,22 +154,40 @@ export function PricingCard({ tier, isAnnual, index }: PricingCardProps) {
           </div>
         )}
 
-        {/* Bundled Compliance/Financials indicator */}
+        {/* Enhanced Bundled Value indicator */}
         {(tier.complianceIncluded || tier.financialsIncluded) && (
-          <div className="mb-4 p-3 rounded-lg bg-accent-emerald/5 border border-accent-emerald/20">
-            <p className="text-xs font-medium text-accent-emerald mb-1">Included in this tier:</p>
-            <div className="flex flex-wrap gap-2">
+          <div className="mb-4 p-3 rounded-lg bg-gradient-to-br from-accent-emerald/10 to-accent-emerald/5 border border-accent-emerald/30">
+            <p className="text-xs font-semibold text-accent-emerald mb-2 flex items-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              Included at no extra cost:
+            </p>
+            <div className="space-y-1.5">
               {tier.complianceIncluded && (
-                <span className="text-xs px-2 py-0.5 rounded bg-accent-emerald/10 text-accent-emerald">
-                  ✓ Compliance
-                </span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <Check className="h-3 w-3 text-accent-emerald" />
+                    <span className="text-foreground">METRC/BioTrack Compliance</span>
+                  </span>
+                  <span className="text-muted-foreground line-through">$350/mo</span>
+                </div>
               )}
               {tier.financialsIncluded && (
-                <span className="text-xs px-2 py-0.5 rounded bg-accent-emerald/10 text-accent-emerald">
-                  ✓ Financials
-                </span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <Check className="h-3 w-3 text-accent-emerald" />
+                    <span className="text-foreground">QuickBooks Integration</span>
+                  </span>
+                  <span className="text-muted-foreground line-through">$100/mo</span>
+                </div>
               )}
             </div>
+            {tier.complianceIncluded && tier.financialsIncluded && (
+              <div className="mt-2 pt-2 border-t border-accent-emerald/20">
+                <p className="text-xs font-semibold text-accent-emerald">
+                  Save $450+/mo in add-ons alone
+                </p>
+              </div>
+            )}
           </div>
         )}
 

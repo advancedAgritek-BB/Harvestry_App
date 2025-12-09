@@ -439,6 +439,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* Reset scrollbar and accent color to browser defaults */
+  /* This prevents Safari from using custom accent colors for the scrollbar */
+  accent-color: auto;
 }
 
 /* ===== FOCUS STYLES ===== */

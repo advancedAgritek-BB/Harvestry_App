@@ -12,7 +12,11 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { InventoryLot, LotStatus, QAStatus, SyncState } from '../../types';
+import type { InventoryLot, LotStatus, SyncStatus } from '../../types';
+
+// Alias for consistency with component usage
+type QAStatus = 'passed' | 'failed' | 'pending' | 'expired' | 'not_required';
+type SyncState = SyncStatus;
 
 interface LotCardProps {
   lot: InventoryLot;
@@ -100,8 +104,8 @@ export function LotCard({
   compact = false,
 }: LotCardProps) {
   const statusConfig = getStatusConfig(lot.status);
-  const qaConfig = getQAStatusConfig(lot.qaStatus);
-  const syncConfig = getSyncStatusConfig(lot.syncStatus);
+  const qaConfig = getQAStatusConfig(lot.qaStatus ?? 'not_required');
+  const syncConfig = getSyncStatusConfig(lot.syncStatus ?? 'not_required');
   const expirationInfo = formatDaysUntilExpiration(lot.expirationDate);
   const QAIcon = qaConfig.icon;
   const SyncIcon = syncConfig.icon;
@@ -287,7 +291,7 @@ export function LotCard({
           
           {/* Compliance Tags */}
           <div className="flex items-center gap-1">
-            {lot.metrcTag && (
+            {lot.metrcId && (
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400">
                 METRC
               </span>

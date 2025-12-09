@@ -1,11 +1,7 @@
-import { Metadata } from 'next';
+'use client';
+
 import { FileText } from 'lucide-react';
 import { ComingSoonPlaceholder } from '@/components/common';
-
-export const metadata: Metadata = {
-  title: 'Blog | Harvestry',
-  description: 'Insights, tips, and news from the Harvestry team on cultivation best practices.',
-};
 
 export default function BlogPage() {
   return (

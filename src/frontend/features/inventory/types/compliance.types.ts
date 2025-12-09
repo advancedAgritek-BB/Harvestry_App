@@ -3,11 +3,27 @@
  * Types for METRC/BioTrack integration, sync status, and regulatory workflows
  */
 
+// ===== COMMON API TYPES =====
+
+/** Generic API response wrapper */
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+    timestamp: string;
+  };
+}
+
+// ===== COMPLIANCE TYPES =====
+
 /** Compliance provider */
 export type ComplianceProvider = 'metrc' | 'biotrack';
 
 /** Sync status for individual items */
-export type SyncStatus = 'synced' | 'pending' | 'error' | 'stale';
+export type SyncStatus = 'synced' | 'pending' | 'error' | 'stale' | 'not_required';
 
 /** Sync event type */
 export type SyncEventType =
@@ -297,4 +313,31 @@ export interface AuditExportRequest {
   endDate: string;
   entityTypes?: string[];
   format: 'csv' | 'xlsx' | 'pdf';
+}
+
+/** Sync entity types for DLQ */
+export type SyncEntityType =
+  | 'plants'
+  | 'packages'
+  | 'transfers'
+  | 'harvests'
+  | 'sales'
+  | 'adjustments'
+  | 'destructions'
+  | 'lab_results';
+
+/** Dead letter item - extended DLQ item for UI */
+export interface DeadLetterItem extends DLQItem {
+  entityType: SyncEntityType;
+  entityName?: string;
+  entityReference: string;
+  lastAttemptAt?: string;
+  lastErrorMessage: string;
+  lastErrorCode?: string;
+  failureCount: number;
+  canRetry: boolean;
+  isDismissed?: boolean;
+  dismissedAt?: string;
+  dismissedBy?: string;
+  dismissNotes?: string;
 }

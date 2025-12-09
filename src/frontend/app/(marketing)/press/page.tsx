@@ -1,11 +1,7 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Newspaper } from 'lucide-react';
 import { ComingSoonPlaceholder } from '@/components/common';
-
-export const metadata: Metadata = {
-  title: 'Press | Harvestry',
-  description: 'Press releases, media kit, and news coverage about Harvestry.',
-};
 
 export default function PressPage() {
   return (

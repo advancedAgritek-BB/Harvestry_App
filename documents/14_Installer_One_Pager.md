@@ -1,5 +1,7 @@
 # Installer One-Pager
 
+> **Note:** For full hardware specifications and v3.3 details, see [33_Edge_Hardware_v3_3.md](./33_Edge_Hardware_v3_3.md).
+
 - **Power:** Use AC mains or PoE+. AC indicator shows mains present. PoE/AC are ideal-ORed; no backfeed.
 - **Valves (INT transformer variants):** Set INT/EXT selector to INT for integrated transformer. Default concurrency caps (enforced by firmware): INT-100VA → ≤1 HL + 4 STD; INT-150VA → ≤1 HL + 6 STD. For higher concurrency, use EXT 24 VAC and update policy.
 - **Pumps:** Drive contactors; **never** route motor mains through controller PCB.

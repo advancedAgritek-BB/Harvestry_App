@@ -142,17 +142,17 @@ export class BomService {
       status: 'draft',
       isDefault: request.isDefault || false,
       inputLines: request.inputLines.map((line, idx) => ({
+        ...line,
         id: `line-${Date.now()}-${idx}`,
         bomId: `bom-${Date.now()}`,
         lineNumber: idx + 1,
         lineType: 'material',
-        ...line,
       })),
       byproductLines: (request.byproductLines || []).map((line, idx) => ({
+        ...line,
         id: `bp-${Date.now()}-${idx}`,
         bomId: `bom-${Date.now()}`,
         lineNumber: idx + 1,
-        ...line,
       })),
       requiresQaApproval: true,
       requiresMetrcReporting: true,
@@ -176,12 +176,30 @@ export class BomService {
       throw new Error('BOM not found');
     }
 
-    return {
+    // Process input lines if provided to add required ids
+    const updatedBom = {
       ...existing,
       ...request,
       updatedAt: new Date().toISOString(),
       updatedBy: 'current-user',
+      // Override inputLines with properly formatted ones
+      inputLines: request.inputLines 
+        ? request.inputLines.map((line, idx) => ({
+            ...line,
+            id: `line-${Date.now()}-${idx}`,
+            bomId: request.id,
+          }))
+        : existing.inputLines,
+      byproductLines: request.byproductLines 
+        ? request.byproductLines.map((line, idx) => ({
+            ...line,
+            id: `bp-${Date.now()}-${idx}`,
+            bomId: request.id,
+          }))
+        : existing.byproductLines,
     };
+    
+    return updatedBom as BillOfMaterials;
   }
 
   /**

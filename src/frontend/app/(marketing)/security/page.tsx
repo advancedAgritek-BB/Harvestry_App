@@ -1,11 +1,7 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Shield } from 'lucide-react';
 import { ComingSoonPlaceholder } from '@/components/common';
-
-export const metadata: Metadata = {
-  title: 'Security | Harvestry',
-  description: 'Learn about Harvestry\'s enterprise-grade security measures and compliance certifications.',
-};
 
 export default function SecurityPage() {
   return (

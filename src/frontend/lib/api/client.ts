@@ -42,10 +42,11 @@ export async function apiClient<T = unknown>(
   // Add authentication header
   if (!skipAuth) {
     const supabase = getSupabaseClient();
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (session?.access_token) {
-      headers.set('Authorization', `Bearer ${session.access_token}`);
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers.set('Authorization', `Bearer ${session.access_token}`);
+      }
     }
   }
 
@@ -78,11 +79,13 @@ export async function apiClient<T = unknown>(
     if (tokenExpired === 'true') {
       // Try to refresh the session
       const supabase = getSupabaseClient();
-      const { error } = await supabase.auth.refreshSession();
-      
-      if (!error) {
-        // Retry the request with the new token
-        return apiClient<T>(endpoint, options);
+      if (supabase) {
+        const { error } = await supabase.auth.refreshSession();
+        
+        if (!error) {
+          // Retry the request with the new token
+          return apiClient<T>(endpoint, options);
+        }
       }
     }
     

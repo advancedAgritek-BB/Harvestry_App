@@ -9,6 +9,8 @@ interface MagneticButtonProps {
   strength?: number;
   as?: 'button' | 'a' | 'div';
   href?: string;
+  target?: string;
+  rel?: string;
   onClick?: () => void;
 }
 
@@ -18,9 +20,11 @@ export function MagneticButton({
   strength = 0.3,
   as: Component = 'button',
   href,
+  target,
+  rel,
   onClick,
 }: MagneticButtonProps) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLElement | null>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -38,7 +42,7 @@ export function MagneticButton({
   };
 
   const props = {
-    ref: ref as React.RefObject<HTMLButtonElement & HTMLAnchorElement>,
+    ref: ref as React.Ref<HTMLElement>,
     className: clsx(
       'relative transition-transform duration-200 ease-out',
       className
@@ -49,10 +53,11 @@ export function MagneticButton({
     onMouseMove: handleMouseMove,
     onMouseLeave: handleMouseLeave,
     onClick,
-    ...(Component === 'a' && { href }),
+    ...(Component === 'a' && { href, target, rel }),
   };
 
-  return <Component {...props}>{children}</Component>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <Component {...(props as any)}>{children}</Component>;
 }
 
 

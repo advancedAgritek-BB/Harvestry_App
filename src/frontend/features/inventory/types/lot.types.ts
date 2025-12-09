@@ -16,6 +16,7 @@ export type LotStatus =
   | 'allocated'      // Reserved for production order
   | 'in_transit'
   | 'in_production'  // Being consumed in production
+  | 'consumed'       // Fully consumed in production
   | 'destroyed';
 
 /** Legacy product type - keeping for backward compatibility */
@@ -48,6 +49,7 @@ export type LotRelationshipType =
 export type LotOriginType =
   | 'purchase'       // Purchased from vendor
   | 'cultivation'    // Harvested from cultivation batch
+  | 'harvest'        // Alias for cultivation
   | 'production'     // Output from production order
   | 'receipt'        // Received from transfer
   | 'split'          // Split from parent lot
@@ -69,6 +71,7 @@ export interface InventoryLot {
   // ===== PRODUCT LINK (NEW) =====
   productId?: string;
   product?: Product;
+  productName?: string;
   
   // Classification (from product, denormalized for queries)
   category?: InventoryCategory;
@@ -146,6 +149,7 @@ export interface InventoryLot {
   // ===== LAB/COA =====
   labOrderId?: string;
   coaStatus?: 'not_required' | 'pending' | 'submitted' | 'passed' | 'failed' | 'expired';
+  qaStatus?: 'not_required' | 'pending' | 'passed' | 'failed' | 'expired';
   coaReceivedAt?: string;
   testResults?: LotTestResults;
   
@@ -173,6 +177,10 @@ export interface InventoryLot {
   internalNotes?: string;
   attributes?: Record<string, unknown>;
   imageUrls?: string[];
+  
+  // ===== DENORMALIZED METRICS (for quick display) =====
+  thcPercent?: number;
+  cbdPercent?: number;
   
   // ===== AUDIT =====
   createdAt: string;
@@ -313,17 +321,28 @@ export interface LotAdjustmentRequest {
 export interface LotFilterOptions {
   siteId?: string;
   status?: LotStatus[];
-  productType?: ProductType[];
+  productType?: ProductType | ProductType[];
   locationId?: string;
   strainId?: string;
   batchId?: string;
-  syncStatus?: ('synced' | 'pending' | 'error' | 'stale')[];
-  coaStatus?: ('pending' | 'passed' | 'failed' | 'expired')[];
+  syncStatus?: ('synced' | 'pending' | 'error' | 'stale' | 'not_required')[];
+  coaStatus?: ('pending' | 'passed' | 'failed' | 'expired' | 'not_required')[];
+  qaStatus?: ('pending' | 'passed' | 'failed' | 'expired' | 'not_required')[];
   expiringWithinDays?: number;
   search?: string;
+  dateRange?: { from?: string; to?: string };
   createdAfter?: string;
   createdBefore?: string;
 }
+
+/** Alias for backward compatibility */
+export type LotFilters = LotFilterOptions;
+
+/** QA Status type */
+export type QAStatus = 'not_required' | 'pending' | 'passed' | 'failed' | 'expired';
+
+/** Sync state alias */
+export type SyncState = 'synced' | 'pending' | 'error' | 'stale' | 'not_required';
 
 /** Paginated lot list response */
 export interface LotListResponse {

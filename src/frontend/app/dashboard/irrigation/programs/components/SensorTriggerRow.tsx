@@ -49,7 +49,7 @@ export function SensorTriggerRow({
     if (allSelected) {
       onChange({ sensorIds: trigger.sensorIds.filter(id => !zoneIds.includes(id)) });
     } else {
-      const newIds = [...new Set([...trigger.sensorIds, ...zoneIds])];
+      const newIds = Array.from(new Set([...trigger.sensorIds, ...zoneIds]));
       onChange({ sensorIds: newIds });
     }
   };

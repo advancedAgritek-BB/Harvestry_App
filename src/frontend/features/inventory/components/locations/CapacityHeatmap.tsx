@@ -49,14 +49,14 @@ function HeatmapCell({ location, onClick, isSelected, size = 'md' }: HeatmapCell
       className={cn(
         'rounded-lg transition-all relative group',
         sizeClasses[size],
-        getUtilizationColor(location.utilizationPercent),
+        getUtilizationColor(location.utilizationPercent ?? 0),
         isSelected 
           ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-background' 
           : 'hover:ring-2 hover:ring-foreground/30 hover:ring-offset-1 hover:ring-offset-background',
         location.status === 'inactive' && 'opacity-30',
         location.status === 'quarantine' && 'ring-2 ring-rose-500'
       )}
-      title={`${location.name} (${location.utilizationPercent.toFixed(0)}%)`}
+      title={`${location.name} (${(location.utilizationPercent ?? 0).toFixed(0)}%)`}
     >
       {/* Tooltip on hover */}
       <div className={cn(
@@ -67,7 +67,7 @@ function HeatmapCell({ location, onClick, isSelected, size = 'md' }: HeatmapCell
       )}>
         <div className="text-xs font-medium text-foreground">{location.name}</div>
         <div className="text-[10px] text-muted-foreground">
-          {location.utilizationPercent.toFixed(0)}% • {location.lotCount} lots
+          {(location.utilizationPercent ?? 0).toFixed(0)}% • {location.lotCount ?? 0} lots
         </div>
       </div>
     </button>
@@ -134,9 +134,9 @@ export function CapacityHeatmap({
   // Calculate stats
   const totalLocations = locations.length;
   const avgUtilization = locations.length > 0
-    ? locations.reduce((sum, l) => sum + l.utilizationPercent, 0) / locations.length
+    ? locations.reduce((sum, l) => sum + (l.utilizationPercent ?? 0), 0) / locations.length
     : 0;
-  const fullLocations = locations.filter(l => l.utilizationPercent >= 95).length;
+  const fullLocations = locations.filter(l => (l.utilizationPercent ?? 0) >= 95).length;
   
   if (locations.length === 0) {
     return (

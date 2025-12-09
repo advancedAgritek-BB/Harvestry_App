@@ -34,7 +34,10 @@ const STATUS_CONFIG: Record<LotStatus, { label: string; color: string; bgColor: 
   pending_coa: { label: 'Pending COA', color: 'text-cyan-400', bgColor: 'bg-cyan-500/10 border-cyan-500/20', icon: Clock },
   coa_failed: { label: 'COA Failed', color: 'text-rose-400', bgColor: 'bg-rose-500/10 border-rose-500/20', icon: XCircle },
   reserved: { label: 'Reserved', color: 'text-violet-400', bgColor: 'bg-violet-500/10 border-violet-500/20', icon: Tag },
+  allocated: { label: 'Allocated', color: 'text-indigo-400', bgColor: 'bg-indigo-500/10 border-indigo-500/20', icon: Tag },
   in_transit: { label: 'In Transit', color: 'text-blue-400', bgColor: 'bg-blue-500/10 border-blue-500/20', icon: ArrowUpDown },
+  in_production: { label: 'In Production', color: 'text-orange-400', bgColor: 'bg-orange-500/10 border-orange-500/20', icon: Clock },
+  consumed: { label: 'Consumed', color: 'text-muted-foreground', bgColor: 'bg-muted/50 border-border', icon: CheckCircle },
   destroyed: { label: 'Destroyed', color: 'text-muted-foreground', bgColor: 'bg-muted/50 border-border', icon: XCircle },
 };
 
@@ -61,7 +64,7 @@ const MOCK_LOT = {
   packageDate: '2025-01-20',
   expirationDate: '2026-01-20',
   labOrderId: 'lab-order-1',
-  coaStatus: 'passed' as const,
+  coaStatus: 'passed' as 'passed' | 'failed' | 'pending',
   thcPercent: 22.5,
   cbdPercent: 0.8,
   metrcId: '1A4050000000001234567',

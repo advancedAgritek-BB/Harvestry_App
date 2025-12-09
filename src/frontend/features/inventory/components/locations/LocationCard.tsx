@@ -141,19 +141,19 @@ export function LocationCard({
           </div>
         )}
         
-        {showCapacity && location.utilizationPercent > 0 && (
+        {showCapacity && (location.utilizationPercent ?? 0) > 0 && (
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-muted-foreground">Utilization</span>
-              <span className="text-xs text-foreground tabular-nums">{location.utilizationPercent.toFixed(0)}%</span>
+              <span className="text-xs text-foreground tabular-nums">{(location.utilizationPercent ?? 0).toFixed(0)}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
               <div 
                 className={cn(
                   'h-full rounded-full transition-all',
-                  getUtilizationColor(location.utilizationPercent)
+                  getUtilizationColor(location.utilizationPercent ?? 0)
                 )}
-                style={{ width: `${Math.min(100, location.utilizationPercent)}%` }}
+                style={{ width: `${Math.min(100, location.utilizationPercent ?? 0)}%` }}
               />
             </div>
           </div>

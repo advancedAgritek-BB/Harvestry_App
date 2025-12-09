@@ -37,7 +37,10 @@ const MOCK_LOT_SUMMARY: LotSummary = {
     pending_coa: 8,
     coa_failed: 2,
     reserved: 3,
+    allocated: 0,
     in_transit: 0,
+    in_production: 0,
+    consumed: 0,
     destroyed: 0,
   },
   byProductType: {

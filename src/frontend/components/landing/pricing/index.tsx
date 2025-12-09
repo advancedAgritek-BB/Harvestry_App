@@ -6,6 +6,7 @@ import { pricingTiers, capacityTiers } from './pricingData';
 import { PricingCard } from './PricingCard';
 import { TCOComparison } from './TCOComparison';
 import { AddOns } from './AddOns';
+import { StackComparisonHero } from './StackComparisonHero';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 export function Pricing() {
@@ -41,14 +42,14 @@ export function Pricing() {
             Transparent Pricing
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-5">
-            Start Free,{' '}
+            One Platform.{' '}
             <span className="text-accent-emerald">
-              Scale with Success
+              Replace Your Entire Stack.
             </span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            From your first room to your multi-state expansion. No "Compliance Tax." No "Integration Fees." 
-            Just a platform that grows with you.
+            Stop paying for 4–5 disconnected tools. Harvestry unifies batch tracking, inventory, compliance, 
+            environmental monitoring, and financials—at a fraction of the cost.
           </p>
 
           {/* Billing Toggle */}
@@ -87,6 +88,9 @@ export function Pricing() {
             )}
           </div>
         </div>
+
+        {/* Stack Comparison Hero - Context before price */}
+        <StackComparisonHero />
 
         {/* Pricing Grid - 4 tiers (responsive: 1 → 2 → 4 columns) */}
         <div

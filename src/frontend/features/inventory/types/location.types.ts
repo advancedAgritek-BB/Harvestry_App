@@ -90,6 +90,9 @@ export interface InventoryLocation {
   // Nested children (for tree views)
   children?: InventoryLocation[];
   lotCount?: number;
+  
+  // Utilization
+  utilizationPercent?: number;
 }
 
 /** Room entity (top-level container) */
@@ -171,6 +174,14 @@ export interface CreateLocationRequest {
   notes?: string;
 }
 
+/** Alias for backward compatibility */
+export type LocationCreateRequest = CreateLocationRequest;
+
+/** Update location request */
+export interface LocationUpdateRequest extends Partial<CreateLocationRequest> {
+  id: string;
+}
+
 /** Location filter options */
 export interface LocationFilterOptions {
   siteId?: string;
@@ -179,8 +190,13 @@ export interface LocationFilterOptions {
   locationType?: LocationType[];
   status?: LocationStatus[];
   hasCapacity?: boolean;
+  minUtilization?: number;
+  maxUtilization?: number;
   search?: string;
 }
+
+/** Alias for backward compatibility */
+export type LocationFilters = LocationFilterOptions;
 
 /** Location summary for dashboard */
 export interface LocationSummary {

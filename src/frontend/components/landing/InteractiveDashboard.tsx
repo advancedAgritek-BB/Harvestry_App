@@ -229,10 +229,11 @@ function DesktopInteractiveDashboard() {
         }
         
         // Determine active widget based on widget progress
+        // Each widget gets equal scroll time: (1.0 - 0.05) / 6 = ~15.83% each
         if (widgetProgress < 0.05) {
           setActiveWidget(null);
         } else {
-          const adjustedProgress = (widgetProgress - 0.05) / 0.90;
+          const adjustedProgress = (widgetProgress - 0.05) / 0.95;
           const widgetIndex = Math.floor(adjustedProgress * WIDGET_SEQUENCE.length);
           const clampedIndex = Math.min(Math.max(0, widgetIndex), WIDGET_SEQUENCE.length - 1);
           setActiveWidget(WIDGET_SEQUENCE[clampedIndex]);

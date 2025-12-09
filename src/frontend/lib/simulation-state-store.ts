@@ -139,13 +139,14 @@ class SimulationStateStore {
   getActive(): SimulationState[] {
     // Update values before returning
     const now = Date.now();
-    for (const state of this.activeSimulations.values()) {
+    const states = Array.from(this.activeSimulations.values());
+    for (const state of states) {
       if (state.isRunning) {
         state.lastValue = this.generateValue(state.profile, state.lastValue, now);
         state.lastUpdated = now;
       }
     }
-    return Array.from(this.activeSimulations.values()).filter(s => s.isRunning);
+    return states.filter(s => s.isRunning);
   }
 
   getByStreamType(streamType: number): SimulationState | undefined {

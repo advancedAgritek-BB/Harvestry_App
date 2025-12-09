@@ -176,6 +176,9 @@ export interface ProductionMaterialLine {
   allocatedAt?: string;
   allocatedBy?: string;
 
+  // Optional flag
+  isOptional?: boolean;
+  
   // Substitution
   isSubstitute: boolean;
   originalProductId?: string;

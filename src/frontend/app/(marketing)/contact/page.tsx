@@ -1,11 +1,7 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Mail } from 'lucide-react';
 import { ComingSoonPlaceholder } from '@/components/common';
-
-export const metadata: Metadata = {
-  title: 'Contact Us | Harvestry',
-  description: 'Get in touch with the Harvestry team.',
-};
 
 export default function ContactPage() {
   return (

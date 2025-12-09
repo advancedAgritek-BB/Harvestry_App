@@ -35,6 +35,7 @@ import {
 } from '@/components/irrigation';
 
 // Mock data for irrigation programs with extended profile data
+// Note: shotConfig.calculatedDurationSeconds is derived from calibration data
 const MOCK_PROGRAMS = [
   {
     id: '1',
@@ -45,8 +46,8 @@ const MOCK_PROGRAMS = [
     recipeId: 'flower-4-6',
     description: 'Aggressive P1 ramp with controlled dryback',
     dayProfile: {
-      shotConfig: { shotSizeMl: 50, expectedVwcIncreasePercent: 2, minSoakTimeMinutes: 30, maxShotsPerDay: 10 },
-      phaseTargets: { p1TargetVwcPercent: 65, p1ShotCount: 6, p2TargetVwcPercent: 55, p2ShotCount: 4, p3TargetDrybackPercent: 25, p3AllowEmergencyShots: false },
+      shotConfig: { shotSizeMl: 50, calculatedDurationSeconds: 17, expectedVwcIncreasePercent: 2, minSoakTimeMinutes: 30, maxShotsPerDay: 10 },
+      phaseTargets: { p1TargetVwcPercent: 65, p1ShotCount: 6, p1ShotCountMode: 'manual' as const, p2TargetVwcPercent: 55, p2ShotCount: 4, p2ShotCountMode: 'manual' as const, p3TargetDrybackPercent: 25, p3AllowEmergencyShots: false },
     },
     nightProfile: { allowIrrigation: false, description: 'No irrigation, maintain dryback' },
     safetyPolicy: { maxVolumeMlPerPlantPerDay: 120, maxEc: 3.5, minEc: 1.5, maxPh: 6.5, minPh: 5.5 },
@@ -78,8 +79,8 @@ const MOCK_PROGRAMS = [
     recipeId: 'veg-standard',
     description: 'Standard veg maintenance with VWC targeting',
     dayProfile: {
-      shotConfig: { shotSizeMl: 40, expectedVwcIncreasePercent: 3, minSoakTimeMinutes: 45, maxShotsPerDay: 8 },
-      phaseTargets: { p1TargetVwcPercent: 70, p1ShotCount: 4, p2TargetVwcPercent: 65, p2ShotCount: 4, p3TargetDrybackPercent: 20, p3AllowEmergencyShots: true },
+      shotConfig: { shotSizeMl: 40, calculatedDurationSeconds: 13, expectedVwcIncreasePercent: 3, minSoakTimeMinutes: 45, maxShotsPerDay: 8 },
+      phaseTargets: { p1TargetVwcPercent: 70, p1ShotCount: 4, p1ShotCountMode: 'manual' as const, p2TargetVwcPercent: 65, p2ShotCount: 4, p2ShotCountMode: 'auto' as const, p3TargetDrybackPercent: 20, p3AllowEmergencyShots: true },
     },
     nightProfile: { allowIrrigation: true, maintainVwcPercent: 50, maxNightShots: 1, description: 'Single shot at lights off' },
     safetyPolicy: { maxVolumeMlPerPlantPerDay: 150, maxEc: 2.2, minEc: 1.8, maxPh: 6.2, minPh: 5.8 },
@@ -98,8 +99,8 @@ const MOCK_PROGRAMS = [
     recipeId: 'flush',
     description: 'Pre-harvest flush program',
     dayProfile: {
-      shotConfig: { shotSizeMl: 100, expectedVwcIncreasePercent: 5, minSoakTimeMinutes: 60, maxShotsPerDay: 6 },
-      phaseTargets: { p1TargetVwcPercent: 75, p1ShotCount: 3, p2TargetVwcPercent: 70, p2ShotCount: 3, p3TargetDrybackPercent: 30, p3AllowEmergencyShots: false },
+      shotConfig: { shotSizeMl: 100, calculatedDurationSeconds: 33, expectedVwcIncreasePercent: 5, minSoakTimeMinutes: 60, maxShotsPerDay: 6 },
+      phaseTargets: { p1TargetVwcPercent: 75, p1ShotCount: 3, p1ShotCountMode: 'manual' as const, p2TargetVwcPercent: 70, p2ShotCount: 3, p2ShotCountMode: 'manual' as const, p3TargetDrybackPercent: 30, p3AllowEmergencyShots: false },
     },
     nightProfile: { allowIrrigation: false, description: 'Extended dryback' },
     safetyPolicy: { maxVolumeMlPerPlantPerDay: 300, maxEc: 0.5, minEc: 0, maxPh: 7.0, minPh: 5.5 },
@@ -118,8 +119,8 @@ const MOCK_PROGRAMS = [
     recipeId: 'clone-mist',
     description: 'High humidity misting for propagation',
     dayProfile: {
-      shotConfig: { shotSizeMl: 10, expectedVwcIncreasePercent: 1, minSoakTimeMinutes: 5, maxShotsPerDay: 50 },
-      phaseTargets: { p1TargetVwcPercent: 85, p1ShotCount: 20, p2TargetVwcPercent: 80, p2ShotCount: 20, p3TargetDrybackPercent: 5, p3AllowEmergencyShots: true },
+      shotConfig: { shotSizeMl: 10, calculatedDurationSeconds: 3, expectedVwcIncreasePercent: 1, minSoakTimeMinutes: 5, maxShotsPerDay: 50 },
+      phaseTargets: { p1TargetVwcPercent: 85, p1ShotCount: 20, p1ShotCountMode: 'manual' as const, p2TargetVwcPercent: 80, p2ShotCount: 20, p2ShotCountMode: 'manual' as const, p3TargetDrybackPercent: 5, p3AllowEmergencyShots: true },
     },
     nightProfile: { allowIrrigation: true, maintainVwcPercent: 75, maxNightShots: 10, description: '30s on / 15min off cycles' },
     safetyPolicy: { maxVolumeMlPerPlantPerDay: 200, maxEc: 1.5, minEc: 0.5, maxPh: 6.5, minPh: 5.5 },

@@ -173,7 +173,7 @@ export function OperationsOverview() {
     : [];
 
   const handleDismissAlert = (alertId: string) => {
-    setDismissedAlerts(prev => new Set([...prev, alertId]));
+    setDismissedAlerts(prev => new Set([...Array.from(prev), alertId]));
   };
 
   // Filter action items based on permissions

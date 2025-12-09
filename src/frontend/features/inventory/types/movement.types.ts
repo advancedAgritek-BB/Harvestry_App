@@ -25,8 +25,8 @@ export type MovementStatus =
   | 'cancelled'
   | 'failed';
 
-/** Adjustment reason codes */
-export type AdjustmentReasonCode =
+/** Adjustment reason code values */
+export type AdjustmentReasonCodeValue =
   | 'damage'
   | 'theft'
   | 'spoilage'
@@ -37,6 +37,16 @@ export type AdjustmentReasonCode =
   | 'regulatory_destruction'
   | 'sample'
   | 'other';
+
+/** Adjustment reason code with metadata for UI */
+export interface AdjustmentReasonCode {
+  code: AdjustmentReasonCodeValue;
+  label: string;
+  category: 'increase' | 'decrease' | 'both';
+  requiresEvidence?: boolean;
+  requiresApproval?: boolean;
+  complianceReportable?: boolean;
+}
 
 /** Core movement entity */
 export interface InventoryMovement {
@@ -96,7 +106,7 @@ export interface InventoryAdjustment {
   lotNumber: string;
   
   // Adjustment details
-  reasonCode: AdjustmentReasonCode;
+  reasonCode: AdjustmentReasonCodeValue;
   quantityBefore: number;
   quantityChange: number;
   quantityAfter: number;

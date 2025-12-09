@@ -117,6 +117,7 @@ export async function createTask(
 ): Promise<Task> {
   if (USE_MOCK) {
     const newTask: Task = {
+      ...request,
       id: `task-${Date.now()}`,
       title: request.title,
       description: request.description,
@@ -126,7 +127,6 @@ export async function createTask(
       dueAt: request.dueDate || new Date().toISOString(),
       category: 'general',
       location: 'Unknown', // Default
-      ...request
     };
     // Note: We can't persist to MOCK_TASKS permanently here as it's a const export,
     // but for a real mock service we would push to a local array.

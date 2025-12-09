@@ -1,11 +1,7 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Users } from 'lucide-react';
 import { ComingSoonPlaceholder } from '@/components/common';
-
-export const metadata: Metadata = {
-  title: 'Community | Harvestry',
-  description: 'Join the Harvestry community of cultivation professionals.',
-};
 
 export default function CommunityPage() {
   return (

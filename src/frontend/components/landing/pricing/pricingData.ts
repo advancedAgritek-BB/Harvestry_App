@@ -1,6 +1,12 @@
 // Pricing structure aligned with Harvestry_Pricing.md
 // "Land and Expand" strategy: Free to Start → Scales with Success
 
+export interface CompetitorEquivalent {
+  total: number;
+  breakdown: string;
+  savingsPercent: number;
+}
+
 export interface PricingTier {
   id: string;
   name: string;
@@ -20,6 +26,7 @@ export interface PricingTier {
   hardwareLevel: string;
   complianceIncluded: boolean;
   financialsIncluded: boolean;
+  competitorEquivalent?: CompetitorEquivalent;
 }
 
 export interface PricingFeature {
@@ -95,6 +102,11 @@ export const pricingTiers: PricingTier[] = [
     hardwareLevel: 'Read-Only (Historical Data)',
     complianceIncluded: false,
     financialsIncluded: false,
+    competitorEquivalent: {
+      total: 850,
+      breakdown: 'Trym + Inventory + SOP tools',
+      savingsPercent: 59,
+    },
     features: [
       { text: 'Everything in Monitor, plus:', category: 'core' },
       { text: 'Unlimited rooms (within capacity)', category: 'core', highlight: true },
@@ -123,6 +135,11 @@ export const pricingTiers: PricingTier[] = [
     hardwareLevel: 'Control (Automation)',
     complianceIncluded: true,
     financialsIncluded: true,
+    competitorEquivalent: {
+      total: 2500,
+      breakdown: 'Full commercial stack',
+      savingsPercent: 64,
+    },
     features: [
       { text: 'Everything in Foundation, plus:', category: 'core' },
       { text: 'Hardware control & automation', category: 'hardware', highlight: true },

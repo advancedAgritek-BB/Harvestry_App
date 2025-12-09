@@ -7,13 +7,13 @@
  * glass morphism styling, and smooth entrance animations.
  */
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Leaf, Eye, EyeOff, ArrowRight, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signIn, isLoading: authLoading } = useAuth();
@@ -384,4 +384,12 @@ function getErrorMessage(message: string): string {
   };
   
   return errorMap[message] || message;
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
+  );
 }

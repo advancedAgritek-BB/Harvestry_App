@@ -1,11 +1,7 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Briefcase } from 'lucide-react';
 import { ComingSoonPlaceholder } from '@/components/common';
-
-export const metadata: Metadata = {
-  title: 'Careers | Harvestry',
-  description: 'Join the Harvestry team and help revolutionize the cultivation industry.',
-};
 
 export default function CareersPage() {
   return (

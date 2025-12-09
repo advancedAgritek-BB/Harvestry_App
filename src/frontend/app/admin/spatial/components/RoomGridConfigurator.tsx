@@ -303,7 +303,7 @@ export function RoomGridConfigurator({
       
       if (e.shiftKey && selectedCells.size > 0) {
         // Shift-click: extend selection
-        setSelectedCells(prev => new Set([...prev, cellKey]));
+        setSelectedCells(prev => new Set([...Array.from(prev), cellKey]));
       } else if (e.ctrlKey || e.metaKey) {
         // Ctrl/Cmd-click: toggle selection
         setSelectedCells(prev => {

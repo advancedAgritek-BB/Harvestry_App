@@ -20,6 +20,7 @@ const ALL_TASKS: Task[] = [
     priority: 'critical',
     status: 'ready',
     slaStatus: 'breached',
+    category: 'general',
     assignee: { id: 'u2', firstName: 'Sarah', lastName: 'Chen' },
   },
   {
@@ -30,6 +31,7 @@ const ALL_TASKS: Task[] = [
     priority: 'high',
     status: 'in_progress',
     slaStatus: 'warning',
+    category: 'general',
     assignee: { id: 'u3', firstName: 'Marcus', lastName: 'Johnson' },
   },
   {
@@ -40,6 +42,7 @@ const ALL_TASKS: Task[] = [
     priority: 'normal',
     status: 'ready',
     slaStatus: 'ok',
+    category: 'general',
     // Unassigned
   },
   {
@@ -50,6 +53,7 @@ const ALL_TASKS: Task[] = [
     priority: 'high',
     status: 'blocked',
     slaStatus: 'ok',
+    category: 'general',
     assignee: { id: 'u1', firstName: 'Brandon', lastName: 'Burnette' },
   },
   {
@@ -60,6 +64,7 @@ const ALL_TASKS: Task[] = [
     priority: 'high',
     status: 'completed',
     slaStatus: 'ok',
+    category: 'application',
     assignee: { id: 'u3', firstName: 'Marcus', lastName: 'Johnson' },
   },
   {
@@ -70,6 +75,7 @@ const ALL_TASKS: Task[] = [
     priority: 'normal',
     status: 'ready',
     slaStatus: 'ok',
+    category: 'general',
     assignee: { id: 'u2', firstName: 'Sarah', lastName: 'Chen' },
   },
 ];

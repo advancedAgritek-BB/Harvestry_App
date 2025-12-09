@@ -17,3 +17,6 @@ export * from './batch.types';
 
 // Lineage & traceability
 export * from './lineage.types';
+
+// Harvest workflow
+export * from './harvest-workflow.types';

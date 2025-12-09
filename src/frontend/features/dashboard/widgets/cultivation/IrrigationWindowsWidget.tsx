@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, TooltipProps, Brush } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Brush } from 'recharts';
 import { cn } from '@/lib/utils';
 import { Plus, Droplets, AlertTriangle, Hand, Zap, Waves } from 'lucide-react';
 import { useChartHorizontalScroll } from '@/hooks/useChartHorizontalScroll';
@@ -34,7 +34,7 @@ const mockData: IrrigationDataPoint[] = Array.from({ length: 12 }).map((_, i) =>
 }));
 
 // Custom Tooltip Component
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey?: string; value?: number; payload?: IrrigationDataPoint }>; label?: string }) {
   if (!active || !payload || !payload.length) return null;
 
   const dataPoint = payload[0]?.payload as IrrigationDataPoint;

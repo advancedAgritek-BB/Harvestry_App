@@ -29,7 +29,10 @@ const STATUS_CONFIG: Record<LotStatus, { icon: React.ElementType; color: string;
   pending_coa: { icon: Clock, color: 'text-cyan-400', label: 'Pending COA' },
   coa_failed: { icon: XCircle, color: 'text-rose-400', label: 'COA Failed' },
   reserved: { icon: Package, color: 'text-violet-400', label: 'Reserved' },
+  allocated: { icon: Package, color: 'text-violet-400', label: 'Allocated' },
   in_transit: { icon: Package, color: 'text-blue-400', label: 'In Transit' },
+  in_production: { icon: Clock, color: 'text-orange-400', label: 'In Production' },
+  consumed: { icon: CheckCircle, color: 'text-muted-foreground', label: 'Consumed' },
   destroyed: { icon: XCircle, color: 'text-muted-foreground', label: 'Destroyed' },
 };
 

@@ -12,6 +12,7 @@ export interface LabelTemplate {
   name: string;
   jurisdiction: string;
   labelType: 'product' | 'package' | 'manifest' | 'batch' | 'location';
+  format: 'zpl' | 'pdf' | 'png';
   
   // Dimensions
   widthInches: number;
