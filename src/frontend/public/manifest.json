@@ -1,0 +1,17 @@
+{
+  "name": "Harvestry",
+  "short_name": "Harvestry",
+  "description": "Cannabis cultivation management platform - Grow Smarter. Stay Compliant. Scale Confidently.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#22c55e",
+  "icons": [
+    {
+      "src": "/images/Harvestry_logo_1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

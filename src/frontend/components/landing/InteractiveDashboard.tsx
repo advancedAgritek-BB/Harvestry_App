@@ -518,8 +518,8 @@ function DesktopInteractiveDashboard() {
               </div>
             </div>
             
-            {/* Dashboard content */}
-            <div className="aspect-[16/8] relative bg-gradient-to-br from-background via-surface to-elevated overflow-visible">
+{/* Dashboard content */}
+                            <div className="aspect-[16/8] relative bg-gradient-to-br from-background via-surface to-elevated overflow-hidden">
               <div className="absolute inset-0 p-6">
                 <div className="h-full flex gap-4">
                   {/* Sidebar */}
@@ -564,43 +564,43 @@ function DesktopInteractiveDashboard() {
                     </div>
                     
                     {/* Chart area */}
-                    <div className="flex-1 grid grid-cols-3 gap-4">
+                                    <div className="flex-1 grid grid-cols-3 gap-4 min-h-0">
                       {/* Main Chart */}
-                      <div 
-                        className={`relative col-span-2 bg-elevated/50 rounded-lg p-4 transition-all duration-500 border ${isActive('chart') ? 'border-accent-emerald/50 bg-elevated/80' : 'border-transparent'}`}
-                        style={getWidgetStyle('chart')}
-                      >
-                        <div className="w-24 h-3 bg-border/50 rounded mb-4" />
-                        <div className="flex items-end gap-2 h-32">
-                          {[40, 65, 45, 80, 55, 90, 70, 85, 60, 75, 95, 50].map((h, i) => (
-                            <div key={i} className="flex-1 bg-accent-emerald/30 rounded-t" style={{ height: `${h}%` }} />
-                          ))}
-                        </div>
-                        {isActive('chart') && <InfoTooltip widgetKey="chart" position="bottom" />}
-                      </div>
+                                      <div 
+                                        className={`relative col-span-2 bg-elevated/50 rounded-lg p-4 transition-all duration-500 border h-full min-h-0 flex flex-col ${isActive('chart') ? 'border-accent-emerald/50 bg-elevated/80' : 'border-transparent'}`}
+                                        style={getWidgetStyle('chart')}
+                                      >
+                                        <div className="w-24 h-3 bg-border/50 rounded mb-3 flex-shrink-0" />
+                                        <div className="flex items-end gap-2 flex-1 min-h-0">
+                                          {[40, 65, 45, 80, 55, 90, 70, 85, 60, 75, 95, 50].map((h, i) => (
+                                            <div key={i} className="flex-1 bg-accent-emerald/30 rounded-t" style={{ height: `${h}%` }} />
+                                          ))}
+                                        </div>
+                                        {isActive('chart') && <InfoTooltip widgetKey="chart" position="bottom" />}
+                                      </div>
                       
                       {/* Side widgets */}
-                      <div className="space-y-4">
-                        <div 
-                          className={`relative bg-elevated/50 rounded-lg p-4 transition-all duration-500 border ${isActive('environment') ? 'border-accent-cyan/50 bg-elevated/80' : 'border-transparent'}`}
-                          style={getWidgetStyle('environment')}
-                        >
-                          <div className="w-16 h-16 mx-auto rounded-full border-4 border-accent-cyan/20 border-t-accent-cyan animate-spin-slow" />
-                          <div className="mt-2 text-center text-xs text-muted-foreground">VPD Target</div>
-                          {isActive('environment') && <InfoTooltip widgetKey="environment" position="left" />}
-                        </div>
-                        
-                        <div className="bg-elevated/50 rounded-lg p-4">
-                          <div className="space-y-2">
-                            {[80, 60, 40].map((w, i) => (
-                              <div key={i} className="flex items-center gap-2">
-                                <div className="h-2 bg-accent-amber/30 rounded" style={{ width: `${w}%` }} />
-                                <div className="text-xs text-muted-foreground">{w}%</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+                                      <div className="flex flex-col gap-4 min-h-0 h-full">
+                                        <div 
+                                          className={`relative bg-elevated/50 rounded-lg p-3 transition-all duration-500 border flex-1 min-h-0 flex flex-col items-center justify-center ${isActive('environment') ? 'border-accent-cyan/50 bg-elevated/80' : 'border-transparent'}`}
+                                          style={getWidgetStyle('environment')}
+                                        >
+                                          <div className="w-12 h-12 rounded-full border-4 border-accent-cyan/20 border-t-accent-cyan animate-spin-slow" />
+                                          <div className="mt-2 text-center text-xs text-muted-foreground">VPD Target</div>
+                                          {isActive('environment') && <InfoTooltip widgetKey="environment" position="left" />}
+                                        </div>
+                                        
+                                        <div className="bg-elevated/50 rounded-lg p-3 flex-1 min-h-0 flex flex-col justify-center">
+                                          <div className="space-y-2">
+                                            {[80, 60, 40].map((w, i) => (
+                                              <div key={i} className="flex items-center gap-2">
+                                                <div className="h-2 bg-accent-amber/30 rounded" style={{ width: `${w}%` }} />
+                                                <div className="text-xs text-muted-foreground">{w}%</div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </div>
                     </div>
                   </div>
                 </div>

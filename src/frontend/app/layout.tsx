@@ -1,11 +1,11 @@
+import type { Metadata } from 'next';
+import { Inter, JetBrains_Mono } from 'next/font/google';
+
 import '@/styles/globals.css';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { DemoSeeder } from '@/components/demo/DemoSeeder';
 import { CalendlyWidget } from '@/components/common/CalendlyWidget';
-
-// Add Google Fonts
-import { Inter, JetBrains_Mono } from 'next/font/google';
 
 const fontSans = Inter({ 
   subsets: ['latin'], 
@@ -19,9 +19,17 @@ const fontMono = JetBrains_Mono({
   display: 'swap',
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Harvestry',
-  description: 'Cannabis cultivation management platform',
+  description: 'Cannabis cultivation management platform - Grow Smarter. Stay Compliant. Scale Confidently.',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon.svg',
+    apple: '/images/Harvestry_logo_1.png',
+  },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
