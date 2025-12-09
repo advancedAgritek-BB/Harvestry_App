@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useShares, useAddShare, useRemoveShare } from '../../hooks/useShares';
+import { useShares, useAddShare, useRemoveShare } from '../hooks/useShares';
 
 interface Props {
   resourceType: 'report' | 'dashboard';
@@ -77,3 +77,4 @@ export const ShareModal: React.FC<Props> = ({ resourceType, resourceId, isOpen, 
     </div>
   );
 };
+
