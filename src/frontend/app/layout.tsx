@@ -5,7 +5,6 @@ import '@/styles/globals.css';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { DemoSeeder } from '@/components/demo/DemoSeeder';
-import { CalendlyWidget } from '@/components/common/CalendlyWidget';
 
 const fontSans = Inter({ 
   subsets: ['latin'], 
@@ -44,7 +43,6 @@ export default function RootLayout({
           <AuthProvider>
             <DemoSeeder />
             {children}
-            <CalendlyWidget />
           </AuthProvider>
         </ThemeProvider>
       </body>

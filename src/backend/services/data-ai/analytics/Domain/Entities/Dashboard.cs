@@ -90,3 +90,7 @@ public sealed class Dashboard : AggregateRoot<Guid>
         return new Dashboard(id, name, description, layoutConfig, isPublic, ownerId);
     }
 }
+
+
+
+

@@ -42,3 +42,7 @@ COMMENT ON COLUMN strains.metrc_strain_id IS 'METRC internal strain identifier';
 
 
 
+
+
+
+

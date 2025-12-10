@@ -275,3 +275,7 @@ public record RecordScaleCalibrationRequest
     public string? Notes { get; init; }
     public string? CertificateUrl { get; init; }
 }
+
+
+
+

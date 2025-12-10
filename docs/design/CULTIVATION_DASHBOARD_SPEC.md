@@ -50,16 +50,31 @@ The layout utilizes a **12-column CSS Grid** system to accommodate the dense inf
 
 ### 3.3. Irrigation Windows
 *   **Location**: Main Content, Middle Left.
-*   **Description**: Visualization of irrigation events.
+*   **Description**: Visualization of irrigation events (executed and planned).
 *   **Tabs**: P1 Ramp, P2 Maintenance, P3 Dryback, **All**.
 *   **Visualization**: **Dual Bar Chart**.
-    *   **Bar 1**: Actual Amount Fed (Volume).
-    *   **Bar 2**: VWC at the end of the event (before next event starts).
-    *   **Color Coding**: Distinct colors for Automated events vs. Manual triggers.
+    *   **Bar 1**: Volume (mL) - actual amount fed for executed events, expected amount for planned events.
+    *   **Bar 2**: VWC % - actual end VWC for executed events, expected VWC for planned events.
+    *   **Color Coding**:
+        *   Executed events: Blue (Automated) / Amber (Manual) for volume, Emerald for VWC.
+        *   Planned events: Slate/Light Emerald (ghost bars) with high transparency (15-20% opacity) for subtle visual distinction.
+*   **Event States**:
+    *   **Executed**: Events that have occurred (before current time). Show actual readings with solid bars.
+    *   **Planned**: Scheduled events that haven't occurred yet. Shown as ghost bars with expected values.
 *   **Controls**:
     *   Zone Selectors (Zone A-F).
     *   Action: "+ Add shot" (Manual Modal).
     *   Action: "Quick pick" (50mL, etc.). **Requirement**: Triggers a **Confirmation Modal** before firing.
+*   **Schedule Performance Panel** (Target icon button):
+    *   **Purpose**: Historical analysis of expected vs actual irrigation events to identify alignment issues.
+    *   **Alignment Score**: 0-100 score showing overall schedule accuracy.
+    *   **Summary Metrics**:
+        *   Volume variance (% difference from expected).
+        *   VWC accuracy (% of events within ±2% of expected).
+        *   On-time execution rate (% within 5 min of scheduled).
+        *   Missed/extra event counts.
+    *   **Event Details**: Expandable list showing individual event comparisons (expected vs actual volume, VWC, timing).
+    *   **Recommendations**: AI-generated suggestions for schedule adjustments based on variance patterns.
 
 ### 3.4. Zone Heatmap
 *   **Location**: Main Content, Middle Right.
@@ -135,4 +150,29 @@ A demonstration implementation has been created at `src/frontend/app/dashboard/c
 
 ### Layout
 A dedicated `CultivationLayout` component enforces the 12-column grid structure required for this high-density view. The widgets are registered in `widgetRegistry.ts` with the `cultivation-` prefix.
+
+## 8. LLM Assistant Integration for Cultivation
+- Scope: operator/grower copilot focused on cultivation workflows (plants, environment, irrigation, IPM) with citations and quick actions back into dashboard widgets.
+- Safety: only uses canonical data from existing services (no alternate truth), redacts PII before OpenAI calls, refuses unsafe actuation, and logs prompt/response metadata without storing raw PII.
+- Primary interactions:
+  - Inline “Ask” on cultivation dashboard sections (metrics, trends, irrigation, alerts) to explain anomalies, suggest actions, or summarize changes.
+  - Chat panel for multi-turn reasoning; returns links to relevant widgets/records.
+  - Command palette macros (e.g., “Run plant health check for Room A”).
+- High-value use cases:
+  - Environment & plant health watch: explain sensor anomalies (temp/RH/VPD/EC/pH), phase transition risks, mortality spikes; propose SOP-linked actions.
+  - Irrigation/fertigation validation: check schedules vs. recipes and stage; flag over/under-watering signals from VWC/EC deltas; summarize last 24h irrigation.
+  - IPM readiness: surface overdue/next IPM tasks by zone/stage; generate checklists; highlight coverage gaps.
+  - Harvest readiness & QA: identify blocks nearing harvest, estimate readiness windows, and validate weight deltas once harvest starts.
+  - Report interpretation: summarize cultivation KPIs (trend deltas, outliers) with cited filters/time ranges.
+- Guardrails:
+  - Deterministic context assembly from existing APIs/stores; no unverified free-text facts.
+  - Refusal policy for actions that would change recipes/actuation; recommendations only.
+  - Confidence + provenance in every suggestion; suppress low-confidence/noisy alerts.
+
+## 9. Testing & Rollout (LLM Assistant)
+- Unit: prompt renderer (variable validation), redactor/safety filters, data QA filter thresholds.
+- Contract/integration: assistant API route returns streamed text; Telemetry insights worker runs without throwing; OpenAI gateway gracefully handles 4xx/5xx.
+- Shadow mode: cultivate insights worker runs log-only; assistant API responds with fallback when key missing; feature flag gates UI entry.
+- Metrics: token usage, latency, success rate, redaction applied, safety flags, noise rate (QA filter pass ratio).
+- Rollout: enable for staging with test API key → canary single site/room → expand after stability; keep feature flag per persona/domain.
 

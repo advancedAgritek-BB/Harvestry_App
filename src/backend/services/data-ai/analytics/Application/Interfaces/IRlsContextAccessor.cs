@@ -6,3 +6,7 @@ public interface IRlsContextAccessor
 }
 
 public record RlsContext(Guid UserId, string Role, Guid SiteId);
+
+
+
+

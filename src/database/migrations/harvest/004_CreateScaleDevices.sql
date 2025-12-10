@@ -51,3 +51,7 @@ COMMENT ON COLUMN scale_devices.connection_type IS 'Connection type: usb, serial
 COMMENT ON COLUMN scale_devices.connection_config_json IS 'JSON configuration: port, IP address, baud rate, etc.';
 COMMENT ON COLUMN scale_devices.capacity_grams IS 'Maximum weight capacity in grams';
 COMMENT ON COLUMN scale_devices.readability_grams IS 'Smallest measurable increment (e.g., 0.1g)';
+
+
+
+

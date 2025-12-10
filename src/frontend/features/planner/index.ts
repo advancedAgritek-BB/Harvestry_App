@@ -10,6 +10,9 @@ export * from './types';
 // Constants
 export * from './constants';
 
+// Services
+export * from './services';
+
 // Store
 export * from './stores';
 

@@ -101,3 +101,7 @@ public sealed class Report : AggregateRoot<Guid>
         return new Report(id, name, description, config, visualizationConfigJson, isPublic, ownerId);
     }
 }
+
+
+
+

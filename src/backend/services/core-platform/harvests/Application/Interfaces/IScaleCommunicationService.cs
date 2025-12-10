@@ -159,3 +159,7 @@ public class ScaleReadingData
     /// </summary>
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }
+
+
+
+

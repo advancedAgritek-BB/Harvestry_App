@@ -37,3 +37,7 @@ public sealed record GrowlinkAccountDto(
     string Email,
     string Name,
     string? Organization);
+
+
+
+

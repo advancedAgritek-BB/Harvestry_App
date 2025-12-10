@@ -22,3 +22,7 @@ CREATE INDEX IF NOT EXISTS idx_harvest_plants_locked
 COMMENT ON COLUMN harvest_plants.scale_reading_id IS 'Reference to scale_readings table if weight came from scale';
 COMMENT ON COLUMN harvest_plants.weight_source IS 'Source of weight: scale or manual';
 COMMENT ON COLUMN harvest_plants.is_weight_locked IS 'When true, weight requires PIN override to adjust';
+
+
+
+

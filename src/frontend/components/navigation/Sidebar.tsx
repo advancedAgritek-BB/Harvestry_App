@@ -37,7 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Tasks', icon: ClipboardCheck, href: '/dashboard/tasks', requiredFeature: 'task_management' },
   { label: 'Cultivation', icon: Flower2, href: '/dashboard/cultivation', requiredFeature: 'monitoring' },
   { label: 'Irrigation', icon: Droplets, href: '/dashboard/irrigation', requiredFeature: 'control' },
-  { label: 'Recipes', icon: BookOpen, href: '/dashboard/recipes', requiredFeature: 'sop_engine' },
+  { label: 'Library', icon: BookOpen, href: '/library', requiredFeature: 'sop_engine' },
   { label: 'Inventory', icon: Package, href: '/inventory', accent: 'amber', requiredFeature: 'inventory' },
   { label: 'Analytics', icon: BarChart2, href: '/dashboard/analytics', accent: 'amber', requiredFeature: 'historical_data' },
   { label: 'Admin', icon: Cog, href: '/admin', accent: 'violet' },
@@ -160,7 +160,11 @@ export function Sidebar() {
            <span className="text-[10px] font-medium">Invite</span>
         </button>
         
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 mx-auto ring-2 ring-border" />
+        <img 
+          src="/images/user-avatar.png" 
+          alt="User avatar" 
+          className="w-8 h-8 rounded-full mx-auto ring-2 ring-border object-cover"
+        />
       </div>
     </aside>
   );

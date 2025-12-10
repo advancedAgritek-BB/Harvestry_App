@@ -381,3 +381,7 @@ public class ScaleDeviceService : IScaleDeviceService
 
     #endregion
 }
+
+
+
+

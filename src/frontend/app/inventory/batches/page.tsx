@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow, format, differenceInDays } from 'date-fns';
 import {
@@ -10,10 +10,7 @@ import {
   Filter,
   ChevronDown,
   ChevronLeft,
-  MoreHorizontal,
-  Eye,
   Scissors,
-  AlertTriangle,
   Sprout,
   Flower2,
   Timer,
@@ -31,6 +28,8 @@ import {
   type CultivationPhase,
   type BatchStatus,
 } from '@/features/inventory/types';
+import { useBatchStore } from '@/stores/batchStore';
+import { SEED_BATCHES } from '@/stores/batchSeedData';
 
 // Phase icons
 const PHASE_ICONS: Record<CultivationPhase, React.ElementType> = {
@@ -43,162 +42,6 @@ const PHASE_ICONS: Record<CultivationPhase, React.ElementType> = {
   curing: Timer,
   complete: CheckCircle,
 };
-
-// Mock data for cultivation batches
-const MOCK_BATCHES: CultivationBatch[] = [
-  {
-    id: 'batch-001',
-    siteId: 'site-1',
-    batchNumber: 'BATCH-2025-001',
-    name: 'Blue Dream #1',
-    originType: 'clone',
-    geneticId: 'gen-001',
-    geneticName: 'Blue Dream',
-    strainId: 'strain-001',
-    strainName: 'Blue Dream',
-    generationNumber: 3,
-    currentPhase: 'flowering',
-    phaseHistory: [],
-    status: 'active',
-    initialPlantCount: 50,
-    currentPlantCount: 48,
-    plantLossEvents: [],
-    totalPlantsLost: 2,
-    survivalRate: 96,
-    currentRoomId: 'room-001',
-    currentRoomName: 'Flower Room A',
-    currentZoneId: 'zone-001',
-    currentZoneName: 'Zone 1',
-    locationHistory: [],
-    startDate: '2025-01-01T00:00:00Z',
-    expectedHarvestDate: '2025-03-15T00:00:00Z',
-    expectedDays: 75,
-    projectedYieldGrams: 12000,
-    costs: {
-      seedCloneCost: 400,
-      nutrientCost: 250,
-      laborCost: 800,
-      utilityCost: 600,
-      facilityCost: 300,
-      equipmentCost: 100,
-      overheadCost: 200,
-      totalDirectCost: 1450,
-      totalIndirectCost: 1200,
-      totalCost: 2650,
-      costAllocations: [],
-    },
-    costPerPlant: 55.21,
-    isCompliant: true,
-    harvestEventIds: [],
-    outputLotIds: [],
-    createdAt: '2025-01-01T00:00:00Z',
-    createdBy: 'admin',
-    updatedAt: '2025-02-15T00:00:00Z',
-    updatedBy: 'cultivator',
-  },
-  {
-    id: 'batch-002',
-    siteId: 'site-1',
-    batchNumber: 'BATCH-2025-002',
-    name: 'OG Kush #1',
-    originType: 'seed',
-    geneticId: 'gen-002',
-    geneticName: 'OG Kush',
-    strainId: 'strain-002',
-    strainName: 'OG Kush',
-    generationNumber: 1,
-    currentPhase: 'vegetative',
-    phaseHistory: [],
-    status: 'active',
-    initialPlantCount: 100,
-    currentPlantCount: 95,
-    plantLossEvents: [],
-    totalPlantsLost: 5,
-    survivalRate: 95,
-    currentRoomId: 'room-002',
-    currentRoomName: 'Veg Room B',
-    currentZoneId: 'zone-002',
-    currentZoneName: 'Zone 2',
-    locationHistory: [],
-    startDate: '2025-02-01T00:00:00Z',
-    expectedHarvestDate: '2025-04-20T00:00:00Z',
-    expectedDays: 80,
-    projectedYieldGrams: 25000,
-    costs: {
-      seedCloneCost: 1500,
-      nutrientCost: 150,
-      laborCost: 500,
-      utilityCost: 400,
-      facilityCost: 200,
-      equipmentCost: 75,
-      overheadCost: 150,
-      totalDirectCost: 2150,
-      totalIndirectCost: 825,
-      totalCost: 2975,
-      costAllocations: [],
-    },
-    costPerPlant: 31.32,
-    isCompliant: true,
-    harvestEventIds: [],
-    outputLotIds: [],
-    createdAt: '2025-02-01T00:00:00Z',
-    createdBy: 'admin',
-    updatedAt: '2025-02-20T00:00:00Z',
-    updatedBy: 'cultivator',
-  },
-  {
-    id: 'batch-003',
-    siteId: 'site-1',
-    batchNumber: 'BATCH-2025-003',
-    name: 'Gelato #1',
-    originType: 'clone',
-    geneticId: 'gen-003',
-    geneticName: 'Gelato',
-    strainId: 'strain-003',
-    strainName: 'Gelato',
-    generationNumber: 2,
-    currentPhase: 'drying',
-    phaseHistory: [],
-    status: 'harvested',
-    initialPlantCount: 40,
-    currentPlantCount: 38,
-    plantLossEvents: [],
-    totalPlantsLost: 2,
-    survivalRate: 95,
-    currentRoomId: 'room-003',
-    currentRoomName: 'Dry Room',
-    locationHistory: [],
-    startDate: '2024-11-15T00:00:00Z',
-    expectedHarvestDate: '2025-02-01T00:00:00Z',
-    actualHarvestDate: '2025-02-01T00:00:00Z',
-    expectedDays: 78,
-    actualDays: 78,
-    actualWetWeightGrams: 32000,
-    projectedYieldGrams: 8000,
-    costs: {
-      seedCloneCost: 320,
-      nutrientCost: 350,
-      laborCost: 1200,
-      utilityCost: 900,
-      facilityCost: 450,
-      equipmentCost: 150,
-      overheadCost: 300,
-      totalDirectCost: 1870,
-      totalIndirectCost: 1800,
-      totalCost: 3670,
-      costAllocations: [],
-    },
-    costPerPlant: 96.58,
-    costPerGram: 0.46,
-    isCompliant: true,
-    harvestEventIds: ['harvest-001'],
-    outputLotIds: ['lot-001', 'lot-002'],
-    createdAt: '2024-11-15T00:00:00Z',
-    createdBy: 'admin',
-    updatedAt: '2025-02-10T00:00:00Z',
-    updatedBy: 'cultivator',
-  },
-];
 
 // Phase badge component
 function PhaseBadge({ phase }: { phase: CultivationPhase }) {
@@ -442,7 +285,16 @@ function KPICard({
 export default function CultivationBatchesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPhase, setSelectedPhase] = useState<CultivationPhase | 'all'>('all');
-  const [batches] = useState(MOCK_BATCHES);
+  
+  // Use shared batch store (single source of truth)
+  const { batches, setBatches } = useBatchStore();
+
+  // Initialize with seed data if empty
+  useEffect(() => {
+    if (batches.length === 0) {
+      setBatches(SEED_BATCHES);
+    }
+  }, [batches.length, setBatches]);
 
   // Calculate phase counts
   const phaseCounts = batches.reduce((acc, batch) => {

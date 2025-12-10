@@ -10,3 +10,7 @@ public interface IReportRepository
     Task UpdateAsync(Report report, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
+
+
+
+

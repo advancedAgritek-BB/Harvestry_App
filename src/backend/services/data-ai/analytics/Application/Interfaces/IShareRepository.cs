@@ -8,3 +8,7 @@ public interface IShareRepository
     Task AddAsync(Share share, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
+
+
+
+

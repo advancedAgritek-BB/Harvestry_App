@@ -103,3 +103,7 @@ CREATE POLICY "Service role can update waitlist entries" ON public.waitlist_entr
 
 COMMENT ON TABLE public.waitlist_entries IS 'Stores early access waitlist signups - Supabase compatible';
 
+
+
+
+

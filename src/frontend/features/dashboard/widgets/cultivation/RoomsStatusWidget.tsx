@@ -21,7 +21,6 @@ const MOCK_ROOMS: RoomSummary[] = [
 
 export function RoomsStatusWidget() {
   return (
-    // Increased grid columns for wider screens to prevent stretching
     <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-3">
       {MOCK_ROOMS.map((room) => (
         <button
@@ -33,31 +32,33 @@ export function RoomsStatusWidget() {
             <span className="text-sm font-bold text-foreground group-hover:text-cyan-400 transition-colors line-clamp-1">
               {room.name}
             </span>
-             {/* Status Dot */}
-             <div className={cn("w-2 h-2 flex-shrink-0 rounded-full ml-2", 
-                room.status === 'healthy' && "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]",
-                room.status === 'warning' && "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.4)]",
-                room.status === 'critical' && "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.4)]"
-             )} />
+            {/* Status Dot */}
+            <div className={cn("w-2 h-2 flex-shrink-0 rounded-full ml-2", 
+              room.status === 'healthy' && "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]",
+              room.status === 'warning' && "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.4)]",
+              room.status === 'critical' && "bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.4)]"
+            )} />
           </div>
 
-          {/* Compact Metric Grid: Keeps labels and values close together */}
-          <div className="grid grid-cols-2 gap-x-2 gap-y-2 text-muted-foreground">
+          {/* TEMP and RH in separate columns */}
+          <div className="flex justify-between gap-4 text-muted-foreground mb-2">
             <div className="flex flex-col">
-               <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">Temp</span>
-               <span className="text-foreground font-bold font-mono text-lg">{room.temp}°F</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">Temp</span>
+              <span className="text-foreground font-bold font-mono text-lg">{room.temp}°F</span>
             </div>
-            <div className="flex flex-col">
-               <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">RH</span>
-               <span className="text-foreground font-bold font-mono text-lg">{room.rh}%</span>
+            <div className="flex flex-col text-right">
+              <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">RH</span>
+              <span className="text-foreground font-bold font-mono text-lg">{room.rh}%</span>
             </div>
-            {room.ec > 0 && (
-              <div className="flex flex-col">
-                 <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">EC</span>
-                 <span className="text-foreground font-bold font-mono text-lg">{room.ec}</span>
-              </div>
-            )}
           </div>
+
+          {/* EC on its own row */}
+          {room.ec > 0 && (
+            <div className="flex flex-col text-muted-foreground">
+              <span className="text-[10px] font-semibold uppercase tracking-wider opacity-80">EC</span>
+              <span className="text-foreground font-bold font-mono text-lg">{room.ec}</span>
+            </div>
+          )}
         </button>
       ))}
     </div>

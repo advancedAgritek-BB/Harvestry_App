@@ -10,3 +10,7 @@ public interface IDashboardRepository
     Task UpdateAsync(Dashboard dashboard, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
+
+
+
+

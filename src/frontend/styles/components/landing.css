@@ -435,13 +435,24 @@
 [data-visible="true"] > *:nth-child(11) { transition-delay: calc(var(--stagger-delay, 100ms) * 10); }
 [data-visible="true"] > *:nth-child(12) { transition-delay: calc(var(--stagger-delay, 100ms) * 11); }
 
-/* ===== SMOOTH SCROLL ===== */
+/* ===== SMOOTH SCROLL & SCROLLBAR RESET ===== */
 
 html {
   scroll-behavior: smooth;
-  /* Reset scrollbar and accent color to browser defaults */
-  /* This prevents Safari from using custom accent colors for the scrollbar */
+}
+
+/*
+ * Reset scrollbar to system/OS defaults for the main document.
+ * By NOT defining ::-webkit-scrollbar rules here, Safari uses native scrollbars.
+ * accent-color: auto ensures form controls and scrollbars don't pick up theme colors.
+ * color-scheme is handled in midnight.css for dark mode support.
+ */
+html,
+body {
   accent-color: auto;
+  /* Standard scrollbar properties - 'auto' uses browser defaults */
+  scrollbar-color: auto;
+  scrollbar-width: auto;
 }
 
 /* ===== FOCUS STYLES ===== */

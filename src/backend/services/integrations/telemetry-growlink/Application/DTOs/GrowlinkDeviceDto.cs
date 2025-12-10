@@ -39,3 +39,7 @@ public sealed record GrowlinkSensorReadingDto(
 public sealed record GrowlinkReadingsBatchDto(
     List<GrowlinkSensorReadingDto> Readings,
     DateTimeOffset FetchedAt);
+
+
+
+

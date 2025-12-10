@@ -17,3 +17,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
     </div>
   );
 }
+
+
+
+

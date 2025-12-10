@@ -46,6 +46,11 @@ interface BlueprintActions {
   setHasUnsavedChanges: (hasChanges: boolean) => void;
   getPhaseBlueprintsForPhase: (phase: PhaseType) => PhaseBlueprint[];
   getBlueprintById: (id: string) => PhaseBlueprint | BatchBlueprint | null;
+  // Genetics matching methods
+  getBlueprintsForGenetics: (geneticsId: string) => BatchBlueprint[];
+  getRecommendedBlueprints: (geneticsId: string | null) => BatchBlueprint[];
+  addGeneticsToBlueprint: (blueprintId: string, geneticsId: string) => void;
+  removeGeneticsFromBlueprint: (blueprintId: string, geneticsId: string) => void;
 }
 
 const createDefaultPhaseBlueprints = (): PhaseBlueprint[] => {
@@ -236,10 +241,92 @@ export const useBlueprintStore = create<BlueprintState & BlueprintActions>()(
           || batchBlueprints.find(bp => bp.id === id) 
           || null;
       },
+      
+      // Get all blueprints associated with a specific genetics
+      getBlueprintsForGenetics: (geneticsId) => {
+        const { batchBlueprints } = get();
+        return batchBlueprints.filter(bp => 
+          bp.geneticsIds?.includes(geneticsId)
+        );
+      },
+      
+      // Get recommended blueprints sorted by relevance to a genetics
+      getRecommendedBlueprints: (geneticsId) => {
+        const { batchBlueprints } = get();
+        
+        if (!geneticsId) {
+          // Return all blueprints, prioritizing defaults
+          return [...batchBlueprints].sort((a, b) => {
+            if (a.isDefault && !b.isDefault) return -1;
+            if (!a.isDefault && b.isDefault) return 1;
+            return 0;
+          });
+        }
+        
+        // Score and sort blueprints
+        const scored = batchBlueprints.map(bp => {
+          let score = 0;
+          
+          // Exact genetics match = highest priority
+          if (bp.geneticsIds?.includes(geneticsId)) {
+            score = 100;
+          }
+          // Strain association = medium priority
+          else if (bp.strainIds && bp.strainIds.length > 0) {
+            score = 50;
+          }
+          // Generic/universal blueprint = base priority
+          else if (!bp.geneticsIds || bp.geneticsIds.length === 0) {
+            score = 25;
+          }
+          
+          // Boost defaults slightly
+          if (bp.isDefault) {
+            score += 10;
+          }
+          
+          return { bp, score };
+        });
+        
+        return scored
+          .sort((a, b) => b.score - a.score)
+          .map(({ bp }) => bp);
+      },
+      
+      // Associate a genetics with a blueprint
+      addGeneticsToBlueprint: (blueprintId, geneticsId) => {
+        set((state) => ({
+          batchBlueprints: state.batchBlueprints.map(bp => {
+            if (bp.id !== blueprintId) return bp;
+            const currentIds = bp.geneticsIds || [];
+            if (currentIds.includes(geneticsId)) return bp;
+            return {
+              ...bp,
+              geneticsIds: [...currentIds, geneticsId],
+              updatedAt: new Date(),
+            };
+          }),
+        }));
+      },
+      
+      // Remove a genetics association from a blueprint
+      removeGeneticsFromBlueprint: (blueprintId, geneticsId) => {
+        set((state) => ({
+          batchBlueprints: state.batchBlueprints.map(bp => {
+            if (bp.id !== blueprintId) return bp;
+            return {
+              ...bp,
+              geneticsIds: (bp.geneticsIds || []).filter(id => id !== geneticsId),
+              updatedAt: new Date(),
+            };
+          }),
+        }));
+      },
     }),
     { name: 'blueprint-store' }
   )
 );
+
 
 
 

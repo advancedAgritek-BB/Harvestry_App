@@ -87,3 +87,7 @@ export interface UpdateDashboardDto {
   isPublic: boolean;
 }
 
+
+
+
+

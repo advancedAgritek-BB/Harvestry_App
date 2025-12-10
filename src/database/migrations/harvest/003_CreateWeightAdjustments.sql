@@ -46,3 +46,7 @@ CREATE INDEX idx_weight_adj_pin ON harvest_weight_adjustments(pin_override_used)
 COMMENT ON TABLE harvest_weight_adjustments IS 'Audit trail for all weight adjustments in harvest workflow';
 COMMENT ON COLUMN harvest_weight_adjustments.reason_code IS 'Reason code: SCALE_ERROR, RECOUNTED, DATA_ENTRY_ERROR, SPILLAGE, etc.';
 COMMENT ON COLUMN harvest_weight_adjustments.pin_override_used IS 'TRUE if user entered PIN to override a locked weight';
+
+
+
+

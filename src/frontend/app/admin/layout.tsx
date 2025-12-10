@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   Settings,
   Play,
+  Tag,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth';
 import { AuthGuard } from '@/components/auth';
@@ -65,6 +66,13 @@ const ADMIN_TABS: AdminTab[] = [
     href: '/admin/inventory',
     icon: Package,
     description: 'UoM, Label Templates, Barcodes',
+  },
+  {
+    id: 'batch-naming',
+    label: 'Batch Naming',
+    href: '/admin/batch-naming',
+    icon: Tag,
+    description: 'Auto-generation rules, Templates',
   },
   {
     id: 'compliance',

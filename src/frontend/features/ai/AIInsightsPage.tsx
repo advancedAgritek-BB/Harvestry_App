@@ -22,3 +22,7 @@ export function AIInsightsPage() {
 }
 
 export default AIInsightsPage;
+
+
+
+

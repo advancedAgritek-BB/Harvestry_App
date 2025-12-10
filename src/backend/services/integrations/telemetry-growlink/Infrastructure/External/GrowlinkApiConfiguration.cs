@@ -67,3 +67,7 @@ public sealed class GrowlinkApiConfiguration
     /// </summary>
     public bool EnableDetailedLogging { get; set; } = false;
 }
+
+
+
+

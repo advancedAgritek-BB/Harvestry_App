@@ -70,3 +70,7 @@ COMMENT ON COLUMN harvests.usable_flower_percent IS 'Calculated: bucked flower /
 COMMENT ON COLUMN harvests.total_waste_percent IS 'Calculated: total waste / wet * 100';
 COMMENT ON COLUMN harvests.wet_weight_locked IS 'When true, wet weight requires PIN override to adjust';
 COMMENT ON COLUMN harvests.dry_weight_locked IS 'When true, dry weight requires PIN override to adjust';
+
+
+
+

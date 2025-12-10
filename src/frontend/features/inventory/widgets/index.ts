@@ -9,3 +9,6 @@ export { ActiveHoldsWidget } from './ActiveHoldsWidget';
 export { RecentMovementsWidget } from './RecentMovementsWidget';
 export { LocationTreeWidget } from './LocationTreeWidget';
 export { BalanceAlertWidget } from './BalanceAlertWidget';
+export { FinancialMetricsWidget } from './FinancialMetricsWidget';
+export { AgingAnalysisWidget } from './AgingAnalysisWidget';
+export { TurnoverWidget } from './TurnoverWidget';

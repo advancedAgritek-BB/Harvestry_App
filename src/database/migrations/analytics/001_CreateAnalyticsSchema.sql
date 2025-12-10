@@ -130,3 +130,7 @@ CREATE TRIGGER reports_updated_at BEFORE UPDATE ON analytics.reports
 
 CREATE TRIGGER dashboards_updated_at BEFORE UPDATE ON analytics.dashboards
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+
+

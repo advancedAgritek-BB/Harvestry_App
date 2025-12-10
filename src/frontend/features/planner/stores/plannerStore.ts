@@ -82,6 +82,12 @@ interface PlannerState {
   recalculateConflicts: () => void;
   dismissConflict: (conflictId: string) => void;
   
+  // Actions - Conflict Resolution
+  changePhaseRoom: (batchId: string, phaseId: string, newRoomId: string) => void;
+  updateBatchPlantCount: (batchId: string, newPlantCount: number) => void;
+  splitBatch: (batchId: string, splitConfig: { plantCount: number; suffix: string }[]) => string[];
+  shiftBatchSchedule: (batchId: string, daysDelta: number) => void;
+  
   // Actions - Data Loading
   setRooms: (rooms: Room[]) => void;
   setBatches: (batches: PlannedBatch[]) => void;
@@ -362,6 +368,102 @@ export const usePlannerStore = create<PlannerState>()(
       dismissConflict: (conflictId) => set((state) => ({
         conflicts: state.conflicts.filter((c) => c.id !== conflictId),
       })),
+
+      // Conflict resolution actions
+      changePhaseRoom: (batchId, phaseId, newRoomId) => {
+        const state = get();
+        const room = state.rooms.find((r) => r.id === newRoomId);
+        if (!room) return;
+
+        set((s) => ({
+          batches: s.batches.map((b) =>
+            b.id === batchId
+              ? {
+                  ...b,
+                  updatedAt: new Date(),
+                  phases: b.phases.map((p) =>
+                    p.id === phaseId
+                      ? { ...p, roomId: newRoomId, roomName: room.name }
+                      : p
+                  ),
+                }
+              : b
+          ),
+        }));
+      },
+
+      updateBatchPlantCount: (batchId, newPlantCount) => set((state) => ({
+        batches: state.batches.map((b) =>
+          b.id === batchId
+            ? { ...b, plantCount: newPlantCount, updatedAt: new Date() }
+            : b
+        ),
+      })),
+
+      splitBatch: (batchId, splitConfig) => {
+        const state = get();
+        const originalBatch = state.batches.find((b) => b.id === batchId);
+        if (!originalBatch) return [];
+
+        const newBatchIds: string[] = [];
+        const newBatches: PlannedBatch[] = [];
+
+        // Create new batches from split config
+        splitConfig.forEach((config, index) => {
+          const newId = `batch-${Date.now()}-${index}`;
+          newBatchIds.push(newId);
+
+          const newBatch: PlannedBatch = {
+            ...originalBatch,
+            id: newId,
+            name: `${originalBatch.name}${config.suffix}`,
+            code: `${originalBatch.code}${config.suffix}`,
+            plantCount: config.plantCount,
+            status: 'planned',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            phases: originalBatch.phases.map((p) => ({
+              ...p,
+              id: `phase-${Date.now()}-${index}-${p.phase}`,
+              actualStart: undefined,
+              actualEnd: undefined,
+            })),
+          };
+
+          newBatches.push(newBatch);
+        });
+
+        set((s) => ({
+          batches: [
+            ...s.batches.filter((b) => b.id !== batchId), // Remove original
+            ...newBatches, // Add new split batches
+          ],
+          selectedBatchId: newBatchIds[0] || null, // Select first new batch
+        }));
+
+        return newBatchIds;
+      },
+
+      shiftBatchSchedule: (batchId, daysDelta) => {
+        if (daysDelta === 0) return;
+
+        set((state) => ({
+          batches: state.batches.map((b) =>
+            b.id === batchId
+              ? {
+                  ...b,
+                  updatedAt: new Date(),
+                  phases: b.phases.map((p) => ({
+                    ...p,
+                    plannedStart: addDays(p.plannedStart, daysDelta),
+                    plannedEnd: addDays(p.plannedEnd, daysDelta),
+                    // Keep actual dates as is - only shift planned
+                  })),
+                }
+              : b
+          ),
+        }));
+      },
 
       // Data loading actions
       setRooms: (rooms) => set({ rooms }),

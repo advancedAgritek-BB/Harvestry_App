@@ -61,3 +61,7 @@ COMMENT ON COLUMN scale_readings.calibration_was_valid IS 'Whether scale was wit
 COMMENT ON COLUMN scale_readings.is_stable IS 'Whether scale reported stable weight';
 COMMENT ON COLUMN scale_readings.stability_duration_ms IS 'How long weight was stable before capture (milliseconds)';
 COMMENT ON COLUMN scale_readings.raw_scale_data_json IS 'Raw response from scale in JSON format';
+
+
+
+

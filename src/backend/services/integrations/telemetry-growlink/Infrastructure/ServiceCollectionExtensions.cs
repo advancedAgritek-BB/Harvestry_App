@@ -69,3 +69,7 @@ public static class ServiceCollectionExtensions
             .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30));
     }
 }
+
+
+
+

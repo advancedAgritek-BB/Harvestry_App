@@ -228,3 +228,7 @@ public sealed class ScaleCalibration : Entity<Guid>
         };
     }
 }
+
+
+
+

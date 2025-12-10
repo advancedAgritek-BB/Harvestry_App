@@ -72,3 +72,7 @@ HydroCore v2 is designed to take over *control* of existing fertigation skids.
 *   **Safety:** UL 508A Listed Component (Planned).
 *   **EMI/EMC:** FCC Part 15 Class B.
 *   **Ingress:** IP66 / NEMA 4X.
+
+
+
+

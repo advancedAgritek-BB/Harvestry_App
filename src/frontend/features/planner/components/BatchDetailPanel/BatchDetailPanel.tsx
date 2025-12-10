@@ -21,8 +21,9 @@ import {
   FileText,
   Settings,
   LayoutGrid,
+  TreeDeciduous,
 } from 'lucide-react';
-import { PlannedBatch, BatchPhase, PhaseType, PlannerConflict } from '../../types/planner.types';
+import { PlannedBatch, BatchPhase, PhaseType, PlannerConflict, Room } from '../../types/planner.types';
 import { PhaseBlueprint } from '../../types/blueprint.types';
 import { PHASE_CONFIGS, PHASE_ORDER } from '../../constants/phaseConfig';
 import { formatDuration } from '../../utils/dateUtils';
@@ -30,6 +31,8 @@ import { getBatchConflicts } from '../../utils/conflictDetection';
 import { BlueprintSelector } from '../BlueprintSelector';
 import { ParameterEditor } from '../ParameterEditor';
 import { useBlueprintStore } from '../../stores/blueprintStore';
+import { PlantsPanelTab } from '@/features/plants/components/PlantsPanelTab';
+import { ConflictResolutionPanel, ConflictResolution } from '../ConflictResolutionPanel';
 import { differenceInDays, format } from 'date-fns';
 
 const PHASE_ICONS: Record<PhaseType, React.ElementType> = {
@@ -40,28 +43,34 @@ const PHASE_ICONS: Record<PhaseType, React.ElementType> = {
   cure: Package,
 };
 
-type TabType = 'overview' | 'blueprint';
+type TabType = 'overview' | 'plants' | 'blueprint';
 
 interface BatchDetailPanelProps {
   batch: PlannedBatch | null;
   conflicts: PlannerConflict[];
+  rooms: Room[];
   isOpen: boolean;
   onClose: () => void;
   onEdit?: (batch: PlannedBatch) => void;
   onDuplicate?: (batch: PlannedBatch) => void;
   onDelete?: (batch: PlannedBatch) => void;
   onEditPhase?: (batchId: string, phaseId: string) => void;
+  onResolveConflict?: (resolution: ConflictResolution) => void;
+  onViewAffectedBatches?: (batchIds: string[]) => void;
 }
 
 export function BatchDetailPanel({
   batch,
   conflicts,
+  rooms,
   isOpen,
   onClose,
   onEdit,
   onDuplicate,
   onDelete,
   onEditPhase,
+  onResolveConflict,
+  onViewAffectedBatches,
 }: BatchDetailPanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [selectedPhase, setSelectedPhase] = useState<PhaseType>('veg');
@@ -142,36 +151,63 @@ export function BatchDetailPanel({
   };
 
   return (
-    <div 
-      className={cn(
-        'fixed top-0 right-0 h-full w-[420px] bg-surface border-l border-border shadow-2xl z-40',
-        'transform transition-transform duration-300 ease-out',
-        isOpen ? 'translate-x-0' : 'translate-x-full'
+    <>
+      {/* Backdrop for click-outside-to-close */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 top-[72px] z-30"
+          onClick={onClose}
+          aria-hidden="true"
+        />
       )}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div 
-            className={cn(
-              'w-2 h-2 rounded-full',
-              batch.status === 'active' && 'bg-emerald-500',
-              batch.status === 'planned' && 'bg-cyan-500',
-              batch.status === 'completed' && 'bg-muted-foreground',
-              batch.status === 'cancelled' && 'bg-red-500'
-            )}
-          />
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            {batch.status}
-          </span>
-        </div>
+      
+      <div 
+        className={cn(
+          'fixed top-[72px] right-0 h-[calc(100vh-72px)] w-[420px] bg-surface border-l border-border shadow-2xl z-40',
+          'transform transition-transform duration-300 ease-out',
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        )}
+      >
+        {/* Collapse Button - Left Edge */}
         <button
           onClick={onClose}
-          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+          className={cn(
+            'absolute -left-8 top-1/2 -translate-y-1/2 z-50',
+            'w-7 h-14 rounded-l-lg',
+            'bg-surface border border-border border-r-0',
+            'flex items-center justify-center',
+            'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+            'transition-colors shadow-lg'
+          )}
+          aria-label="Collapse panel"
         >
-          <X className="w-4 h-4" />
+          <ChevronRight className="w-4 h-4" />
         </button>
-      </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <div 
+              className={cn(
+                'w-2 h-2 rounded-full',
+                batch.status === 'active' && 'bg-emerald-500',
+                batch.status === 'planned' && 'bg-cyan-500',
+                batch.status === 'completed' && 'bg-muted-foreground',
+                batch.status === 'cancelled' && 'bg-red-500'
+              )}
+            />
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">
+              {batch.status}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-md transition-colors border border-transparent hover:border-border"
+            aria-label="Close panel"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
       {/* Tabs */}
       <div className="flex border-b border-border">
@@ -186,6 +222,18 @@ export function BatchDetailPanel({
         >
           <LayoutGrid className="w-4 h-4" />
           Overview
+        </button>
+        <button
+          onClick={() => setActiveTab('plants')}
+          className={cn(
+            'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors',
+            activeTab === 'plants'
+              ? 'text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5'
+              : 'text-muted-foreground hover:text-foreground/70'
+          )}
+        >
+          <TreeDeciduous className="w-4 h-4" />
+          Plants
         </button>
         <button
           onClick={() => setActiveTab('blueprint')}
@@ -203,7 +251,13 @@ export function BatchDetailPanel({
 
       {/* Content */}
       <div className="flex flex-col h-[calc(100%-180px)] overflow-y-auto">
-        {activeTab === 'overview' ? (
+        {activeTab === 'plants' ? (
+          <PlantsPanelTab
+            batchId={batch.id}
+            batchStatus={batch.status}
+            plannedPlantCount={batch.plantCount}
+          />
+        ) : activeTab === 'overview' ? (
           <>
             {/* Batch Info */}
             <div className="p-4 border-b border-border/50">
@@ -229,27 +283,16 @@ export function BatchDetailPanel({
               </div>
             </div>
 
-            {/* Conflicts Warning */}
+            {/* Conflicts Warning with Resolution Options */}
             {hasConflicts && (
-              <div className="mx-4 mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <div className="flex items-center gap-2 text-red-400 mb-2">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    {batchConflicts.length} {batchConflicts.length === 1 ? 'Conflict' : 'Conflicts'}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  {batchConflicts.slice(0, 3).map((conflict) => (
-                    <p key={conflict.id} className="text-xs text-red-300/80">
-                      {conflict.message}
-                    </p>
-                  ))}
-                  {batchConflicts.length > 3 && (
-                    <p className="text-xs text-red-400">
-                      +{batchConflicts.length - 3} more
-                    </p>
-                  )}
-                </div>
+              <div className="mx-4 mt-4">
+                <ConflictResolutionPanel
+                  conflicts={batchConflicts}
+                  batch={batch}
+                  rooms={rooms}
+                  onResolve={(resolution) => onResolveConflict?.(resolution)}
+                  onViewAffectedBatches={onViewAffectedBatches}
+                />
               </div>
             )}
 
@@ -415,34 +458,35 @@ export function BatchDetailPanel({
         )}
       </div>
 
-      {/* Actions Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-surface">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onEdit?.(batch)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-cyan-500 hover:bg-cyan-400 rounded-lg transition-colors"
-          >
-            <Edit3 className="w-4 h-4" />
-            Edit Batch
-          </button>
-          
-          <button
-            onClick={() => onDuplicate?.(batch)}
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-            title="Duplicate"
-          >
-            <Copy className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={() => onDelete?.(batch)}
-            className="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+        {/* Actions Footer */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-surface">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onEdit?.(batch)}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-cyan-500 hover:bg-cyan-400 rounded-lg transition-colors"
+            >
+              <Edit3 className="w-4 h-4" />
+              Edit Batch
+            </button>
+            
+            <button
+              onClick={() => onDuplicate?.(batch)}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+              title="Duplicate"
+            >
+              <Copy className="w-4 h-4" />
+            </button>
+            
+            <button
+              onClick={() => onDelete?.(batch)}
+              className="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

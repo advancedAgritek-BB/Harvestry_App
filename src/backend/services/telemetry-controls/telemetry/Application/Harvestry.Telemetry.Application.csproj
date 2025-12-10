@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Harvestry.Telemetry.Domain.csproj" />
+    <ProjectReference Include="..\..\..\..\..\shared\utilities\Harvestry.Shared.Utilities.csproj" />
   </ItemGroup>
 
   <ItemGroup>

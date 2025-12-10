@@ -33,3 +33,7 @@
   <!-- Small leaf detail growing from H -->
   <ellipse cx="16" cy="9" rx="2.5" ry="1.5" fill="url(#stemGrad)" transform="rotate(-10 16 9)"/>
 </svg>
+
+
+
+

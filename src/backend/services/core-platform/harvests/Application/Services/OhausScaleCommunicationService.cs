@@ -453,3 +453,7 @@ internal class UsbScaleConnection : IScaleConnection
 }
 
 #endregion
+
+
+
+

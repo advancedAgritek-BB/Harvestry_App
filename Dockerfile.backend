@@ -20,3 +20,7 @@ EXPOSE 80
 
 # The entrypoint is 'dotnet', the command (DLL name) is passed via docker-compose
 ENTRYPOINT ["dotnet"]
+
+
+
+

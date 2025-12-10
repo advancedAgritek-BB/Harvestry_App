@@ -43,3 +43,7 @@ The fonts are configured in `src/frontend/app/layout.tsx` via `next/font` and ma
 
 
 
+
+
+
+

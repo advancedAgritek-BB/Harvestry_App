@@ -26,3 +26,7 @@ public record UpdateDashboardDto(
     List<DashboardWidget> LayoutConfig,
     bool IsPublic
 );
+
+
+
+

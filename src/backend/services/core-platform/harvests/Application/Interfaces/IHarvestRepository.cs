@@ -226,3 +226,7 @@ public interface IScaleReadingRepository
         ScaleReading scaleReading,
         CancellationToken cancellationToken = default);
 }
+
+
+
+

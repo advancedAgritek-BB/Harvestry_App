@@ -13,3 +13,8 @@ export * from './labels.service';
 export * from './product.service';
 export * from './bom.service';
 export * from './production.service';
+
+// WMS
+export * from './packages.service';
+export * from './financial.service';
+export * from './location.service';

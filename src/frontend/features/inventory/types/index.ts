@@ -20,3 +20,6 @@ export * from './lineage.types';
 
 // Harvest workflow
 export * from './harvest-workflow.types';
+
+// Financial metrics
+export * from './financial.types';

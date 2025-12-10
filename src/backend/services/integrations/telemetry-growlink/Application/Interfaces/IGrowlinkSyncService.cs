@@ -20,3 +20,7 @@ public interface IGrowlinkSyncService
     Task<List<GrowlinkSyncResultDto>> SyncAllSitesAsync(
         CancellationToken cancellationToken = default);
 }
+
+
+
+

@@ -12,11 +12,13 @@ using Harvestry.Telemetry.Application.Services.Simulation;
 using Harvestry.Telemetry.Infrastructure.Persistence;
 using Harvestry.Telemetry.Infrastructure.Configuration;
 using Harvestry.Telemetry.Infrastructure.Realtime;
+using Harvestry.Telemetry.Infrastructure.Insights;
 using Harvestry.Telemetry.Infrastructure.Repositories;
 using Harvestry.Telemetry.Infrastructure.Workers;
 using System.Threading.RateLimiting;
 using Harvestry.Shared.Observability;
 using Harvestry.Shared.Observability.Tracing;
+using Harvestry.Shared.Utilities.Llm;
 using HealthChecks.NpgSql;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -138,6 +140,11 @@ builder.Services.AddDbContext<TelemetryDbContext>((serviceProvider, options) =>
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(TelemetryMappingProfile));
 
+// LLM gateway + prompt toolkit
+builder.Services.AddLlmPromptToolkit();
+builder.Services.AddLlmGateway(builder.Configuration);
+builder.Services.AddDataQaFiltering(builder.Configuration);
+
 // Real-time infrastructure
 builder.Services.AddSingleton<ITelemetrySubscriptionRegistry, TelemetrySubscriptionRegistry>();
 
@@ -155,6 +162,8 @@ builder.Services.AddScoped<IIngestionErrorRepository, IngestionErrorRepository>(
 builder.Services.AddScoped<ISensorReadingRepository, SensorReadingRepository>();
 builder.Services.AddScoped<IAlertInstanceRepository, AlertInstanceRepository>();
 builder.Services.AddScoped<ITelemetryQueryRepository, TelemetryQueryRepository>();
+builder.Services.AddScoped<ICultivationInsightService, CultivationInsightService>();
+builder.Services.AddSingleton<ICultivationInsightProvider, StubCultivationInsightProvider>();
 
 // Repositories
 builder.Services.AddScoped<ISensorStreamRepository, SensorStreamRepository>();
@@ -169,6 +178,7 @@ builder.Services.AddHostedService<MqttTelemetryWorker>();
 builder.Services.AddHostedService<WalFanoutWorker>();
 builder.Services.AddHostedService<TelemetrySubscriptionMonitorWorker>();
 builder.Services.AddHostedService<TelemetrySimulationWorker>();
+builder.Services.AddHostedService<CultivationInsightsWorker>();
 
 // Logging
 builder.Logging.ClearProviders();

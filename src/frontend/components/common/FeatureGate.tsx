@@ -107,3 +107,7 @@ export function FeatureGateBadge({ feature, className }: FeatureGateBadgeProps) 
     </span>
   );
 }
+
+
+
+

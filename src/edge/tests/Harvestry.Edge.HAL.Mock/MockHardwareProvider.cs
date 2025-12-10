@@ -77,3 +77,7 @@ public class MockHardwareProvider : IHardwareProvider
         return _digitalPins.TryGetValue(pinNumber, out var val) ? val : PinValue.Low;
     }
 }
+
+
+
+

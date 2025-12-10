@@ -6,3 +6,7 @@ public interface IQueryBuilderService
 {
     Task<IEnumerable<dynamic>> ExecuteQueryAsync(ReportConfig config, Guid userId, CancellationToken cancellationToken = default);
 }
+
+
+
+

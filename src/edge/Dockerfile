@@ -39,3 +39,7 @@ EXPOSE 5000
 # RUN apt-get update && apt-get install -y libgpiod-dev i2c-tools
 
 ENTRYPOINT ["dotnet", "Harvestry.Edge.API.dll"]
+
+
+
+

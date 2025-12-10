@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Thermometer, Droplets, Sun, Wind, Activity, Wifi, WifiOff, Settings2 } from 'lucide-react';
+import { Thermometer, Droplets, Sun, Wind, Activity, Wifi, WifiOff, Settings2, ArrowUp, ArrowDown } from 'lucide-react';
 import { SensorSelectorModal } from './SensorSelectorModal';
 import { useCanConfigureSensors } from '@/stores/auth/authStore';
 import { simulationService, StreamType } from '@/features/telemetry/services/simulation.service';
+import { ClickableMetricCard } from './ClickableMetricCard';
 import {
   SensorAssignment,
   SensorMetricType,
@@ -37,127 +38,8 @@ const defaultAssignments: MetricAssignments = {
   VWC: null,
 };
 
-interface ClickableMetricCardProps {
-  title: string;
-  metric: SensorMetricType;
-  assignment: SensorAssignment | null;
-  fallbackValue: number;
-  unit: string;
-  icon: React.ReactNode;
-  iconColor: string;
-  status?: 'normal' | 'warning' | 'critical';
-  subValue?: React.ReactNode;
-  onConfigureClick: () => void;
-  /** Whether user has permission to configure sensors */
-  canConfigure?: boolean;
-}
-
-function ClickableMetricCard({
-  title,
-  metric,
-  assignment,
-  fallbackValue,
-  unit,
-  icon,
-  iconColor,
-  status = 'normal',
-  subValue,
-  onConfigureClick,
-  canConfigure = true,
-}: ClickableMetricCardProps) {
-  const reading = getMetricReading(metric, assignment, fallbackValue);
-  const config = METRIC_CONFIGS[metric];
-
-  return (
-    <div 
-      className={cn(
-        "flex flex-col p-4 bg-surface/50 border rounded-xl backdrop-blur-sm transition-all duration-200",
-        status === 'normal' && "border-border hover:border-border/80",
-        status === 'warning' && "border-amber-500/50 bg-amber-500/5",
-        status === 'critical' && "border-rose-500/50 bg-rose-500/5"
-      )}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-base font-bold text-muted-foreground uppercase tracking-wider">{title}</span>
-        <div className={cn(
-          "w-4 h-4",
-          status === 'normal' && "",
-          status === 'warning' && "text-amber-500",
-          status === 'critical' && "text-rose-500"
-        )} style={{ color: status === 'normal' ? iconColor : undefined }}>
-          {icon}
-        </div>
-      </div>
-      
-      {/* Value - Clickable only if user has permission */}
-      {canConfigure ? (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onConfigureClick();
-          }}
-          className="flex items-baseline gap-1 group text-left hover:bg-cyan-500/10 rounded px-2 -mx-2 py-1 transition-all cursor-pointer"
-          title={`Click to configure ${title} sensor`}
-        >
-          <span className="text-2xl font-bold text-foreground tracking-tight group-hover:text-cyan-400 transition-colors">
-            {reading.value.toFixed(config.decimals)}
-          </span>
-          <span className="text-xs font-medium text-muted-foreground">{unit}</span>
-          
-          {/* Source label */}
-          {reading.label && (
-            <span className="text-[9px] text-muted-foreground opacity-70 ml-1">
-              ({reading.label})
-            </span>
-          )}
-          
-          {/* Live indicator */}
-          {assignment && assignment.sensorIds.length > 0 && (
-            reading.isLive ? (
-              <Wifi className="w-2.5 h-2.5 text-emerald-400 opacity-60 ml-1" />
-            ) : (
-              <WifiOff className="w-2.5 h-2.5 text-amber-400 opacity-60 ml-1" />
-            )
-          )}
-          
-          {/* Configure hint */}
-          <Settings2 className="w-3 h-3 text-cyan-400 opacity-0 group-hover:opacity-60 ml-auto transition-opacity" />
-        </button>
-      ) : (
-        <div className="flex items-baseline gap-1 px-2 -mx-2 py-1">
-          <span className="text-2xl font-bold text-foreground tracking-tight">
-            {reading.value.toFixed(config.decimals)}
-          </span>
-          <span className="text-xs font-medium text-muted-foreground">{unit}</span>
-          
-          {/* Source label */}
-          {reading.label && (
-            <span className="text-[9px] text-muted-foreground opacity-70 ml-1">
-              ({reading.label})
-            </span>
-          )}
-          
-          {/* Live indicator */}
-          {assignment && assignment.sensorIds.length > 0 && (
-            reading.isLive ? (
-              <Wifi className="w-2.5 h-2.5 text-emerald-400 opacity-60 ml-1" />
-            ) : (
-              <WifiOff className="w-2.5 h-2.5 text-amber-400 opacity-60 ml-1" />
-            )
-          )}
-        </div>
-      )}
-      
-      {subValue && (
-        <div className="mt-auto pt-2">
-          {subValue}
-        </div>
-      )}
-    </div>
-  );
-}
+const SIM_POLL_INTERVAL_MS = 10000;
+const SIM_SMOOTHING_FACTOR = 0.25;
 
 export function EnvironmentalMetricsWidget() {
   const [lightMode, setLightMode] = useState<'DLI' | 'PPFD'>('DLI');
@@ -183,6 +65,21 @@ export function EnvironmentalMetricsWidget() {
     VWC: simulatedValues.VWC ?? 55,
   };
 
+  const temperatureReading = getMetricReading(
+    'Temperature',
+    assignments.Temperature,
+    fallbackMetrics.Temperature
+  );
+  const [temperatureDailyHigh, setTemperatureDailyHigh] = useState<number>(temperatureReading.value);
+  const [temperatureDailyLow, setTemperatureDailyLow] = useState<number>(temperatureReading.value);
+  const humidityReading = getMetricReading(
+    'Humidity',
+    assignments.Humidity,
+    fallbackMetrics.Humidity
+  );
+  const [humidityDailyHigh, setHumidityDailyHigh] = useState<number>(humidityReading.value);
+  const [humidityDailyLow, setHumidityDailyLow] = useState<number>(humidityReading.value);
+
   // Start simulations on mount
   useEffect(() => {
     const startSimulations = async () => {
@@ -205,7 +102,7 @@ export function EnvironmentalMetricsWidget() {
 
     startSimulations();
 
-    // Poll for updates every second for smooth visuals
+    // Poll less frequently and smooth values to avoid rapid jitter
     const interval = setInterval(async () => {
       try {
         const activeSims = await simulationService.getActive();
@@ -230,14 +127,38 @@ export function EnvironmentalMetricsWidget() {
           }
         });
         
-        setSimulatedValues(prev => ({ ...prev, ...newValues }));
+        setSimulatedValues(prev => {
+          if (Object.keys(newValues).length === 0) {
+            return prev;
+          }
+
+          const next = { ...prev };
+          Object.entries(newValues).forEach(([key, val]) => {
+            const previous = prev[key] ?? val;
+            next[key] = previous + (val - previous) * SIM_SMOOTHING_FACTOR;
+          });
+
+          return next;
+        });
       } catch (err) {
         console.error('Failed to poll active simulations:', err);
       }
-    }, 1000);
+    }, SIM_POLL_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, []);
+
+  // Track session high/low for temperature using the latest reading
+  useEffect(() => {
+    setTemperatureDailyHigh((prev) => Math.max(prev, temperatureReading.value));
+    setTemperatureDailyLow((prev) => Math.min(prev, temperatureReading.value));
+  }, [temperatureReading.value]);
+
+  // Track session high/low for humidity using the latest reading
+  useEffect(() => {
+    setHumidityDailyHigh((prev) => Math.max(prev, humidityReading.value));
+    setHumidityDailyLow((prev) => Math.min(prev, humidityReading.value));
+  }, [humidityReading.value]);
 
   const co2Reading = getMetricReading('CO2', assignments.CO2, fallbackMetrics.CO2);
   const isCo2Warning = co2Reading.value < 900 || co2Reading.value > 1200;
@@ -273,6 +194,18 @@ export function EnvironmentalMetricsWidget() {
           unit="°F"
           icon={<Thermometer />}
           iconColor="#22d3ee"
+          middleValue={
+            <div className="flex items-center gap-4 text-xs text-muted-foreground opacity-80">
+              <span className="flex items-center gap-1">
+                <ArrowUp className="w-3 h-3 text-amber-500 opacity-70" />
+                <span className="text-foreground">{temperatureDailyHigh.toFixed(1)}°F</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <ArrowDown className="w-3 h-3 text-sky-400 opacity-70" />
+                <span className="text-foreground">{temperatureDailyLow.toFixed(1)}°F</span>
+              </span>
+            </div>
+          }
           onConfigureClick={() => openModal('Temperature')}
           canConfigure={canConfigureSensors}
           subValue={
@@ -305,6 +238,18 @@ export function EnvironmentalMetricsWidget() {
           unit="%"
           icon={<Droplets />}
           iconColor="#a78bfa"
+        middleValue={
+          <div className="flex items-center gap-4 text-xs text-muted-foreground opacity-80">
+            <span className="flex items-center gap-1">
+              <ArrowUp className="w-3 h-3 text-amber-500 opacity-70" />
+              <span className="text-foreground">{humidityDailyHigh.toFixed(0)}%</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <ArrowDown className="w-3 h-3 text-sky-400 opacity-70" />
+              <span className="text-foreground">{humidityDailyLow.toFixed(0)}%</span>
+            </span>
+          </div>
+        }
           onConfigureClick={() => openModal('Humidity')}
           canConfigure={canConfigureSensors}
           subValue={

@@ -53,3 +53,7 @@ COMMENT ON COLUMN scale_calibrations.calibration_type IS 'Type: internal, extern
 COMMENT ON COLUMN scale_calibrations.test_weights_used_json IS 'JSON array of test weights: [{nominal, actual, measured}]';
 COMMENT ON COLUMN scale_calibrations.deviation_grams IS 'Maximum deviation from standard in grams';
 COMMENT ON COLUMN scale_calibrations.deviation_percent IS 'Maximum deviation as percentage';
+
+
+
+

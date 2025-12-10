@@ -319,3 +319,7 @@ public sealed class ScaleDevice : Entity<Guid>
         };
     }
 }
+
+
+
+

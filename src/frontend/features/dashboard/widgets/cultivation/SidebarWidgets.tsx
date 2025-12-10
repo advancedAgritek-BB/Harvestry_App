@@ -10,12 +10,18 @@ import { useAlertsStore } from '@/stores/alertsStore';
 export function ActiveAlertsListWidget() {
   const alerts = useAlertsStore((state) => state.alerts);
   const dismissAlert = useAlertsStore((state) => state.dismissAlert);
+  const hasAlerts = alerts.some(a => !a.dismissed);
   
   // Filter to only show non-dismissed alerts
   const activeAlerts = alerts.filter(a => !a.dismissed).slice(0, 5);
 
   return (
-    <div className="flex flex-col h-full min-h-[200px] bg-surface/50 border border-border rounded-xl p-3">
+    <div
+      className={cn(
+        "flex flex-col bg-surface/50 border border-border rounded-xl p-3",
+        hasAlerts ? "min-h-[220px]" : "min-h-[280px]"
+      )}
+    >
        <div className="flex items-center justify-between mb-3">
          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
            <Bell className="w-4 h-4 text-rose-500" />
@@ -24,46 +30,48 @@ export function ActiveAlertsListWidget() {
          <span className="px-2 py-0.5 bg-muted rounded-full text-xs font-bold text-foreground">{activeAlerts.length}</span>
        </div>
 
-       <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
-         {activeAlerts.length === 0 ? (
-           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-             No active alerts
-           </div>
-         ) : (
-           activeAlerts.map(alert => (
-             <div key={alert.id} className="group p-3 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
-               <div className="flex items-center gap-2 mb-1.5">
-                  <span className={cn(
-                    "px-1.5 py-0.5 text-[10px] font-bold uppercase rounded tracking-wide",
-                    alert.severity === 'critical' ? "bg-rose-500 text-foreground" : 
-                    alert.severity === 'warning' ? "bg-amber-500 text-black" :
-                    "bg-cyan-500 text-black"
-                  )}>
-                    {alert.severity}
-                  </span>
-                  <span className="text-xs text-muted-foreground ml-auto">
-                    {formatTimeAgo(alert.timestamp)}
-                  </span>
-               </div>
-               <h4 className="text-sm font-bold text-foreground leading-tight mb-1 truncate">{alert.title}</h4>
-               <p className="text-xs text-muted-foreground leading-snug mb-2 line-clamp-2">{alert.source}</p>
-               
-               {/* Actions */}
-               <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                  <button 
-                    onClick={() => dismissAlert(alert.id)}
-                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-muted hover:bg-emerald-500/20 hover:text-emerald-400 text-xs text-foreground/70 transition-colors"
-                  >
-                    <CheckCircle2 className="w-3 h-3" /> Ack
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-muted hover:bg-blue-500/20 hover:text-blue-400 text-xs text-foreground/70 transition-colors">
-                    <User className="w-3 h-3" /> Delegate
-                  </button>
-               </div>
-             </div>
-           ))
-         )}
-       </div>
+      <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar">
+        {activeAlerts.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center text-muted-foreground text-sm text-center">
+            No active alerts
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {activeAlerts.map(alert => (
+              <div key={alert.id} className="group p-3 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-2 mb-1.5">
+                   <span className={cn(
+                     "px-1.5 py-0.5 text-[10px] font-bold uppercase rounded tracking-wide",
+                     alert.severity === 'critical' ? "bg-rose-500 text-foreground" : 
+                     alert.severity === 'warning' ? "bg-amber-500 text-black" :
+                     "bg-cyan-500 text-black"
+                   )}>
+                     {alert.severity}
+                   </span>
+                   <span className="text-xs text-muted-foreground ml-auto">
+                     {formatTimeAgo(alert.timestamp)}
+                   </span>
+                </div>
+                <h4 className="text-sm font-bold text-foreground leading-tight mb-1 truncate">{alert.title}</h4>
+                <p className="text-xs text-muted-foreground leading-snug mb-2 line-clamp-2">{alert.source}</p>
+                
+                {/* Actions */}
+                <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                   <button 
+                     onClick={() => dismissAlert(alert.id)}
+                     className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-muted hover:bg-emerald-500/20 hover:text-emerald-400 text-xs text-foreground/70 transition-colors"
+                   >
+                     <CheckCircle2 className="w-3 h-3" /> Ack
+                   </button>
+                   <button className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-muted hover:bg-blue-500/20 hover:text-blue-400 text-xs text-foreground/70 transition-colors">
+                     <User className="w-3 h-3" /> Delegate
+                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

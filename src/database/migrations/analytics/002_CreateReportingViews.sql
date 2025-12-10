@@ -70,3 +70,7 @@ BEGIN
         GRANT USAGE ON SCHEMA analytics TO harvestry_app;
     END IF;
 END $$;
+
+
+
+

@@ -55,3 +55,7 @@ For Enterprise deployments, we enforce strict VLAN separation.
 ### 5.2 Encryption on the Wire
 *   **EdgePods:** CoAP payloads are encrypted with DTLS (Pre-Shared Key derived during pairing).
 *   **SkidLink:** If Modbus/TCP is unencrypted (standard), it *must* stay on the physical OT VLAN.
+
+
+
+

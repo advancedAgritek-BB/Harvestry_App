@@ -3,6 +3,7 @@
 import { Header, Sidebar } from '@/components/navigation';
 import { AuthGuard } from '@/components/auth';
 import { DemoControlPanel } from '@/components/demo/DemoControlPanel';
+import { FloatingAssistant } from '@/features/assistant/FloatingAssistant';
 
 export default function DashboardLayout({
   children,
@@ -34,6 +35,9 @@ export default function DashboardLayout({
         
         {/* Demo tier switcher - SuperAdmin only */}
         <DemoControlPanel />
+        
+        {/* Floating AI Assistant */}
+        <FloatingAssistant />
       </div>
     </AuthGuard>
   );

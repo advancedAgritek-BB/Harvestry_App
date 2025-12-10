@@ -60,3 +60,7 @@ public interface IHardwareProvider
     /// </summary>
     bool IsPinSupported(int pinNumber);
 }
+
+
+
+

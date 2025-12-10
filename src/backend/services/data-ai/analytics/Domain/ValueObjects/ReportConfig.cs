@@ -26,3 +26,7 @@ public record ReportColumn(string Field, string? Aggregation = null, string? Ali
 public record ReportFilter(string Field, string Operator, object? Value);
 
 public record ReportSort(string Field, string Direction = "asc");
+
+
+
+

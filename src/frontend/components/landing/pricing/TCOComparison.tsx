@@ -125,3 +125,7 @@ export function TCOComparison({ harvestryPrice, isAnnual }: TCOComparisonProps) 
     </div>
   );
 }
+
+
+
+

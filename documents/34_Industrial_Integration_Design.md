@@ -80,3 +80,7 @@ To support **Full Offline Experience**, every Edge Controller hosts a local web 
     *   View Active Alarms.
     *   **Manual Override:** Force Stop / Pause / Resume.
     *   **Note:** Configuration changes (Recipe edits) are *Disabled* in local mode to prevent drift, unless "Emergency Admin" is invoked.
+
+
+
+

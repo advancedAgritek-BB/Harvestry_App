@@ -20,3 +20,7 @@ public enum HarvestBatchingMode
     /// </summary>
     SubLot = 2
 }
+
+
+
+

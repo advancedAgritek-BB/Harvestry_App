@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { CultivationLayout, CultivationSection } from '@/features/dashboard/layouts/CultivationLayout';
 import { EnvironmentalMetricsWidget } from '@/features/dashboard/widgets/cultivation/EnvironmentalMetricsWidget';
 import { EnvironmentalTrendsWidget } from '@/features/dashboard/widgets/cultivation/EnvironmentalTrendsWidget';
@@ -13,31 +12,24 @@ import {
   TargetsVsCurrentWidget, 
   QuickActionsWidget 
 } from '@/features/dashboard/widgets/cultivation/SidebarWidgets';
-
-// Room data lookup - in production this would come from an API/store
-const ROOMS_DATA: Record<string, { name: string; stage: string }> = {
-  'f1': { name: 'Flower • F1', stage: 'Flowering' },
-  'f2': { name: 'Flower • F2', stage: 'Flowering' },
-  'f3': { name: 'Flower • F3', stage: 'Flowering' },
-  'v1': { name: 'Veg • V1', stage: 'Vegetative' },
-  'v2': { name: 'Veg • V2', stage: 'Vegetative' },
-  'c1': { name: 'Clone Room', stage: 'Clone' },
-  'd1': { name: 'Dry Room', stage: 'Drying' },
-};
+import { SiteRoomSelector } from '@/components/SiteRoomSelector';
+import { useSelectedSite, useSelectedRoom } from '@/stores/siteRoomStore';
 
 function CultivationHeader() {
-  const searchParams = useSearchParams();
-  const roomId = searchParams.get('room') || 'f1';
-  const roomData = ROOMS_DATA[roomId] || { name: 'Unknown Room', stage: 'Unknown' };
+  const selectedSite = useSelectedSite();
+  const selectedRoom = useSelectedRoom();
 
   return (
     <div className="h-14 border-b border-border flex items-center px-6 justify-between bg-surface/50 backdrop-blur shrink-0">
       <h1 className="font-bold text-lg tracking-tight text-foreground">
-        Harvestry <span className="text-muted-foreground/60 font-light">/ Cultivation / {roomData.name}</span>
+        Harvestry{' '}
+        <span className="text-muted-foreground/60 font-light">
+          / Cultivation / {selectedRoom?.name || 'Select Room'}
+        </span>
       </h1>
-      <div className="flex gap-4 text-sm text-muted-foreground">
-        <span>Site: Evergreen</span>
-        <span>Range: Last 24h</span>
+      <div className="flex items-center gap-4">
+        <SiteRoomSelector />
+        <span className="text-sm text-muted-foreground">Range: Last 24h</span>
       </div>
     </div>
   );
@@ -50,8 +42,7 @@ function HeaderFallback() {
         Harvestry <span className="text-muted-foreground/60 font-light">/ Cultivation / Loading...</span>
       </h1>
       <div className="flex gap-4 text-sm text-muted-foreground">
-        <span>Site: Evergreen</span>
-        <span>Range: Last 24h</span>
+        <span>Loading...</span>
       </div>
     </div>
   );
@@ -96,7 +87,7 @@ export default function CultivationDashboardPage() {
 
         {/* Right Sidebar Column (2 cols) */}
         <CultivationSection span={2} className="flex flex-col gap-4 h-full">
-          <div className="flex-1 min-h-[200px]">
+          <div className="flex-none">
             <ActiveAlertsListWidget />
           </div>
           <div className="flex-none">

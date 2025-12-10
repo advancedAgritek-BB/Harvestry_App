@@ -72,3 +72,7 @@ COMMENT ON TABLE growlink_credentials IS 'OAuth credentials for Growlink API int
 COMMENT ON TABLE growlink_stream_mappings IS 'Maps Growlink sensors to Harvestry SensorStreams';
 COMMENT ON COLUMN growlink_credentials.status IS 'Connection status: NotConnected, Pending, Connected, TokenExpired, Error, Disconnected';
 COMMENT ON COLUMN growlink_stream_mappings.auto_created IS 'True if mapping was auto-created during sync';
+
+
+
+

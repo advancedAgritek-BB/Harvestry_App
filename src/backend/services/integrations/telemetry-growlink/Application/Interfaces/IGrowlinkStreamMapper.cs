@@ -47,3 +47,7 @@ public interface IGrowlinkStreamMapper
         Guid mappingId,
         CancellationToken cancellationToken = default);
 }
+
+
+
+

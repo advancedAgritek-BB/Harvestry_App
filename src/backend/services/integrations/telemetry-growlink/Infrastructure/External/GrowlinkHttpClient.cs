@@ -342,3 +342,7 @@ public sealed class GrowlinkHttpClient : IGrowlinkApiClient, IDisposable
         public DateTimeOffset Timestamp { get; set; }
     }
 }
+
+
+
+

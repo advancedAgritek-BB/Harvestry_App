@@ -208,3 +208,7 @@ public static class HarvestWorkflowMapper
         return readings.Select(ToScaleReadingResponse).ToList();
     }
 }
+
+
+
+

@@ -22,3 +22,7 @@ public interface IWeightAdjustmentRepository
     /// </summary>
     Task<WeightAdjustment> CreateAsync(WeightAdjustment adjustment, CancellationToken cancellationToken = default);
 }
+
+
+
+

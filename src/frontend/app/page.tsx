@@ -12,6 +12,7 @@ import {
   FinalCTA,
   Footer,
 } from '@/components/landing';
+import { CalendlyWidget } from '@/components/common/CalendlyWidget';
 
 export const metadata: Metadata = {
   title: 'Harvestry | The Modern Cultivation Operating System',
@@ -45,6 +46,7 @@ export default function LandingPage() {
       <Pricing />
       <FinalCTA />
       <Footer />
+      <CalendlyWidget />
     </main>
   );
 }

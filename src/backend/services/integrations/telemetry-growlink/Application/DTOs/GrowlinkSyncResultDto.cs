@@ -49,3 +49,7 @@ public sealed record StreamMappingDto(
     Guid HarvestryStreamId,
     bool IsActive,
     bool AutoCreated);
+
+
+
+

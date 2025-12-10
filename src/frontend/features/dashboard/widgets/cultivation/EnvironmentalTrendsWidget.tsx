@@ -6,7 +6,7 @@ import {
   ResponsiveContainer, Legend, Brush, ReferenceArea 
 } from 'recharts';
 import { cn } from '@/lib/utils';
-import { X, AlertCircle, Palette, XCircle, Clock, RotateCcw } from 'lucide-react';
+import { X, AlertCircle, Palette, XCircle, Clock, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { useChartHorizontalScroll } from '@/hooks/useChartHorizontalScroll';
 import { simulationService, StreamType } from '@/features/telemetry/services/simulation.service';
 import { useOverridesStore } from '@/stores/overridesStore';
@@ -16,6 +16,8 @@ import {
   type TimeScale, 
   type CropSteeringDataPoint 
 } from '@/features/telemetry/services/crop-steering-data.service';
+import { TrendSensorConfigModal, type TrendSensorConfig } from './TrendSensorConfigModal';
+import type { SensorMetricType } from './types';
 
 // Data Types - extend CropSteeringDataPoint for chart compatibility
 interface TrendDataPoint extends CropSteeringDataPoint {
@@ -108,7 +110,6 @@ function OverridesOverlay() {
 export function EnvironmentalTrendsWidget() {
   const [timeScale, setTimeScale] = useState<TimeScale>('1h');
   const [data, setData] = useState<TrendDataPoint[]>(() => getCropSteeringData('1h') as TrendDataPoint[]);
-  const [showVwcPicker, setShowVwcPicker] = useState(false);
   
   // Horizontal scroll hook for mouse wheel panning
   const { 
@@ -131,13 +132,40 @@ export function EnvironmentalTrendsWidget() {
   const [isSelecting, setIsSelecting] = useState(false);
   
   const [series, setSeries] = useState<SeriesConfig[]>([
-    { key: 'temp', name: 'Temp', color: '#22d3ee', yAxisId: 'temp', unit: '°F', visible: true },
     { key: 'rh', name: 'RH', color: '#a78bfa', yAxisId: 'percent', unit: '%', visible: true },
+    { key: 'vwc', name: 'VWC', color: '#60a5fa', yAxisId: 'percent', unit: '%', visible: true },
+    { key: 'temp', name: 'Temp', color: '#22d3ee', yAxisId: 'temp', unit: '°F', visible: true },
     { key: 'vpd', name: 'VPD', color: '#34d399', yAxisId: 'vpd', unit: 'kPa', visible: false },
     { key: 'co2', name: 'CO₂', color: '#fbbf24', yAxisId: 'co2', unit: 'ppm', visible: false },
     { key: 'ppfd', name: 'PPFD', color: '#f472b6', yAxisId: 'ppfd', unit: 'µmol', visible: false },
-    { key: 'vwc', name: 'VWC', color: '#60a5fa', yAxisId: 'percent', unit: '%', visible: true },
   ]);
+
+  // Sensor configuration modal state
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [configModalSeries, setConfigModalSeries] = useState<SeriesConfig | null>(null);
+  const [sensorConfigs, setSensorConfigs] = useState<Record<string, TrendSensorConfig[]>>({});
+
+  // Map series keys to SensorMetricType
+  const seriesKeyToMetricType: Record<string, SensorMetricType> = {
+    rh: 'Humidity',
+    vwc: 'VWC',
+    temp: 'Temperature',
+    vpd: 'VPD',
+    co2: 'CO2',
+    ppfd: 'PPFD',
+  };
+
+  // Calculate which axes need to be visible based on active series
+  const visibleAxes = React.useMemo(() => {
+    const axes = new Set<string>();
+    series.forEach(s => {
+      if (s.visible) axes.add(s.yAxisId);
+    });
+    return axes;
+  }, [series]);
+
+  // Small right margin - axes handle their own width
+  const rightMargin = 5;
 
   // Get data from the consistent crop steering data service when time scale changes
   useEffect(() => {
@@ -146,55 +174,64 @@ export function EnvironmentalTrendsWidget() {
     setZoomRight(null);
   }, [timeScale]);
 
-  // Periodic refresh to keep data current (uses same underlying cached data)
+  // Periodic refresh to keep data current (only mutate the latest tick, slide window)
   useEffect(() => {
     const config = TIME_SCALES[timeScale];
-    
-    const refreshData = () => {
-      // Refresh from the crop steering data service
-      // This maintains consistency since the service uses cached base data
-      setData(getCropSteeringData(timeScale) as TrendDataPoint[]);
+    const maxPoints = config.dataPoints;
+
+    // Append or replace only the latest tick and slide the window forward
+    const applyNextPoint = (nextPoint: TrendDataPoint) => {
+      setData(prev => {
+        if (!prev.length) return [nextPoint];
+
+        const last = prev[prev.length - 1];
+
+        // If the timestamp matches or is behind, replace the last tick
+        if (nextPoint.timestamp <= last.timestamp) {
+          const updated = [...prev];
+          updated[updated.length - 1] = nextPoint;
+          return updated;
+        }
+
+        // Otherwise push and keep a sliding window
+        const updated = [...prev, nextPoint];
+        if (updated.length > maxPoints) {
+          updated.shift();
+        }
+        return updated;
+      });
     };
 
-    // Also check for any active simulations to overlay real-time values
     const pollSimulation = async () => {
       try {
-        const activeSims = await simulationService.getActive();
-        if (activeSims.length === 0) {
-          refreshData();
-          return;
-        }
-
-        // Get base data from crop steering service
+        // Base point for "now" from the deterministic crop steering service
         const baseData = getCropSteeringData(timeScale) as TrendDataPoint[];
-        
-        // Update the last point with live simulation values if available
-        if (baseData.length > 0) {
-          const lastPoint = { ...baseData[baseData.length - 1] };
-          
-          activeSims.forEach(sim => {
-            switch(sim.stream.streamType) {
-              case StreamType.Temperature: lastPoint.temp = sim.lastValue; break;
-              case StreamType.Humidity: lastPoint.rh = sim.lastValue; break;
-              case StreamType.Vpd: lastPoint.vpd = sim.lastValue; break;
-              case StreamType.Co2: lastPoint.co2 = sim.lastValue; break;
-              case StreamType.LightPpfd: lastPoint.ppfd = sim.lastValue; break;
-              case StreamType.SoilMoisture: lastPoint.vwc = sim.lastValue; break;
-            }
-          });
+        if (baseData.length === 0) return;
+        const nextPoint = { ...baseData[baseData.length - 1] };
 
-          baseData[baseData.length - 1] = lastPoint;
-        }
-        
-        setData(baseData);
+        // Overlay live simulation values onto just the latest tick
+        const activeSims = await simulationService.getActive();
+        activeSims.forEach(sim => {
+          switch(sim.stream.streamType) {
+            case StreamType.Temperature: nextPoint.temp = sim.lastValue; break;
+            case StreamType.Humidity: nextPoint.rh = sim.lastValue; break;
+            case StreamType.Vpd: nextPoint.vpd = sim.lastValue; break;
+            case StreamType.Co2: nextPoint.co2 = sim.lastValue; break;
+            case StreamType.LightPpfd: nextPoint.ppfd = sim.lastValue; break;
+            case StreamType.SoilMoisture: nextPoint.vwc = sim.lastValue; break;
+          }
+        });
+
+        applyNextPoint(nextPoint);
       } catch {
-        // Silently fail and use base data
-        refreshData();
+        // Best-effort: ignore and keep existing data
       }
     };
 
     pollSimulation();
-    const interval = setInterval(pollSimulation, Math.min(config.intervalMs, 2000));
+
+    // Use the time scale's intended cadence so each tick advances the window
+    const interval = setInterval(pollSimulation, config.intervalMs);
     return () => clearInterval(interval);
   }, [timeScale]);
 
@@ -240,17 +277,71 @@ export function EnvironmentalTrendsWidget() {
     resetViewport(); // Also reset scroll position
   };
 
+  // Zoom in - reduce viewport to show fewer data points (more detail)
+  const zoomIn = () => {
+    const currentViewportSize = endIndex - startIndex + 1;
+    const minViewportSize = 10; // Don't zoom in past 10 data points
+    if (currentViewportSize <= minViewportSize) return;
+    
+    const newViewportSize = Math.max(minViewportSize, Math.floor(currentViewportSize * 0.7));
+    const reduction = currentViewportSize - newViewportSize;
+    const halfReduction = Math.floor(reduction / 2);
+    
+    const newStartIndex = Math.min(startIndex + halfReduction, data.length - newViewportSize);
+    const newEndIndex = newStartIndex + newViewportSize - 1;
+    
+    onBrushChange({ startIndex: newStartIndex, endIndex: newEndIndex });
+  };
+
+  // Zoom out - increase viewport to show more data points (less detail)
+  const zoomOut = () => {
+    const currentViewportSize = endIndex - startIndex + 1;
+    if (currentViewportSize >= data.length) return;
+    
+    const newViewportSize = Math.min(data.length, Math.ceil(currentViewportSize * 1.4));
+    const expansion = newViewportSize - currentViewportSize;
+    const halfExpansion = Math.floor(expansion / 2);
+    
+    const newStartIndex = Math.max(0, startIndex - halfExpansion);
+    const newEndIndex = Math.min(data.length - 1, newStartIndex + newViewportSize - 1);
+    
+    // Adjust start if we hit the end
+    const adjustedStartIndex = Math.max(0, newEndIndex - newViewportSize + 1);
+    
+    onBrushChange({ startIndex: adjustedStartIndex, endIndex: newEndIndex });
+  };
+
   const toggleSeries = (key: string) => {
     setSeries(prev => prev.map(s => s.key === key ? { ...s, visible: !s.visible } : s));
   };
 
   const handleLegendClick = (e: any) => {
     const { dataKey } = e;
-    if (dataKey === 'vwc') {
-      setShowVwcPicker(true);
-    } else {
-      toggleSeries(dataKey);
+    const seriesItem = series.find(s => s.key === dataKey);
+    if (seriesItem) {
+      setConfigModalSeries(seriesItem);
+      setConfigModalOpen(true);
     }
+  };
+
+  const handleSensorConfigSave = (configs: TrendSensorConfig[]) => {
+    if (!configModalSeries) return;
+    
+    // Save sensor configs for this series
+    setSensorConfigs(prev => ({
+      ...prev,
+      [configModalSeries.key]: configs,
+    }));
+
+    // Update the series color if sensors are configured, but keep visible either way
+    // Empty configs = show default simulated data; populated configs = show with custom color
+    setSeries(prev => prev.map(s => {
+      if (s.key === configModalSeries.key) {
+        const newColor = configs.length > 0 ? configs[0].color : s.color;
+        return { ...s, visible: true, color: newColor };
+      }
+      return s;
+    }));
   };
 
   const isZoomed = zoomLeft !== null && zoomRight !== null;
@@ -283,6 +374,22 @@ export function EnvironmentalTrendsWidget() {
 
           {/* Zoom/Pan Controls */}
           <div className="flex items-center gap-1">
+            <button
+              onClick={zoomOut}
+              disabled={endIndex - startIndex + 1 >= data.length}
+              className="p-1.5 rounded-md bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title="Zoom out"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <button
+              onClick={zoomIn}
+              disabled={endIndex - startIndex + 1 <= 10}
+              className="p-1.5 rounded-md bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              title="Zoom in"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
             {hasViewportChange && (
               <button
                 onClick={resetZoom}
@@ -316,7 +423,7 @@ export function EnvironmentalTrendsWidget() {
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart 
             data={displayData} 
-            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            margin={{ top: 10, right: rightMargin, left: 0, bottom: 0 }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -330,7 +437,7 @@ export function EnvironmentalTrendsWidget() {
           >
             <defs>
               {series.map(s => (
-                <linearGradient key={s.key} id={`grad-${s.key}`} x1="0" y1="0" x2="0" y2="1">
+                <linearGradient key={`${s.key}-${s.color}`} id={`grad-${s.key}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={s.color} stopOpacity={0.3}/>
                   <stop offset="95%" stopColor={s.color} stopOpacity={0}/>
                 </linearGradient>
@@ -348,11 +455,83 @@ export function EnvironmentalTrendsWidget() {
               minTickGap={30}
             />
             
-            <YAxis yAxisId="temp" orientation="left" stroke="#22d3ee" fontSize={10} tickLine={false} axisLine={false} unit="°" width={35} domain={['auto', 'auto']} />
-            <YAxis yAxisId="percent" orientation="right" stroke="#a78bfa" fontSize={10} tickLine={false} axisLine={false} unit="%" width={35} domain={[0, 100]} />
-            <YAxis yAxisId="vpd" hide domain={[0, 3]} />
-            <YAxis yAxisId="co2" hide domain={[0, 2000]} />
-            <YAxis yAxisId="ppfd" hide domain={[0, 1500]} />
+            {/* Dynamic Y-Axes - only render visible ones */}
+            {visibleAxes.has('temp') && (
+              <YAxis 
+                yAxisId="temp" 
+                orientation="right" 
+                stroke="#22d3ee"
+                tick={{ fill: '#22d3ee', fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+                width={40}
+                tickFormatter={(value: number) => `${Math.round(value)}°`}
+                domain={[70, 85]}
+                tickCount={4}
+              />
+            )}
+            {visibleAxes.has('percent') && (
+              <YAxis 
+                yAxisId="percent" 
+                orientation="right" 
+                stroke="#a78bfa" 
+                tick={{ fill: '#a78bfa', fontSize: 10 }}
+                tickLine={false} 
+                axisLine={false} 
+                width={40}
+                domain={[0, 100]} 
+                tickCount={5}
+                tickFormatter={(v: number) => `${v}%`}
+              />
+            )}
+            {visibleAxes.has('vpd') && (
+              <YAxis 
+                yAxisId="vpd" 
+                orientation="right" 
+                stroke="#34d399"
+                tick={{ fill: '#34d399', fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+                width={40}
+                domain={[0, 2]}
+                tickCount={5}
+                tickFormatter={(v: number) => v.toFixed(1)}
+              />
+            )}
+            {visibleAxes.has('co2') && (
+              <YAxis 
+                yAxisId="co2" 
+                orientation="right" 
+                stroke="#fbbf24"
+                tick={{ fill: '#fbbf24', fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+                width={40}
+                domain={[0, 2000]}
+                tickCount={5}
+                tickFormatter={(v: number) => `${v}`}
+              />
+            )}
+            {visibleAxes.has('ppfd') && (
+              <YAxis 
+                yAxisId="ppfd" 
+                orientation="right" 
+                stroke="#f472b6"
+                tick={{ fill: '#f472b6', fontSize: 10 }}
+                tickLine={false}
+                axisLine={false}
+                width={40}
+                domain={[0, 1500]}
+                tickCount={5}
+                tickFormatter={(v: number) => `${v}`}
+              />
+            )}
+            {/* Hidden axes for series that might get toggled - provides scale reference */}
+            {!visibleAxes.has('temp') && <YAxis yAxisId="temp" hide domain={[70, 85]} />}
+            {!visibleAxes.has('percent') && <YAxis yAxisId="percent" hide domain={[0, 100]} />}
+            {!visibleAxes.has('vpd') && <YAxis yAxisId="vpd" hide domain={[0, 2]} />}
+            {!visibleAxes.has('co2') && <YAxis yAxisId="co2" hide domain={[0, 2000]} />}
+            {!visibleAxes.has('ppfd') && <YAxis yAxisId="ppfd" hide domain={[0, 1500]} />}
 
             <Tooltip 
               contentStyle={{ 
@@ -374,16 +553,46 @@ export function EnvironmentalTrendsWidget() {
             
             <Legend 
               wrapperStyle={{ paddingTop: '10px' }} 
-              onClick={handleLegendClick}
-              formatter={(value, entry: any) => {
-                const s = series.find(item => item.key === entry.dataKey);
+              content={() => {
+                const legendOrder = ['rh', 'vwc', 'temp', 'vpd', 'co2', 'ppfd'];
                 return (
-                  <span className={cn(
-                    "ml-1 text-xs font-medium transition-opacity cursor-pointer",
-                    !s?.visible && "opacity-40 line-through decoration-muted-foreground"
-                  )}>
-                    {value}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-3 text-xs">
+                    {legendOrder.map((key) => {
+                      const item = series.find((s) => s.key === key);
+                      if (!item) return null;
+                      return (
+                        <div
+                          key={item.key}
+                          className={cn(
+                            "flex items-center gap-1 px-2 py-1 rounded-md transition-colors",
+                            "border border-border/70 bg-muted/30",
+                            !item.visible && "opacity-50"
+                          )}
+                        >
+                          {/* Color dot - click to configure */}
+                          <button
+                            type="button"
+                            onClick={() => handleLegendClick({ dataKey: item.key })}
+                            title="Click to configure sensors & colors"
+                            className="w-3 h-3 rounded-full hover:ring-2 ring-white/50 transition-all"
+                            style={{ backgroundColor: item.color }}
+                            aria-label={`Configure ${item.name} sensors`}
+                          />
+                          {/* Name - click to toggle visibility */}
+                          <button
+                            type="button"
+                            onClick={() => toggleSeries(item.key)}
+                            className={cn(
+                              "font-medium hover:text-foreground transition-colors",
+                              item.visible ? "text-foreground/80" : "text-muted-foreground line-through"
+                            )}
+                          >
+                            {item.name}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 );
               }}
             />
@@ -433,44 +642,21 @@ export function EnvironmentalTrendsWidget() {
         </ResponsiveContainer>
       </div>
       
-      {/* VWC Color Picker Modal */}
-      {showVwcPicker && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm rounded-xl">
-           <div className="bg-surface border border-border p-6 rounded-xl shadow-2xl max-w-sm w-full">
-             <div className="flex items-center justify-between mb-4">
-               <h4 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                 <Palette className="w-4 h-4 text-cyan-400" />
-                 Customize VWC Colors
-               </h4>
-               <button 
-                 onClick={() => setShowVwcPicker(false)} 
-                 className="text-muted-foreground hover:text-foreground"
-                 aria-label="Close color picker"
-               >
-                 <X className="w-5 h-5" />
-               </button>
-             </div>
-             <p className="text-sm text-muted-foreground mb-4">Assign colors to individual sensor feeds.</p>
-             
-             <div className="space-y-3 mb-6">
-                {['Sensor A1', 'Sensor A2', 'Sensor B1'].map((sensor) => (
-                  <div key={sensor} className="flex items-center justify-between p-2 bg-muted rounded">
-                    <span className="text-sm text-foreground/70">{sensor}</span>
-                    <div className="flex gap-2">
-                      <div className="w-6 h-6 rounded-full bg-blue-500 cursor-pointer hover:ring-2 ring-foreground" />
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 cursor-pointer hover:ring-2 ring-foreground" />
-                      <div className="w-6 h-6 rounded-full bg-purple-500 cursor-pointer hover:ring-2 ring-foreground" />
-                    </div>
-                  </div>
-                ))}
-             </div>
-             
-             <div className="flex justify-end gap-2">
-               <button onClick={() => setShowVwcPicker(false)} className="px-3 py-1.5 text-xs font-medium text-foreground/70 hover:text-foreground">Cancel</button>
-               <button onClick={() => setShowVwcPicker(false)} className="px-3 py-1.5 text-xs font-medium bg-cyan-500 text-background rounded hover:bg-cyan-400">Save</button>
-             </div>
-           </div>
-        </div>
+      {/* Sensor Configuration Modal */}
+      {configModalSeries && (
+        <TrendSensorConfigModal
+          isOpen={configModalOpen}
+          onClose={() => {
+            setConfigModalOpen(false);
+            setConfigModalSeries(null);
+          }}
+          metricKey={configModalSeries.key}
+          metricName={configModalSeries.name}
+          metricType={seriesKeyToMetricType[configModalSeries.key]}
+          defaultColor={configModalSeries.color}
+          currentConfig={sensorConfigs[configModalSeries.key] || []}
+          onSave={handleSensorConfigSave}
+        />
       )}
     </div>
   );

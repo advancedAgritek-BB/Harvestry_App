@@ -1,7 +1,10 @@
+'use client';
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { SiteRoomSelectorCompact } from '@/components/SiteRoomSelector';
 
 interface IrrigationLayoutProps {
   children: React.ReactNode;
@@ -24,11 +27,7 @@ export default function IrrigationLayout({ children }: IrrigationLayoutProps) {
       <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface/50 backdrop-blur shrink-0">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-foreground">Irrigation Control</h1>
-          <div className="flex gap-2 text-sm text-muted-foreground">
-            <span>Site: Evergreen</span>
-            <span>•</span>
-            <span>All Zones</span>
-          </div>
+          <SiteRoomSelectorCompact />
         </div>
         
         {/* Navigation Tabs */}

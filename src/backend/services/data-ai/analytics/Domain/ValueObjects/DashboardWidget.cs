@@ -10,3 +10,7 @@ public record DashboardWidget(
     string Title, 
     string VisualizationType
 );
+
+
+
+

@@ -406,3 +406,7 @@ public sealed class GrowlinkIntegrationController : ControllerBase
 /// Response for connect endpoint.
 /// </summary>
 public sealed record ConnectResponse(string AuthorizationUrl, string State);
+
+
+
+

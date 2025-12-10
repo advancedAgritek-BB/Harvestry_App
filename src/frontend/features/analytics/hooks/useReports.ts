@@ -54,3 +54,7 @@ export const usePreviewQuery = () => {
     mutationFn: (config: ReportConfig) => api.post<any[]>('/analytics/reports/query', config),
   });
 };
+
+
+
+

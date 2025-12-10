@@ -73,32 +73,39 @@ export function useChartHorizontalScroll({
   // Track the viewport size (can be changed via Brush drag)
   const viewportSize = useRef(effectiveVisibleCount);
 
-  // Update viewport when data length changes
+  // Track previous data length to detect actual data changes
+  const prevDataLength = useRef(dataLength);
+
+  // Update viewport only when data length changes (not when indices change)
   useEffect(() => {
     if (dataLength <= 0) return;
+    
+    const dataLengthChanged = prevDataLength.current !== dataLength;
+    prevDataLength.current = dataLength;
+    
+    // Only reset if data length actually changed
+    if (!dataLengthChanged) return;
     
     // If we have an initialVisibleCount, maintain that viewport size
     if (initialVisibleCount && initialVisibleCount < dataLength) {
       const newViewportSize = Math.min(initialVisibleCount, dataLength);
       viewportSize.current = newViewportSize;
       
-      // Keep end at max if we were at the end
-      if (endIndex >= dataLength - 1) {
-        setStartIndex(Math.max(0, dataLength - newViewportSize));
-        setEndIndex(dataLength - 1);
-      } else {
-        // Adjust if start is out of bounds
-        const newStart = Math.min(startIndex, dataLength - newViewportSize);
-        setStartIndex(Math.max(0, newStart));
-        setEndIndex(Math.min(newStart + newViewportSize - 1, dataLength - 1));
-      }
-    } else {
-      // Show all data
+      // Keep end at max (show latest data)
+      setStartIndex(Math.max(0, dataLength - newViewportSize));
+      setEndIndex(dataLength - 1);
+    } else if (viewportSize.current >= prevDataLength.current || viewportSize.current >= dataLength) {
+      // Was showing all data, continue to show all
       viewportSize.current = dataLength;
       setStartIndex(0);
       setEndIndex(dataLength - 1);
+    } else {
+      // Maintain current viewport size, shift to show latest
+      const currentSize = viewportSize.current;
+      setStartIndex(Math.max(0, dataLength - currentSize));
+      setEndIndex(dataLength - 1);
     }
-  }, [dataLength, initialVisibleCount, startIndex, endIndex]);
+  }, [dataLength, initialVisibleCount]);
 
   const handleWheel = useCallback((event: WheelEvent) => {
     if (!enabled || dataLength <= 1) return;

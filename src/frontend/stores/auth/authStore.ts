@@ -203,6 +203,7 @@ const DEV_MOCK_USER: User | null = USE_MOCK_AUTH ? {
   email: 'dev@harvestry.io',
   name: 'Dev User',
   role: UserRole.SuperAdmin,
+  avatarUrl: '/images/user-avatar.png',
   sitePermissions: [
     {
       siteId: 'site-1',

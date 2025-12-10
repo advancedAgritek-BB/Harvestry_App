@@ -317,3 +317,7 @@ export default function GDPRPage() {
     </div>
   );
 }
+
+
+
+

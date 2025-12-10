@@ -139,3 +139,7 @@ public interface IScaleService
         Guid siteId,
         CancellationToken cancellationToken = default);
 }
+
+
+
+

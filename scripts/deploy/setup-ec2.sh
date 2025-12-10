@@ -18,3 +18,7 @@ echo "Installing Git..."
 sudo apt install git -y
 
 echo "Setup complete. Please logout and login again for Docker group changes to take effect."
+
+
+
+

@@ -275,7 +275,11 @@ export function Header() {
         {/* User Profile */}
         <button className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full hover:bg-[var(--bg-tile)] transition-colors">
            <span className="text-sm font-medium text-[var(--text-primary)] hidden md:block">Brandon</span>
-           <div className="w-8 h-8 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600 ring-2 ring-[var(--bg-surface)] shadow-lg" />
+           <img 
+             src="/images/user-avatar.png" 
+             alt="User avatar" 
+             className="w-10 h-10 rounded-full ring-2 ring-[var(--bg-surface)] shadow-lg object-cover"
+           />
         </button>
 
       </div>
