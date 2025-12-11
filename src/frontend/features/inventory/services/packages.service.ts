@@ -9,6 +9,14 @@ import type {
 
 const getApiBase = (siteId: string) => `/api/v1/sites/${siteId}/packages`;
 
+/** Extended filter options for package queries */
+export interface PackageFilterOptions extends LotFilterOptions {
+  labTestingState?: string;
+  inventoryCategory?: string;
+  onHold?: boolean;
+  expiringSoon?: boolean;
+}
+
 // Types matching backend DTOs
 export interface PackageDto {
   id: string;
@@ -171,7 +179,7 @@ export interface PackageSummaryStats {
  */
 export async function getPackages(
   siteId: string,
-  filters: LotFilterOptions = {},
+  filters: PackageFilterOptions = {},
   page = 1,
   pageSize = 50
 ): Promise<PackageListResponse> {
