@@ -2,7 +2,9 @@
  * Financial types for inventory WMS dashboard
  */
 
-export type InventoryCategory = 'raw_material' | 'work_in_progress' | 'finished_good' | 'consumable' | 'byproduct';
+import type { InventoryCategory } from './product.types';
+
+export type { InventoryCategory };
 export type TrendDirection = 'up' | 'down' | 'stable';
 export type AlertSeverity = 'critical' | 'warning' | 'info';
 export type AlertType = 'low_stock' | 'expiring' | 'hold' | 'sync' | 'variance' | 'lab_test';
