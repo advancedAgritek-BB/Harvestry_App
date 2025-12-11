@@ -96,7 +96,7 @@ export function ShotDetailsPopover({
             />
             <span className="text-muted-foreground">End VWC:</span>
             <span className="text-foreground font-medium ml-auto">
-              {shot.endVwc.toFixed(1)}%
+              {shot.endVwc?.toFixed(1) ?? '—'}%
             </span>
           </div>
 
