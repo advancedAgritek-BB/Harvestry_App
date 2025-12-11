@@ -56,6 +56,7 @@ export interface PlannedBatch {
   plantCount: number;
   phases: BatchPhase[];
   status: BatchStatus;
+  blueprintId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
