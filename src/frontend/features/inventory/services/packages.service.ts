@@ -307,7 +307,7 @@ export async function getPackageLineage(siteId: string, packageId: string): Prom
 /**
  * Place package on hold
  */
-export async function placeHold(
+export async function placePackageHold(
   siteId: string,
   packageId: string,
   reasonCode: string,
@@ -326,7 +326,7 @@ export async function placeHold(
 /**
  * Release package from hold
  */
-export async function releaseHold(
+export async function releasePackageHold(
   siteId: string,
   packageId: string,
   notes?: string
