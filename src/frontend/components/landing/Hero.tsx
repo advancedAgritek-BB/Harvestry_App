@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Play, Shield, Zap, BarChart3, Sparkles } from 'lucide-react';
+import { ArrowRight, Play, Shield, Zap, BarChart3, Sparkles, Brain } from 'lucide-react';
 import { MagneticButton } from './MagneticButton';
 import { InteractiveDashboard } from './InteractiveDashboard';
 import { useMousePosition } from './hooks/useScrollAnimation';
@@ -120,11 +120,12 @@ export function Hero() {
 
           {/* Value Props with hover effects */}
           <div 
-            className={`grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto transition-all duration-700 delay-400 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            className={`grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto transition-all duration-700 delay-400 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             {[
               { icon: Shield, text: 'Compliance-Ready', color: 'accent-emerald' },
               { icon: Zap, text: 'Real-Time Telemetry', color: 'accent-amber' },
+              { icon: Brain, text: 'Meet Harvey AI', color: 'accent-violet' },
               { icon: BarChart3, text: 'Enterprise-Grade', color: 'accent-emerald' },
             ].map((item, index) => (
               <div 

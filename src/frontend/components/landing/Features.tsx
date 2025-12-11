@@ -13,7 +13,9 @@ import {
   Wallet,
   Bell,
   Brain,
-  Gauge
+  Gauge,
+  Users,
+  CalendarDays
 } from 'lucide-react';
 import { AnimatedSection, StaggerContainer } from './AnimatedSection';
 import { useScrollAnimation } from './hooks/useScrollAnimation';
@@ -52,7 +54,7 @@ const features = [
   {
     icon: Package,
     title: 'Unified Inventory & Labeling',
-    description: 'Universal locations, lot tracking, movement history. GS1/UDI labels with jurisdiction-specific rules.',
+    description: 'Universal locations, lot tracking, mobile scanning, lineage graphs. GS1/UDI labels with jurisdiction-specific rules.',
     color: 'cyan',
   },
   {
@@ -75,8 +77,8 @@ const features = [
   },
   {
     icon: Brain,
-    title: 'AI-Powered Insights',
-    description: 'Anomaly detection, yield prediction, ET₀-aware recommendations. Auto-apply behind feature flags.',
+    title: 'Meet Harvey, Your AI Expert',
+    description: "The industry's most advanced cultivation AI. Harvey learns your operation, spots problems before you do, and delivers expert advice—all trained on your data in a private, secure environment.",
     color: 'violet',
   },
   {
@@ -90,6 +92,18 @@ const features = [
     title: 'Notifications & Escalations',
     description: 'In-app, email, Slack for all severities. SMS for critical alerts. Role-based subscriptions.',
     color: 'rose',
+  },
+  {
+    icon: Users,
+    title: 'Labor & Workforce Management',
+    description: 'Shift scheduling, timecard approvals, certification tracking. Real-time coverage metrics and productivity dashboards.',
+    color: 'sky',
+  },
+  {
+    icon: CalendarDays,
+    title: 'Visual Production Planning',
+    description: 'Drag-and-drop Gantt charts for batch scheduling. What-if modeling and capacity optimization built-in.',
+    color: 'cyan',
   },
 ];
 
