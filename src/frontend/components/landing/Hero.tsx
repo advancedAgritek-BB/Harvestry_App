@@ -125,7 +125,7 @@ export function Hero() {
             {[
               { icon: Shield, text: 'Compliance-Ready', color: 'accent-emerald' },
               { icon: Zap, text: 'Real-Time Telemetry', color: 'accent-amber' },
-              { icon: Brain, text: 'Harvey - AI Assistant', color: 'accent-violet' },
+              { icon: Brain, text: 'Harvey AI', color: 'accent-violet' },
               { icon: BarChart3, text: 'Enterprise-Grade', color: 'accent-emerald' },
             ].map((item, index) => (
               <div 

@@ -9,7 +9,8 @@ export type AlertCategory =
   | 'time_sensitive'
   | 'compliance'
   | 'cost_impact'
-  | 'scheduling_conflict';
+  | 'scheduling_conflict'
+  | 'certification_expiring';
 
 export type CriticalAlert = {
   id: string;
