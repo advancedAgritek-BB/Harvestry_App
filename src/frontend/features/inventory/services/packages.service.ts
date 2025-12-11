@@ -180,9 +180,9 @@ export async function getPackages(
     pageSize: pageSize.toString(),
   });
 
-  if (filters.status) params.append('status', filters.status);
-  if (filters.labTestingState) params.append('labTestingState', filters.labTestingState);
-  if (filters.inventoryCategory) params.append('inventoryCategory', filters.inventoryCategory);
+  if (filters.status?.length) params.append('status', filters.status.join(','));
+  if (filters.labTestingState) params.append('labTestingState', String(filters.labTestingState));
+  if (filters.inventoryCategory) params.append('inventoryCategory', String(filters.inventoryCategory));
   if (filters.locationId) params.append('locationId', filters.locationId);
   if (filters.search) params.append('search', filters.search);
   if (filters.onHold !== undefined) params.append('onHold', String(filters.onHold));
