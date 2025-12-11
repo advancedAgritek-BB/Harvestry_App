@@ -384,7 +384,7 @@ export function PlantsPanelTab({
                 {pb.metrcSyncStatus === 'synced' && <CheckCircle className="w-3 h-3" />}
                 {pb.metrcSyncStatus === 'pending' && <Clock className="w-3 h-3" />}
                 {pb.metrcSyncStatus === 'error' && <AlertCircle className="w-3 h-3" />}
-                {pb.metrcSyncStatus?.charAt(0).toUpperCase() + pb.metrcSyncStatus?.slice(1)}
+                {pb.metrcSyncStatus ? pb.metrcSyncStatus.charAt(0).toUpperCase() + pb.metrcSyncStatus.slice(1) : '—'}
               </span>
             </div>
           ))}
