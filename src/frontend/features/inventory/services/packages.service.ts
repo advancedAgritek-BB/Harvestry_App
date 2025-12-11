@@ -341,9 +341,9 @@ export async function releaseHold(
 }
 
 /**
- * Get all holds
+ * Get all holds for a site (simple version)
  */
-export async function getHolds(siteId: string): Promise<any[]> {
+export async function getPackageHolds(siteId: string): Promise<any[]> {
   const response = await fetch(`/api/v1/sites/${siteId}/holds`);
   if (!response.ok) throw new Error('Failed to fetch holds');
   return response.json();
