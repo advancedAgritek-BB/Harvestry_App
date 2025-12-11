@@ -18,7 +18,7 @@ import type { Room, PhaseType, RoomClass } from '../../types/planner.types';
 // TYPES
 // =============================================================================
 
-export interface PhaseConfig {
+export interface PhaseFormConfig {
   phase: PhaseType;
   roomId: string;
   duration: number;
@@ -27,8 +27,8 @@ export interface PhaseConfig {
 export interface CustomConfigTabProps {
   startDate: Date;
   rooms: Room[];
-  phaseConfigs: Record<PhaseType, PhaseConfig>;
-  onPhaseConfigChange: (phase: PhaseType, updates: Partial<PhaseConfig>) => void;
+  phaseConfigs: Record<PhaseType, PhaseFormConfig>;
+  onPhaseConfigChange: (phase: PhaseType, updates: Partial<PhaseFormConfig>) => void;
 }
 
 // =============================================================================

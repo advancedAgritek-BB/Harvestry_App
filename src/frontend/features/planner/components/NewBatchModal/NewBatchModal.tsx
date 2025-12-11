@@ -24,7 +24,7 @@ import type { Room, PlannedBatch, BatchPhase, PhaseType } from '../../types';
 import { useBlueprintStore } from '../../stores/blueprintStore';
 import { BatchNamingService } from '../../services/batchNaming.service';
 import { BlueprintTab } from './BlueprintTab';
-import { CustomConfigTab, type PhaseConfig } from './CustomConfigTab';
+import { CustomConfigTab, type PhaseFormConfig } from './CustomConfigTab';
 
 // =============================================================================
 // TYPES
@@ -227,7 +227,7 @@ export function NewBatchModal({ isOpen, onClose, onCreateBatch, rooms }: NewBatc
   const [startDate, setStartDate] = useState(new Date());
   const [configMode, setConfigMode] = useState<ConfigMode>('blueprint');
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null);
-  const [phaseConfigs, setPhaseConfigs] = useState<Record<PhaseType, PhaseConfig>>({
+  const [phaseConfigs, setPhaseConfigs] = useState<Record<PhaseType, PhaseFormConfig>>({
     clone: { phase: 'clone', roomId: '', duration: 14 },
     veg: { phase: 'veg', roomId: '', duration: 21 },
     flower: { phase: 'flower', roomId: '', duration: 56 },
@@ -356,7 +356,7 @@ export function NewBatchModal({ isOpen, onClose, onCreateBatch, rooms }: NewBatc
 
   // Handle phase config change
   const handlePhaseConfigChange = useCallback(
-    (phase: PhaseType, updates: Partial<PhaseConfig>) => {
+    (phase: PhaseType, updates: Partial<PhaseFormConfig>) => {
       setPhaseConfigs((prev) => ({
         ...prev,
         [phase]: { ...prev[phase], ...updates },
