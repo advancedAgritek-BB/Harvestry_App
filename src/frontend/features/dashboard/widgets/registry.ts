@@ -54,7 +54,8 @@ export const widgetRegistry: Record<string, WidgetRegistryItem> = {
   },
   'cultivation-irrigation': {
     type: 'cultivation-irrigation',
-    component: IrrigationWindowsWidget,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    component: IrrigationWindowsWidget as any,
     defaultSize: '2x1',
     title: 'Irrigation Windows',
     description: 'Dual bar chart for volume and VWC',
