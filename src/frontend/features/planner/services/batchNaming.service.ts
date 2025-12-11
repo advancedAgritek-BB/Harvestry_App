@@ -269,8 +269,8 @@ export class BatchNamingService {
     // Check for invalid tokens
     const validTokenPattern = /\{(STRAIN|STRAIN_CODE|STRAIN_ABBR|TYPE|YYYY|YY|MM|DD|Q|#{3,5}|SITE|SITE_ID|ROOM|PHASE)\}/gi;
     const allTokensPattern = /\{[^}]+\}/g;
-    const allTokens = template.match(allTokensPattern) || [];
-    const validTokens = template.match(validTokenPattern) || [];
+    const allTokens: string[] = template.match(allTokensPattern) || [];
+    const validTokens: string[] = template.match(validTokenPattern) || [];
     
     if (allTokens.length > validTokens.length) {
       const invalidTokens = allTokens.filter(t => !validTokens.includes(t));
