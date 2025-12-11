@@ -58,6 +58,13 @@ public sealed class Strain : AggregateRoot<Guid>
     public TargetEnvironment TargetEnvironment { get; private set; }
     public ComplianceRequirements ComplianceRequirements { get; private set; }
 
+    // Crop Steering
+    /// <summary>
+    /// Optional reference to a strain-specific crop steering profile.
+    /// If null, site default steering profile will be used.
+    /// </summary>
+    public Guid? CropSteeringProfileId { get; private set; }
+
     // METRC Compliance Fields
     /// <summary>
     /// Genetic classification (Indica, Sativa, Hybrid)
@@ -160,7 +167,9 @@ public sealed class Strain : AggregateRoot<Guid>
         decimal? nominalCbdPercent = null,
         long? metrcStrainId = null,
         DateTime? metrcLastSyncAt = null,
-        string? metrcSyncStatus = null)
+        string? metrcSyncStatus = null,
+        // Crop steering
+        Guid? cropSteeringProfileId = null)
     {
         var strain = new Strain(id)
         {
@@ -186,7 +195,9 @@ public sealed class Strain : AggregateRoot<Guid>
             NominalCbdPercent = nominalCbdPercent,
             MetrcStrainId = metrcStrainId,
             MetrcLastSyncAt = metrcLastSyncAt,
-            MetrcSyncStatus = metrcSyncStatus
+            MetrcSyncStatus = metrcSyncStatus,
+            // Crop steering
+            CropSteeringProfileId = cropSteeringProfileId
         };
 
         return strain;
@@ -319,6 +330,25 @@ public sealed class Strain : AggregateRoot<Guid>
         UpdatedByUserId = updatedByUserId;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// Set or clear the strain-specific crop steering profile.
+    /// Pass null to use site default profile instead.
+    /// </summary>
+    public void SetCropSteeringProfile(Guid? cropSteeringProfileId, Guid updatedByUserId)
+    {
+        if (updatedByUserId == Guid.Empty)
+            throw new ArgumentException("Updated by user ID cannot be empty", nameof(updatedByUserId));
+
+        CropSteeringProfileId = cropSteeringProfileId;
+        UpdatedByUserId = updatedByUserId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Check if this strain has a custom steering profile assigned.
+    /// </summary>
+    public bool HasCustomSteeringProfile => CropSteeringProfileId.HasValue;
 
     private static void ValidateConstructorArgs(
         Guid siteId,
