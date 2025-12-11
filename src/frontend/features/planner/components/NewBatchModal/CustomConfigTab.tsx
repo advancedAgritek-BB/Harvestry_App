@@ -141,9 +141,9 @@ function RoomSelector({
 
 interface PhaseConfigRowProps {
   phase: PhaseType;
-  config: PhaseConfig;
+  config: PhaseFormConfig;
   rooms: Room[];
-  onConfigChange: (updates: Partial<PhaseConfig>) => void;
+  onConfigChange: (updates: Partial<PhaseFormConfig>) => void;
   startDate: Date;
   previousEndDate: Date | null;
 }
