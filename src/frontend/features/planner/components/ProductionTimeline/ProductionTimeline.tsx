@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useRef } from 'react';
-import Link from 'next/link';
 import {
   Scissors,
   Package,
@@ -20,6 +19,7 @@ import { PlannerCard, StatusBadge, SectionHeader } from '../ui';
 interface ProductionTimelineProps {
   tasks: ProductionTask[];
   className?: string;
+  onTaskSelect?: (task: ProductionTask) => void;
 }
 
 const TASK_TYPE_CONFIG: Record<
@@ -96,16 +96,23 @@ function formatDate(dateString: string): { dayName: string; dayNum: string; isTo
   };
 }
 
-function TaskCard({ task }: { task: ProductionTask }) {
+function TaskCard({ 
+  task, 
+  onSelect 
+}: { 
+  task: ProductionTask; 
+  onSelect?: (task: ProductionTask) => void;
+}) {
   const typeConfig = TASK_TYPE_CONFIG[task.type];
   const statusConfig = LABOR_STATUS_CONFIG[task.laborStatus];
   const Icon = typeConfig.icon;
   const shortfall = task.requiredCount - task.assignedCount;
 
   return (
-    <Link
-      href={`/dashboard/planner/shift-board?task=${task.id}`}
-      className="block"
+    <button
+      type="button"
+      onClick={() => onSelect?.(task)}
+      className="block text-left w-full"
     >
       <PlannerCard
         hoverable
@@ -158,16 +165,18 @@ function TaskCard({ task }: { task: ProductionTask }) {
           </div>
         )}
       </PlannerCard>
-    </Link>
+    </button>
   );
 }
 
 function DayColumn({
   date,
   tasks,
+  onTaskSelect,
 }: {
   date: string;
   tasks: ProductionTask[];
+  onTaskSelect?: (task: ProductionTask) => void;
 }) {
   const { dayName, dayNum, isToday } = formatDate(date);
 
@@ -213,7 +222,9 @@ function DayColumn({
             No tasks scheduled
           </div>
         ) : (
-          tasks.map((task) => <TaskCard key={task.id} task={task} />)
+          tasks.map((task) => (
+            <TaskCard key={task.id} task={task} onSelect={onTaskSelect} />
+          ))
         )}
       </div>
     </div>
@@ -223,6 +234,7 @@ function DayColumn({
 export function ProductionTimeline({
   tasks,
   className,
+  onTaskSelect,
 }: ProductionTimelineProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -301,7 +313,12 @@ export function ProductionTimeline({
           )}
         >
           {dates.map((date) => (
-            <DayColumn key={date} date={date} tasks={tasksByDate[date]} />
+            <DayColumn 
+              key={date} 
+              date={date} 
+              tasks={tasksByDate[date]} 
+              onTaskSelect={onTaskSelect}
+            />
           ))}
         </div>
 
@@ -329,3 +346,4 @@ export function ProductionTimeline({
 }
 
 export default ProductionTimeline;
+

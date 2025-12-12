@@ -227,3 +227,4 @@ COMMENT ON COLUMN inventory_movements.batch_movement_id IS 'Reference to parent 
 
 
 
+

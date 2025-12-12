@@ -57,3 +57,4 @@ COMMENT ON COLUMN scale_calibrations.deviation_percent IS 'Maximum deviation as 
 
 
 
+

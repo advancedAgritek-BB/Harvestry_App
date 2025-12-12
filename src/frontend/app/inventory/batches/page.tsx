@@ -20,6 +20,7 @@ import {
   MapPin,
   TrendingUp,
   Sparkles,
+  Printer,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -30,6 +31,31 @@ import {
 } from '@/features/inventory/types';
 import { useBatchStore } from '@/stores/batchStore';
 import { SEED_BATCHES } from '@/stores/batchSeedData';
+import { LabelPreviewSlideout, PrinterSettings } from '@/features/inventory/components/labels';
+import type { LabelTemplate } from '@/features/inventory/services/labels.service';
+
+// Batch label templates
+const BATCH_LABEL_TEMPLATES: LabelTemplate[] = [
+  {
+    id: 'batch-tpl-1',
+    siteId: 'site-1',
+    name: 'Batch Label - Standard',
+    jurisdiction: 'ALL',
+    labelType: 'batch',
+    format: 'zpl',
+    barcodeFormat: 'qr',
+    barcodePosition: { x: 10, y: 10, width: 80, height: 80 },
+    widthInches: 3,
+    heightInches: 2,
+    fields: [],
+    requiredPhrases: [],
+    jurisdictionRules: {},
+    isActive: true,
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
 
 // Phase icons
 const PHASE_ICONS: Record<CultivationPhase, React.ElementType> = {
@@ -133,7 +159,7 @@ function PhaseTabs({
 }
 
 // Batch card component
-function BatchCard({ batch, onClick }: { batch: CultivationBatch; onClick: () => void }) {
+function BatchCard({ batch, onClick, onPrintLabel }: { batch: CultivationBatch; onClick: () => void; onPrintLabel: () => void }) {
   const phaseConfig = PHASE_CONFIG[batch.currentPhase];
   const PhaseIcon = PHASE_ICONS[batch.currentPhase];
   const daysToHarvest = batch.expectedHarvestDate
@@ -244,9 +270,21 @@ function BatchCard({ batch, onClick }: { batch: CultivationBatch; onClick: () =>
         <span className="text-xs text-muted-foreground capitalize">
           {batch.originType}
         </span>
-        <span className="text-xs text-muted-foreground">
-          Updated {formatDistanceToNow(new Date(batch.updatedAt), { addSuffix: true })}
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrintLabel();
+            }}
+            title="Print Label"
+            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-cyan-400 transition-colors"
+          >
+            <Printer className="w-4 h-4" />
+          </button>
+          <span className="text-xs text-muted-foreground">
+            Updated {formatDistanceToNow(new Date(batch.updatedAt), { addSuffix: true })}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -285,6 +323,12 @@ function KPICard({
 export default function CultivationBatchesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPhase, setSelectedPhase] = useState<CultivationPhase | 'all'>('all');
+  
+  // Label preview state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewBatch, setPreviewBatch] = useState<CultivationBatch | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<LabelTemplate | null>(BATCH_LABEL_TEMPLATES[0]);
+  const [isPrinterSettingsOpen, setIsPrinterSettingsOpen] = useState(false);
   
   // Use shared batch store (single source of truth)
   const { batches, setBatches } = useBatchStore();
@@ -446,6 +490,10 @@ export default function CultivationBatchesPage() {
               onClick={() => {
                 window.location.href = `/inventory/batches/${batch.id}`;
               }}
+              onPrintLabel={() => {
+                setPreviewBatch(batch);
+                setIsPreviewOpen(true);
+              }}
             />
           ))}
         </div>
@@ -464,6 +512,37 @@ export default function CultivationBatchesPage() {
           </div>
         )}
       </main>
+
+      {/* Label Preview Slideout */}
+      <LabelPreviewSlideout
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        template={selectedTemplate}
+        availableTemplates={BATCH_LABEL_TEMPLATES}
+        onTemplateChange={(id) => {
+          const t = BATCH_LABEL_TEMPLATES.find(tpl => tpl.id === id);
+          if (t) setSelectedTemplate(t);
+        }}
+        entityData={previewBatch ? {
+          lotNumber: previewBatch.batchNumber,
+          productName: previewBatch.strainName,
+          strainName: previewBatch.strainName,
+          batchName: previewBatch.batchNumber,
+        } : null}
+        entityType="batch"
+        onPrint={async () => console.log('Printing batch label:', previewBatch?.batchNumber)}
+        onDownload={async (format) => console.log('Downloading as:', format)}
+        onOpenSettings={() => {
+          setIsPreviewOpen(false);
+          setIsPrinterSettingsOpen(true);
+        }}
+      />
+
+      {/* Printer Settings Modal */}
+      <PrinterSettings
+        isOpen={isPrinterSettingsOpen}
+        onClose={() => setIsPrinterSettingsOpen(false)}
+      />
     </div>
   );
 }

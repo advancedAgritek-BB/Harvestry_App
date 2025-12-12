@@ -65,3 +65,4 @@ COMMENT ON COLUMN scale_readings.raw_scale_data_json IS 'Raw response from scale
 
 
 
+

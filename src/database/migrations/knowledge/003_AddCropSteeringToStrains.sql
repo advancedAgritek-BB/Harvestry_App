@@ -20,3 +20,4 @@ CREATE INDEX IF NOT EXISTS ix_strains_crop_steering_profile
 -- Add comment
 COMMENT ON COLUMN genetics.strains.crop_steering_profile_id IS 
     'Optional reference to a strain-specific crop steering profile. If null, site default profile applies.';
+

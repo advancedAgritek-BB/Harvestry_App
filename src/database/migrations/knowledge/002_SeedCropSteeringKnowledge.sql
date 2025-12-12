@@ -186,3 +186,4 @@ Signals define phase-specific (P1/P2/P3) targets for shot sizing, intervals, and
 P1 = Ramp (post lights-on saturation)
 P2 = Maintenance (sustain VWC during photosynthesis)
 P3 = Dryback (controlled drying before lights-off)';
+

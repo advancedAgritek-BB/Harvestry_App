@@ -271,3 +271,4 @@ public sealed class CropSteeringProfile : AggregateRoot<Guid>
             throw new ArgumentException("Created by user ID cannot be empty", nameof(createdByUserId));
     }
 }
+

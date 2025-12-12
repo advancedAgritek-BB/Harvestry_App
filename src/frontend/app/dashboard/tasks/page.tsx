@@ -21,6 +21,9 @@ import {
 
 type ViewMode = 'board' | 'list';
 
+// Mock site ID - in production this would come from auth/site context
+const CURRENT_SITE_ID = 'site-1';
+
 export default function MyTasksPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -285,6 +288,7 @@ export default function MyTasksPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateTask}
+        siteId={CURRENT_SITE_ID}
         templates={[]}
         sops={[]}
         assignees={[

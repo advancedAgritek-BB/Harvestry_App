@@ -56,3 +56,4 @@ public sealed class SchedulingDemand : AggregateRoot<Guid>
 }
 
 
+

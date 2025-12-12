@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Command, ChevronDown, Bell, CheckCircle2, AlertTriangle, Zap, MessageSquare } from 'lucide-react';
+import { Command, Bell, CheckCircle2, AlertTriangle, Zap, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { UserProfileMenu } from './UserProfileMenu';
+import { SiteSelector } from '@/components/SiteRoomSelector';
 
 // Notification types and mock data
 interface TaskNotification {
@@ -242,29 +244,7 @@ export function Header() {
         
         {/* Site Selector */}
         <div className="hidden lg:flex items-center">
-          <span className="text-xs text-[var(--text-muted)] mr-2">Site:</span>
-          <button className="flex items-center gap-2 h-8 px-3 bg-[var(--bg-tile)] hover:bg-[var(--bg-tile-hover)] border border-[var(--border)] rounded-full text-xs font-medium text-[var(--text-primary)] transition-all group">
-            <span>Evergreen</span>
-            <ChevronDown className="w-3 h-3 text-[var(--text-muted)] group-hover:text-cyan-400" />
-          </button>
-        </div>
-
-        {/* Room Selector */}
-        <div className="hidden xl:flex items-center">
-          <span className="text-xs text-[var(--text-muted)] mr-2">Room:</span>
-          <button className="flex items-center gap-2 h-8 px-3 bg-[var(--bg-tile)] hover:bg-[var(--bg-tile-hover)] border border-[var(--border)] rounded-full text-xs font-medium text-[var(--text-primary)] transition-all group">
-            <span>Flower • F1</span>
-            <ChevronDown className="w-3 h-3 text-[var(--text-muted)] group-hover:text-cyan-400" />
-          </button>
-        </div>
-
-        {/* Time Range */}
-        <div className="hidden 2xl:flex items-center mr-4">
-          <span className="text-xs text-[var(--text-muted)] mr-2">Range:</span>
-          <button className="flex items-center gap-2 h-8 px-3 bg-[var(--bg-tile)] hover:bg-[var(--bg-tile-hover)] border border-[var(--border)] rounded-full text-xs font-medium text-[var(--text-primary)] transition-all group">
-            <span>Last 24 h</span>
-            <ChevronDown className="w-3 h-3 text-[var(--text-muted)] group-hover:text-cyan-400" />
-          </button>
+          <SiteSelector />
         </div>
 
         <div className="w-px h-6 bg-[var(--border)] mx-1" />
@@ -273,14 +253,7 @@ export function Header() {
         <NotificationIndicator />
 
         {/* User Profile */}
-        <button className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full hover:bg-[var(--bg-tile)] transition-colors">
-           <span className="text-sm font-medium text-[var(--text-primary)] hidden md:block">Brandon</span>
-           <img 
-             src="/images/user-avatar.png" 
-             alt="User avatar" 
-             className="w-10 h-10 rounded-full ring-2 ring-[var(--bg-surface)] shadow-lg object-cover"
-           />
-        </button>
+        <UserProfileMenu />
 
       </div>
     </header>

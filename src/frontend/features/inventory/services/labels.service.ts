@@ -11,7 +11,7 @@ export interface LabelTemplate {
   siteId: string;
   name: string;
   jurisdiction: string;
-  labelType: 'product' | 'package' | 'manifest' | 'batch' | 'location';
+  labelType: 'product' | 'package' | 'manifest' | 'batch' | 'location' | 'lot';
   format: 'zpl' | 'pdf' | 'png';
   
   // Dimensions
@@ -305,4 +305,186 @@ export async function validateLabel(
   });
   if (!response.ok) throw new Error('Failed to validate label');
   return response.json();
+}
+
+/**
+ * Zebra Printer Configuration
+ */
+export type ZebraPrinterDensity = '6dpmm' | '8dpmm' | '12dpmm' | '24dpmm';
+
+export interface ZebraPrinterConfig {
+  id: string;
+  name: string;
+  ipAddress?: string;
+  port?: number;
+  density: ZebraPrinterDensity;
+  darkness: number; // 0-30
+  printSpeed: number; // inches per second
+  isDefault: boolean;
+}
+
+export interface PrinterInfo {
+  id: string;
+  name: string;
+  type: 'zebra' | 'dymo' | 'brother' | 'generic';
+  isOnline: boolean;
+  config?: ZebraPrinterConfig;
+}
+
+const PRINTER_STORAGE_KEY = 'harvestry_printer_config';
+
+/**
+ * Get saved printer configuration from localStorage
+ */
+export function getSavedPrinterConfig(): ZebraPrinterConfig | null {
+  if (typeof window === 'undefined') return null;
+  const saved = localStorage.getItem(PRINTER_STORAGE_KEY);
+  return saved ? JSON.parse(saved) : null;
+}
+
+/**
+ * Save printer configuration to localStorage
+ */
+export function savePrinterConfig(config: ZebraPrinterConfig): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(PRINTER_STORAGE_KEY, JSON.stringify(config));
+}
+
+/**
+ * Clear saved printer configuration
+ */
+export function clearPrinterConfig(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(PRINTER_STORAGE_KEY);
+}
+
+/**
+ * Barcode Generation Options
+ */
+export interface BarcodeGenerationOptions {
+  width?: number;
+  height?: number;
+  scale?: number;
+  includeText?: boolean;
+  textSize?: number;
+  backgroundColor?: string;
+  barcodeColor?: string;
+}
+
+export type BarcodeFormat = 'gs1-128' | 'code128' | 'qr' | 'datamatrix';
+
+/**
+ * Generate barcode image as data URL using bwip-js
+ * This is a client-side function for preview purposes
+ */
+export async function generateBarcodeImage(
+  format: BarcodeFormat,
+  data: string,
+  options: BarcodeGenerationOptions = {}
+): Promise<string> {
+  // Dynamic import for client-side only
+  const bwipjs = await import('bwip-js');
+  
+  const {
+    width = 200,
+    height = format === 'qr' || format === 'datamatrix' ? 200 : 80,
+    scale = 2,
+    includeText = format !== 'qr' && format !== 'datamatrix',
+    textSize = 10,
+    backgroundColor = 'ffffff',
+    barcodeColor = '000000',
+  } = options;
+
+  // Map our format names to bwip-js encoder names
+  const encoderMap: Record<BarcodeFormat, string> = {
+    'gs1-128': 'gs1-128',
+    'code128': 'code128',
+    'qr': 'qrcode',
+    'datamatrix': 'datamatrix',
+  };
+
+  try {
+    const canvas = document.createElement('canvas');
+    
+    await bwipjs.toCanvas(canvas, {
+      bcid: encoderMap[format],
+      text: data,
+      scale,
+      height: format === 'qr' || format === 'datamatrix' ? undefined : height / 10,
+      width: format === 'qr' || format === 'datamatrix' ? undefined : width / 10,
+      includetext: includeText,
+      textsize: textSize,
+      backgroundcolor: backgroundColor,
+      barcolor: barcodeColor,
+    });
+
+    return canvas.toDataURL('image/png');
+  } catch (error) {
+    console.error('Failed to generate barcode:', error);
+    throw new Error(`Failed to generate ${format} barcode: ${error}`);
+  }
+}
+
+/**
+ * Generate a GS1-128 barcode string from lot data
+ * Uses the existing generateGS1Barcode logic
+ */
+export function buildGS1BarcodeData(data: {
+  gtin?: string;
+  lotNumber: string;
+  serial?: string;
+  expirationDate?: Date;
+  quantity?: number;
+}): string {
+  let barcode = '';
+
+  // GTIN (AI 01)
+  if (data.gtin) {
+    barcode += `01${data.gtin.padStart(14, '0')}`;
+  }
+
+  // Lot number (AI 10)
+  barcode += `10${data.lotNumber}`;
+
+  // Serial (AI 21)
+  if (data.serial) {
+    barcode += `21${data.serial}`;
+  }
+
+  // Expiration date (AI 17 - YYMMDD)
+  if (data.expirationDate) {
+    const yy = String(data.expirationDate.getFullYear()).slice(-2);
+    const mm = String(data.expirationDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(data.expirationDate.getDate()).padStart(2, '0');
+    barcode += `17${yy}${mm}${dd}`;
+  }
+
+  // Quantity (AI 30)
+  if (data.quantity !== undefined) {
+    barcode += `30${data.quantity}`;
+  }
+
+  return barcode;
+}
+
+/**
+ * Entity types that can have labels
+ */
+export type LabelEntityType = 'lot' | 'package' | 'batch' | 'location' | 'product' | 'manifest';
+
+/**
+ * Get the default template for an entity type
+ */
+export function getDefaultTemplateForEntity(
+  templates: LabelTemplate[],
+  entityType: LabelEntityType
+): LabelTemplate | undefined {
+  // First try to find a default template for this type
+  const defaultForType = templates.find(
+    t => t.labelType === entityType && t.isDefault && t.isActive
+  );
+  if (defaultForType) return defaultForType;
+
+  // Fall back to any active template for this type
+  return templates.find(t => t.labelType === entityType && t.isActive);
 }

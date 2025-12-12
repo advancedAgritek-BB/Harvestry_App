@@ -74,7 +74,7 @@ public static class SupabaseJwtAuthenticationExtensions
                         
                         if (context.Exception is SecurityTokenExpiredException)
                         {
-                            context.Response.Headers.Append("Token-Expired", "true");
+                            context.Response.Headers["Token-Expired"] = "true";
                             logger.LogDebug("Token expired for request to {Path}", 
                                 context.Request.Path);
                         }
@@ -144,6 +144,7 @@ public static class SupabaseJwtAuthenticationExtensions
         return services.AddSupabaseJwtAuthentication(configuration);
     }
 }
+
 
 
 

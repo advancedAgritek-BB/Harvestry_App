@@ -12,5 +12,6 @@ export * from './MetricsRow';
 export * from './ProductionTimeline';
 export * from './TodaySchedule';
 export * from './ActionItems';
+export * from './TaskDetailPanel';
 export * from './ui';
 

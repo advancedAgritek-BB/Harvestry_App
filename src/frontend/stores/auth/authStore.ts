@@ -38,6 +38,7 @@ export interface User {
   name: string;
   role: UserRole;
   avatarUrl?: string;
+  organizationName: string;
   sitePermissions: SitePermissions[];
 }
 
@@ -204,6 +205,7 @@ const DEV_MOCK_USER: User | null = USE_MOCK_AUTH ? {
   name: 'Dev User',
   role: UserRole.SuperAdmin,
   avatarUrl: '/images/user-avatar.png',
+  organizationName: 'Sugar Creek',
   sitePermissions: [
     {
       siteId: 'site-1',
@@ -409,7 +411,28 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
         currentSiteId: state.currentSiteId,
         currentTier: state.currentTier,
-      })
+      }),
+      // Merge persisted state with defaults to ensure new fields are included
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<AuthState>;
+        // In mock auth mode, ensure the mock user's new fields are always used
+        if (USE_MOCK_AUTH && DEV_MOCK_USER && persisted.user) {
+          return {
+            ...currentState,
+            ...persisted,
+            user: {
+              ...DEV_MOCK_USER,
+              ...persisted.user,
+              // Always use mock user's organizationName if available
+              organizationName: DEV_MOCK_USER.organizationName,
+            },
+          };
+        }
+        return {
+          ...currentState,
+          ...persisted,
+        };
+      },
     }
   )
 );

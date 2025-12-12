@@ -229,7 +229,7 @@ public class PackagesDbContext : DbContext
             entity.Property(e => e.Reason).HasColumnName("reason").HasConversion<string>();
             entity.Property(e => e.ReasonNote).HasColumnName("reason_note");
             entity.Property(e => e.AdjustmentDate).HasColumnName("adjustment_date");
-            entity.Property(e => e.AdjustedByUserId).HasColumnName("adjusted_by_user_id");
+            entity.Property(e => e.PerformedByUserId).HasColumnName("performed_by_user_id");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
         });
     }
@@ -242,14 +242,15 @@ public class PackagesDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.PackageId).HasColumnName("package_id");
-            entity.Property(e => e.RemediationMethod).HasColumnName("remediation_method").HasMaxLength(100);
+            entity.Property(e => e.RemediationMethodName).HasColumnName("remediation_method_name").HasMaxLength(200);
             entity.Property(e => e.RemediationSteps).HasColumnName("remediation_steps");
             entity.Property(e => e.RemediationDate).HasColumnName("remediation_date");
-            entity.Property(e => e.RemediatedByUserId).HasColumnName("remediated_by_user_id");
+            entity.Property(e => e.PerformedByUserId).HasColumnName("performed_by_user_id");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
         });
     }
 }
+
 
 
 

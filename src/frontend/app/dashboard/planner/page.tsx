@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Calendar, Clock, Settings, TrendingUp, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -11,11 +12,14 @@ import { MetricsRow } from '@/features/planner/components/MetricsRow';
 import { ProductionTimeline } from '@/features/planner/components/ProductionTimeline';
 import { TodaySchedule } from '@/features/planner/components/TodaySchedule';
 import { ActionItems } from '@/features/planner/components/ActionItems';
+import { TaskDetailPanel } from '@/features/planner/components/TaskDetailPanel';
+import { AssignStaffModal } from '@/features/planner/components/AssignStaffModal';
 import {
   PlannerCard,
   SectionHeader,
   StatusBadge,
 } from '@/features/planner/components/ui';
+import type { AssignableMember } from '@/features/labor/types/team.types';
 
 // Data
 import {
@@ -29,7 +33,7 @@ import {
 } from '@/features/planner/constants/laborMockData';
 
 // Types
-import { ProductivitySnapshot, IntegrationStatus } from '@/features/planner/types';
+import { ProductivitySnapshot, IntegrationStatus, ProductionTask } from '@/features/planner/types';
 
 // ============================================
 // Quick Stats Components (Bottom Section)
@@ -106,7 +110,52 @@ function IntegrationRow({ integration }: { integration: IntegrationStatus }) {
 // Main Page Component
 // ============================================
 
+// Mock site ID - in production this would come from auth context
+const CURRENT_SITE_ID = 'site-1';
+
 export default function PlannerHomePage() {
+  const router = useRouter();
+  const [selectedTask, setSelectedTask] = useState<ProductionTask | null>(null);
+  const [isTaskPanelOpen, setIsTaskPanelOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [taskToAssign, setTaskToAssign] = useState<ProductionTask | null>(null);
+
+  const handleTaskSelect = useCallback((task: ProductionTask) => {
+    setSelectedTask(task);
+    setIsTaskPanelOpen(true);
+  }, []);
+
+  const handleCloseTaskPanel = useCallback(() => {
+    setIsTaskPanelOpen(false);
+  }, []);
+
+  const handleEditTask = useCallback((task: ProductionTask) => {
+    // TODO: Implement task editing modal or navigation
+    console.log('Edit task:', task.id);
+  }, []);
+
+  const handleAssignStaff = useCallback((task: ProductionTask) => {
+    // Open the assign staff modal instead of navigating to shift board
+    setTaskToAssign(task);
+    setIsAssignModalOpen(true);
+  }, []);
+
+  const handleCloseAssignModal = useCallback(() => {
+    setIsAssignModalOpen(false);
+    setTaskToAssign(null);
+  }, []);
+
+  const handleAssignMembers = useCallback(async (taskId: string, members: AssignableMember[]) => {
+    // TODO: Call API to assign members to task
+    console.log('Assigning members to task:', taskId, members);
+    // In a real implementation, this would call the backend API
+    // await assignStaffToTask(taskId, members.map(m => m.userId));
+  }, []);
+
+  const handleViewShiftBoard = useCallback((task: ProductionTask) => {
+    router.push(`/dashboard/planner/shift-board?task=${task.id}`);
+  }, [router]);
+
   return (
     <div className="flex flex-col gap-6 p-6 max-w-[1600px] mx-auto">
       {/* Page Header */}
@@ -154,7 +203,7 @@ export default function PlannerHomePage() {
       <MetricsRow metrics={laborMetrics} />
 
       {/* Production Timeline */}
-      <ProductionTimeline tasks={productionTasks} />
+      <ProductionTimeline tasks={productionTasks} onTaskSelect={handleTaskSelect} />
 
       {/* Two Column Layout: Schedule + Action Items */}
       <div className="grid gap-6 lg:grid-cols-5">
@@ -200,6 +249,25 @@ export default function PlannerHomePage() {
           </div>
         </div>
       </div>
+
+      {/* Task Detail Panel */}
+      <TaskDetailPanel
+        task={selectedTask}
+        isOpen={isTaskPanelOpen}
+        onClose={handleCloseTaskPanel}
+        onEdit={handleEditTask}
+        onAssignStaff={handleAssignStaff}
+        onViewShiftBoard={handleViewShiftBoard}
+      />
+
+      {/* Assign Staff Modal */}
+      <AssignStaffModal
+        isOpen={isAssignModalOpen}
+        onClose={handleCloseAssignModal}
+        task={taskToAssign}
+        siteId={CURRENT_SITE_ID}
+        onAssign={handleAssignMembers}
+      />
     </div>
   );
 }

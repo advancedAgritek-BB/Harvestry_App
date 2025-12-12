@@ -348,6 +348,20 @@ public sealed class InventoryMovement : AggregateRoot<Guid>
     }
 
     /// <summary>
+    /// Link this movement to an outbound transfer (internal Harvestry transfer id).
+    /// </summary>
+    public void LinkTransfer(Guid transferId)
+    {
+        if (transferId == Guid.Empty)
+        {
+            throw new ArgumentException("TransferId cannot be empty", nameof(transferId));
+        }
+
+        TransferId = transferId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
     /// Add verification
     /// </summary>
     public void Verify(Guid userId, string? scanData = null, string? barcodeScanned = null)
@@ -466,6 +480,7 @@ public sealed class InventoryMovement : AggregateRoot<Guid>
         UpdatedAt = DateTime.UtcNow;
     }
 }
+
 
 
 

@@ -55,3 +55,4 @@ COMMENT ON COLUMN scale_devices.readability_grams IS 'Smallest measurable increm
 
 
 
+

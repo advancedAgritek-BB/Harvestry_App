@@ -230,3 +230,4 @@ export function TodaySchedule({ schedule, className }: TodayScheduleProps) {
 }
 
 export default TodaySchedule;
+

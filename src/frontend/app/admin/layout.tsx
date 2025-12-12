@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   Leaf,
   Users,
+  UsersRound,
   MapPin,
   Cpu,
   Package,
@@ -45,6 +46,13 @@ const ADMIN_TABS: AdminTab[] = [
     href: '/admin/identity',
     icon: Users,
     description: 'Users, Roles, Badges, Training',
+  },
+  {
+    id: 'teams',
+    label: 'Teams',
+    href: '/admin/teams',
+    icon: UsersRound,
+    description: 'Team Management, Leads, Assignments',
   },
   {
     id: 'spatial',

@@ -197,6 +197,7 @@ export function Button({
   size = 'md',
   className,
   children,
+  type = 'button',
   ...props
 }: ButtonProps) {
   const variants = {
@@ -216,6 +217,7 @@ export function Button({
 
   return (
     <button
+      type={type}
       className={cn(
         'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-200',
         'focus:outline-none focus:ring-2 focus:ring-violet-500/30',

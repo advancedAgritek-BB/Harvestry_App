@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Harvestry.Identity.Application.DTOs;
 using Harvestry.Identity.Application.Interfaces;
+using Harvestry.Identity.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,6 +22,51 @@ public sealed class PermissionsController : ControllerBase
     public PermissionsController(IPolicyEvaluationService policyEvaluationService)
     {
         _policyEvaluationService = policyEvaluationService ?? throw new ArgumentNullException(nameof(policyEvaluationService));
+    }
+
+    /// <summary>
+    /// Get the complete permission registry with all sections and bundles.
+    /// Used by the admin UI to render the permission editor.
+    /// </summary>
+    [HttpGet("registry")]
+    [ProducesResponseType(typeof(PermissionRegistryDto), 200)]
+    public ActionResult<PermissionRegistryDto> GetRegistry()
+    {
+        var sections = PermissionSections.All.Select(s => new PermissionSectionDto
+        {
+            Id = s.Id,
+            Label = s.Label,
+            Description = s.Description,
+            DisplayOrder = s.DisplayOrder,
+            Permissions = s.Permissions.Select(p => new PermissionDto
+            {
+                Key = p.Key,
+                Label = p.Label,
+                Description = p.Description,
+                RequiresTwoPersonApproval = p.RequiresTwoPersonApproval,
+                RequiresReason = p.RequiresReason
+            }).ToList()
+        }).ToList();
+
+        var bundles = PermissionBundles.All.Select(b => new PermissionBundleDto
+        {
+            Id = b.Id,
+            Name = b.Name,
+            Description = b.Description,
+            Category = b.Category,
+            DisplayOrder = b.DisplayOrder,
+            PermissionCount = b.PermissionCount,
+            Permissions = b.Permissions.ToList()
+        }).ToList();
+
+        var categories = PermissionBundles.GetCategories().ToList();
+
+        return Ok(new PermissionRegistryDto
+        {
+            Sections = sections,
+            Bundles = bundles,
+            BundleCategories = categories
+        });
     }
 
     [HttpPost("check")]

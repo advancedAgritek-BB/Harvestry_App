@@ -230,3 +230,4 @@ public interface IScaleReadingRepository
 
 
 
+

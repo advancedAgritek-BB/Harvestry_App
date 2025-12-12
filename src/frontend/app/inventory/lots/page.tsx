@@ -21,9 +21,13 @@ import {
   Clock,
   XCircle,
   RefreshCw,
+  Printer,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { LotStatus, ProductType } from '@/features/inventory/types';
+import { LabelPreviewSlideout, PrinterSettings } from '@/features/inventory/components/labels';
+import type { LabelTemplate } from '@/features/inventory/services/labels.service';
+import type { LabelPreviewData } from '@/features/inventory/hooks/useLabelPreview';
 
 // Display-specific lot type for this page's mock data
 interface LotDisplayItem {
@@ -75,6 +79,48 @@ const SYNC_STATUS_COLORS = {
   not_required: 'bg-slate-400',
 };
 
+// Label templates for lots
+const LOT_LABEL_TEMPLATES: LabelTemplate[] = [
+  {
+    id: 'lot-tpl-1',
+    siteId: 'site-1',
+    name: 'Standard Lot Label',
+    jurisdiction: 'ALL',
+    labelType: 'lot',
+    format: 'zpl',
+    barcodeFormat: 'gs1-128',
+    barcodePosition: { x: 10, y: 40, width: 180, height: 30 },
+    widthInches: 2,
+    heightInches: 1,
+    fields: [],
+    requiredPhrases: [],
+    jurisdictionRules: {},
+    isActive: true,
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'lot-tpl-2',
+    siteId: 'site-1',
+    name: 'Lot QR Label',
+    jurisdiction: 'ALL',
+    labelType: 'lot',
+    format: 'zpl',
+    barcodeFormat: 'qr',
+    barcodePosition: { x: 10, y: 10, width: 80, height: 80 },
+    widthInches: 2,
+    heightInches: 2,
+    fields: [],
+    requiredPhrases: [],
+    jurisdictionRules: {},
+    isActive: true,
+    isDefault: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 // Mock data for demo
 const MOCK_LOTS: LotDisplayItem[] = Array.from({ length: 25 }, (_, i) => ({
   id: `lot-${i + 1}`,
@@ -108,11 +154,13 @@ function LotRow({
   selected, 
   onSelect,
   onView,
+  onPrintLabel,
 }: { 
   lot: LotDisplayItem; 
   selected: boolean;
   onSelect: (selected: boolean) => void;
   onView: () => void;
+  onPrintLabel: () => void;
 }) {
   const status = STATUS_CONFIG[lot.status];
   const StatusIcon = status.icon;
@@ -193,10 +241,19 @@ function LotRow({
       </td>
 
       {/* Actions */}
-      <td className="px-4 py-3 w-12" onClick={(e) => e.stopPropagation()}>
-        <button className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-muted text-muted-foreground hover:text-foreground transition-all">
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
+      <td className="px-4 py-3 w-24" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={onPrintLabel}
+            title="Print Label"
+            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-cyan-400 transition-colors"
+          >
+            <Printer className="w-4 h-4" />
+          </button>
+          <button className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+        </div>
       </td>
     </tr>
   );
@@ -209,6 +266,12 @@ export default function LotsListPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
+
+  // Label preview state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewLot, setPreviewLot] = useState<LotDisplayItem | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<LabelTemplate | null>(LOT_LABEL_TEMPLATES[0]);
+  const [isPrinterSettingsOpen, setIsPrinterSettingsOpen] = useState(false);
 
   // In real app, this would come from useLots hook
   const lots = MOCK_LOTS;
@@ -259,6 +322,35 @@ export default function LotsListPage() {
 
   const allSelected = paginatedLots.length > 0 && paginatedLots.every((l) => selectedIds.has(l.id));
   const someSelected = selectedIds.size > 0;
+
+  const handleOpenLabelPreview = (lot: LotDisplayItem) => {
+    setPreviewLot(lot);
+    setSelectedTemplate(LOT_LABEL_TEMPLATES[0]);
+    setIsPreviewOpen(true);
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    const template = LOT_LABEL_TEMPLATES.find(t => t.id === templateId);
+    if (template) {
+      setSelectedTemplate(template);
+    }
+  };
+
+  const getLabelDataFromLot = (lot: LotDisplayItem | null): LabelPreviewData | null => {
+    if (!lot) return null;
+    return {
+      lotNumber: lot.lotNumber,
+      productName: lot.strainName || 'Unknown Product',
+      strainName: lot.strainName,
+      quantity: lot.quantity,
+      uom: lot.uom,
+      expirationDate: lot.expirationDate,
+      metrcTag: lot.metrcId,
+      locationName: lot.locationPath,
+      thcPercent: lot.thcPercent ? `${lot.thcPercent.toFixed(1)}%` : undefined,
+      cbdPercent: lot.cbdPercent ? `${lot.cbdPercent.toFixed(1)}%` : undefined,
+    };
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -419,6 +511,7 @@ export default function LotsListPage() {
                   selected={selectedIds.has(lot.id)}
                   onSelect={(selected) => handleSelect(lot.id, selected)}
                   onView={() => window.location.href = `/inventory/lots/${lot.id}`}
+                  onPrintLabel={() => handleOpenLabelPreview(lot)}
                 />
               ))}
             </tbody>
@@ -451,6 +544,33 @@ export default function LotsListPage() {
           </div>
         </div>
       </div>
+
+      {/* Label Preview Slideout */}
+      <LabelPreviewSlideout
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        template={selectedTemplate}
+        availableTemplates={LOT_LABEL_TEMPLATES}
+        onTemplateChange={handleTemplateChange}
+        entityData={getLabelDataFromLot(previewLot)}
+        entityType="lot"
+        onPrint={async () => {
+          console.log('Printing lot label:', previewLot?.lotNumber);
+        }}
+        onDownload={async (format) => {
+          console.log('Downloading as:', format);
+        }}
+        onOpenSettings={() => {
+          setIsPreviewOpen(false);
+          setIsPrinterSettingsOpen(true);
+        }}
+      />
+
+      {/* Printer Settings Modal */}
+      <PrinterSettings
+        isOpen={isPrinterSettingsOpen}
+        onClose={() => setIsPrinterSettingsOpen(false)}
+      />
     </div>
   );
 }

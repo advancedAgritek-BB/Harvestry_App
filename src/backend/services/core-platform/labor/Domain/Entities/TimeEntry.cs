@@ -80,3 +80,4 @@ public sealed class TimeEntry : AggregateRoot<Guid>
 }
 
 
+

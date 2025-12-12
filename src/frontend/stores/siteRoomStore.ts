@@ -104,9 +104,17 @@ export const useSiteRoomStore = create<SiteRoomState>()(
     }),
     {
       name: 'harvestry-site-room',
+      version: 1,
       partialize: (state) => ({
         selectedSiteId: state.selectedSiteId,
         selectedRoomId: state.selectedRoomId,
+      }),
+      // Ensure sites and rooms always use current defaults, not stale localStorage data
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...(persistedState as Partial<SiteRoomState>),
+        sites: DEFAULT_SITES,
+        rooms: DEFAULT_ROOMS,
       }),
     }
   )
@@ -117,5 +125,6 @@ export const useSelectedSite = () => useSiteRoomStore(state => state.getSelected
 export const useSelectedRoom = () => useSiteRoomStore(state => state.getSelectedRoom());
 export const useAvailableSites = () => useSiteRoomStore(state => state.sites);
 export const useAvailableRooms = () => useSiteRoomStore(state => state.getRoomsForSelectedSite());
+
 
 

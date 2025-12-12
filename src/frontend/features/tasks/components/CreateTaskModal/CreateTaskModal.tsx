@@ -9,13 +9,17 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { TaskLibraryItem, SopSummary } from '../../types/sop.types';
 import type { TaskAssignee, TaskPriority } from '../../types/task.types';
+import { TeamMemberPicker } from '@/features/labor/components/TeamMemberPicker';
+import type { AssignableMember } from '@/features/labor/types/team.types';
 
 interface CreateTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreateTaskFormData) => Promise<void>;
+  siteId: string;
   templates?: TaskLibraryItem[];
   sops?: SopSummary[];
+  /** @deprecated Use TeamMemberPicker instead - this prop is kept for backwards compatibility */
   assignees?: TaskAssignee[];
   isLoading?: boolean;
 }
@@ -36,6 +40,7 @@ export function CreateTaskModal({
   isOpen,
   onClose,
   onSubmit,
+  siteId,
   templates = [],
   sops = [],
   assignees = [],
@@ -221,26 +226,24 @@ export function CreateTaskModal({
               </div>
             </div>
 
-            {/* Assignee */}
-            {assignees.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
-                  Assign To
-                </label>
-                <select
-                  value={formData.assignedToUserId || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, assignedToUserId: e.target.value || undefined }))}
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] px-3 py-2 focus:outline-none focus:border-[var(--accent-cyan)]"
-                >
-                  <option value="">Unassigned</option>
-                  {assignees.map(assignee => (
-                    <option key={assignee.id} value={assignee.id}>
-                      {assignee.firstName} {assignee.lastName} {assignee.role && `(${assignee.role})`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            {/* Assignee - Team Member Picker */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
+                Assign To
+              </label>
+              <TeamMemberPicker
+                siteId={siteId}
+                selectedUserId={formData.assignedToUserId}
+                onSelect={(member: AssignableMember | null) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    assignedToUserId: member?.userId,
+                    assignedToRole: member?.role,
+                  }));
+                }}
+                placeholder="Select team member..."
+              />
+            </div>
 
             {/* SOPs */}
             {sops.length > 0 && (

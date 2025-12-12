@@ -9,3 +9,4 @@ export * from './useScanning';
 export * from './useComplianceSync';
 export * from './useFinancialMetrics';
 export * from './useAlerts';
+export * from './useLabelPreview';

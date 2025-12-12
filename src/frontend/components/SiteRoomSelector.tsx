@@ -123,7 +123,106 @@ export function SiteRoomSelector() {
   );
 }
 
-// Compact version for smaller spaces
+// Site-only selector for the main header
+export function SiteSelector() {
+  const [isMounted, setIsMounted] = React.useState(false);
+  const selectedSite = useSelectedSite();
+  const sites = useAvailableSites();
+  const setSelectedSite = useSiteRoomStore(state => state.setSelectedSite);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Prevent hydration mismatch by not rendering until client-side
+  if (!isMounted) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-sm">
+        <Building2 className="w-4 h-4 text-muted-foreground" />
+        <span className="font-medium text-foreground">Loading...</span>
+        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <SelectorDropdown
+      label="Select Site"
+      icon={<Building2 className="w-4 h-4" />}
+      value={selectedSite?.name || 'Select Site'}
+      options={sites}
+      onChange={setSelectedSite}
+    />
+  );
+}
+
+// Room-only selector for cultivation-specific contexts
+export function RoomSelector() {
+  const [isMounted, setIsMounted] = React.useState(false);
+  const selectedRoom = useSelectedRoom();
+  const rooms = useAvailableRooms();
+  const setSelectedRoom = useSiteRoomStore(state => state.setSelectedRoom);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/50 text-sm">
+        <DoorOpen className="w-4 h-4 text-muted-foreground" />
+        <span className="font-medium text-foreground">Loading...</span>
+        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <SelectorDropdown
+      label="Select Room"
+      icon={<DoorOpen className="w-4 h-4" />}
+      value={selectedRoom?.name || 'Select Room'}
+      options={rooms}
+      onChange={setSelectedRoom}
+    />
+  );
+}
+
+// Compact room selector for smaller spaces
+export function RoomSelectorCompact() {
+  const [isMounted, setIsMounted] = React.useState(false);
+  const selectedRoom = useSelectedRoom();
+  const rooms = useAvailableRooms();
+  const setSelectedRoom = useSiteRoomStore(state => state.setSelectedRoom);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <span className="text-sm text-muted-foreground">Loading...</span>;
+  }
+
+  return (
+    <div className="relative group">
+      <select
+        value={selectedRoom?.id || ''}
+        onChange={(e) => setSelectedRoom(e.target.value)}
+        aria-label="Select room"
+        className="appearance-none bg-transparent border-none text-foreground font-medium cursor-pointer pr-5 focus:outline-none focus:ring-0 text-sm"
+      >
+        {rooms.map((room) => (
+          <option key={room.id} value={room.id} className="bg-surface text-foreground">
+            {room.name}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+    </div>
+  );
+}
+
+// Compact version for smaller spaces (legacy - combines site and room)
 export function SiteRoomSelectorCompact() {
   const selectedSite = useSelectedSite();
   const selectedRoom = useSelectedRoom();
@@ -168,5 +267,6 @@ export function SiteRoomSelectorCompact() {
     </div>
   );
 }
+
 
 

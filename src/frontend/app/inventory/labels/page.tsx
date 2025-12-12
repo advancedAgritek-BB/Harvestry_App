@@ -6,8 +6,6 @@ import {
   ChevronLeft,
   Plus,
   Printer,
-  Download,
-  Copy,
   Edit2,
   Trash2,
   QrCode,
@@ -16,54 +14,89 @@ import {
   ChevronDown,
   Eye,
   CheckCircle,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LabelPreviewSlideout, PrinterSettings } from '@/features/inventory/components/labels';
+import type { LabelTemplate } from '@/features/inventory/services/labels.service';
 
-// Mock templates
-const MOCK_TEMPLATES = [
+// Full template data for preview
+const MOCK_TEMPLATES: LabelTemplate[] = [
   {
     id: 'tpl-1',
+    siteId: 'site-1',
     name: 'Colorado Product Label',
     jurisdiction: 'CO',
     labelType: 'product',
+    format: 'zpl',
     barcodeFormat: 'gs1-128',
+    barcodePosition: { x: 10, y: 40, width: 180, height: 30 },
     widthInches: 2,
     heightInches: 1,
+    fields: [],
+    requiredPhrases: [],
+    jurisdictionRules: {},
     isActive: true,
     isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'tpl-2',
+    siteId: 'site-1',
     name: 'California Batch Label',
     jurisdiction: 'CA',
     labelType: 'batch',
+    format: 'zpl',
     barcodeFormat: 'qr',
+    barcodePosition: { x: 10, y: 10, width: 60, height: 60 },
     widthInches: 3,
     heightInches: 2,
+    fields: [],
+    requiredPhrases: [],
+    jurisdictionRules: {},
     isActive: true,
     isDefault: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'tpl-3',
+    siteId: 'site-1',
     name: 'Manifest Label',
     jurisdiction: 'ALL',
     labelType: 'manifest',
+    format: 'zpl',
     barcodeFormat: 'gs1-128',
+    barcodePosition: { x: 10, y: 50, width: 280, height: 40 },
     widthInches: 4,
     heightInches: 2,
+    fields: [],
+    requiredPhrases: [],
+    jurisdictionRules: {},
     isActive: true,
     isDefault: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'tpl-4',
+    siteId: 'site-1',
     name: 'Location QR Code',
     jurisdiction: 'ALL',
     labelType: 'location',
+    format: 'zpl',
     barcodeFormat: 'qr',
+    barcodePosition: { x: 20, y: 20, width: 160, height: 160 },
     widthInches: 2,
     heightInches: 2,
+    fields: [],
+    requiredPhrases: [],
+    jurisdictionRules: {},
     isActive: true,
     isDefault: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
 ];
 
@@ -73,12 +106,28 @@ const MOCK_PRINT_QUEUE = [
   { id: 'job-3', templateName: 'Colorado Product Label', lotNumber: 'LOT-2025-0012', quantity: 5, status: 'queued', createdAt: new Date(Date.now() - 600000).toISOString() },
 ];
 
+// Sample data for template preview
+const SAMPLE_LABEL_DATA = {
+  lotNumber: 'LOT-2025-001234',
+  productName: 'Blue Dream Flower',
+  strainName: 'Blue Dream',
+  quantity: 3.5,
+  uom: 'g',
+  metrcTag: '1A40500000001234567',
+};
+
 type Tab = 'templates' | 'print-queue';
 
 export default function LabelsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('templates');
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Preview slideout state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState<LabelTemplate | null>(null);
+  
+  // Printer settings state
+  const [isPrinterSettingsOpen, setIsPrinterSettingsOpen] = useState(false);
 
   const filteredTemplates = MOCK_TEMPLATES.filter((t) =>
     t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -94,6 +143,28 @@ export default function LabelsPage() {
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handlePreviewTemplate = (template: LabelTemplate) => {
+    setPreviewTemplate(template);
+    setIsPreviewOpen(true);
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    const template = MOCK_TEMPLATES.find(t => t.id === templateId);
+    if (template) {
+      setPreviewTemplate(template);
+    }
+  };
+
+  const handlePrint = async () => {
+    // TODO: Implement actual printing
+    console.log('Printing template:', previewTemplate?.id);
+  };
+
+  const handleDownload = async (format: 'pdf' | 'png') => {
+    // TODO: Implement actual download
+    console.log('Downloading as:', format);
   };
 
   const tabs = [
@@ -123,6 +194,13 @@ export default function LabelsPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setIsPrinterSettingsOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-foreground hover:bg-white/10 transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="text-sm">Printer Settings</span>
+              </button>
               <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-foreground hover:bg-white/10 transition-colors">
                 <Printer className="w-4 h-4" />
                 <span className="text-sm">Quick Print</span>
@@ -192,12 +270,7 @@ export default function LabelsPage() {
               {filteredTemplates.map((template) => (
                 <div
                   key={template.id}
-                  className={cn(
-                    'bg-surface border rounded-xl overflow-hidden transition-all',
-                    selectedTemplate === template.id
-                      ? 'border-indigo-500/30 ring-1 ring-indigo-500/20'
-                      : 'border-border hover:border-border'
-                  )}
+                  className="bg-surface border border-border rounded-xl overflow-hidden transition-all hover:border-indigo-500/30"
                 >
                   {/* Preview Area */}
                   <div className="aspect-video bg-muted/30 flex items-center justify-center border-b border-border">
@@ -253,7 +326,10 @@ export default function LabelsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white/5 text-sm text-foreground hover:bg-white/10 transition-colors">
+                      <button 
+                        onClick={() => handlePreviewTemplate(template)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white/5 text-sm text-foreground hover:bg-white/10 transition-colors"
+                      >
                         <Eye className="w-3.5 h-3.5" />
                         Preview
                       </button>
@@ -334,7 +410,29 @@ export default function LabelsPage() {
           </div>
         )}
       </div>
+
+      {/* Label Preview Slideout */}
+      <LabelPreviewSlideout
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        template={previewTemplate}
+        availableTemplates={MOCK_TEMPLATES}
+        onTemplateChange={handleTemplateChange}
+        entityData={SAMPLE_LABEL_DATA}
+        entityType={previewTemplate?.labelType || 'product'}
+        onPrint={handlePrint}
+        onDownload={handleDownload}
+        onOpenSettings={() => {
+          setIsPreviewOpen(false);
+          setIsPrinterSettingsOpen(true);
+        }}
+      />
+
+      {/* Printer Settings Modal */}
+      <PrinterSettings
+        isOpen={isPrinterSettingsOpen}
+        onClose={() => setIsPrinterSettingsOpen(false)}
+      />
     </div>
   );
 }
-

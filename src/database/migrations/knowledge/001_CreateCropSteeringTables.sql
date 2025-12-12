@@ -174,3 +174,4 @@ COMMENT ON COLUMN knowledge.irrigation_signal_references.applicable_phase IS 'Da
 
 COMMENT ON TABLE knowledge.cultivar_response_curves IS 'Strain-specific response curves for MPC optimization';
 COMMENT ON COLUMN knowledge.cultivar_response_curves.data_points IS 'Array of {x, y} points defining the response curve';
+

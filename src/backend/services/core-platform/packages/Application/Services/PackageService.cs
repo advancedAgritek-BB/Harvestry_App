@@ -306,7 +306,8 @@ public class PackageService : IPackageService
         var remainingQuantity = sourcePackage.Quantity - totalTargetQuantity;
         if (remainingQuantity > 0)
         {
-            sourcePackage.Adjust(-totalTargetQuantity, AdjustmentReason.Processing, DateOnly.FromDateTime(DateTime.UtcNow), userId, "Split to new packages");
+            // Split is a processing loss on the source package quantity.
+            sourcePackage.Adjust(-totalTargetQuantity, AdjustmentReason.ProcessingLoss, DateOnly.FromDateTime(DateTime.UtcNow), userId, "Split to new packages");
         }
         else
         {
@@ -473,6 +474,7 @@ public class PackageService : IPackageService
         }).ToList();
     }
 }
+
 
 
 

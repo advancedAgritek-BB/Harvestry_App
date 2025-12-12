@@ -6,20 +6,19 @@ import {
   CalendarDays, 
   Flower2, 
   BarChart2, 
-  UserPlus,
   Droplets,
   BookOpen,
   Cog,
   Package,
-  Sun,
-  Moon,
-  ClipboardCheck
+  ClipboardCheck,
+  ShoppingCart,
+  Truck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useThemeStore } from '@/stores/app/themeStore';
 import { useAuthStore, TierFeature, TIER_FEATURES } from '@/stores/auth/authStore';
+import { usePermissions } from '@/providers/PermissionsProvider';
 
 interface NavItem {
   label: string;
@@ -39,6 +38,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Irrigation', icon: Droplets, href: '/dashboard/irrigation', requiredFeature: 'control' },
   { label: 'Library', icon: BookOpen, href: '/library', requiredFeature: 'sop_engine' },
   { label: 'Inventory', icon: Package, href: '/inventory', accent: 'amber', requiredFeature: 'inventory' },
+  { label: 'Sales', icon: ShoppingCart, href: '/sales/dashboard', accent: 'amber', requiredFeature: 'inventory' },
+  { label: 'Transfers', icon: Truck, href: '/transfers/outbound', accent: 'amber', requiredFeature: 'inventory' },
   { label: 'Analytics', icon: BarChart2, href: '/dashboard/analytics', accent: 'amber', requiredFeature: 'historical_data' },
   { label: 'Admin', icon: Cog, href: '/admin', accent: 'violet' },
 ];
@@ -63,34 +64,58 @@ const ACCENT_STYLES = {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { theme, toggleTheme } = useThemeStore();
   // Subscribe to currentTier directly so component re-renders when tier changes
   const currentTier = useAuthStore((state) => state.currentTier);
+  const permissions = usePermissions();
   
   // Check if a feature is available in the current tier
   const hasFeature = (feature: TierFeature) => TIER_FEATURES[currentTier].includes(feature);
 
   return (
-    <aside className="w-20 h-screen flex flex-col items-center py-6 bg-surface border-r border-border z-50 flex-shrink-0">
+    <aside className="w-20 h-screen flex flex-col items-center py-6 bg-surface border-r border-border z-50 flex-shrink-0 overflow-hidden">
       {/* Logo Placeholder / Home */}
-      <div className="mb-8">
+      <div className="mb-4 flex-shrink-0">
          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center ring-1 ring-cyan-500/50">
             <Flower2 className="w-6 h-6 text-cyan-400" />
          </div>
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 flex flex-col gap-6 w-full px-2">
+      <nav className="flex-1 flex flex-col gap-4 w-full px-2 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent min-h-0">
         {NAV_ITEMS.map((item) => {
           // Hide items that require a feature not available in the current tier
           if (item.requiredFeature && !hasFeature(item.requiredFeature)) {
             return null;
           }
+
+          // Permission gating for new top-level modules.
+          if (item.href.startsWith('/sales')) {
+            // Show Sales if user has any sales-related permission
+            if (!permissions.any([
+              'sales:dashboard:view',
+              'sales:customers:view',
+              'sales:orders:view',
+              'sales:orders:create',
+              'sales:allocate',
+              'sales:shipments:create',
+              'sales:transfers:view',
+              'sales:reports:view',
+            ])) return null;
+          }
+          if (item.href.startsWith('/transfers')) {
+            if (!permissions.any(['transfers:view', 'transfers:create'])) return null;
+          }
           
-          // Home is active for exact match, others match on prefix
-          const isActive = item.href === '/dashboard/overview' 
-            ? pathname === '/dashboard/overview' || pathname === '/dashboard'
-            : pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard/overview');
+          // Determine active state - Sales matches any /sales/* path
+          let isActive = false;
+          if (item.href === '/dashboard/overview') {
+            isActive = pathname === '/dashboard/overview' || pathname === '/dashboard';
+          } else if (item.href === '/sales/dashboard') {
+            // Sales nav item is active for any /sales/* path
+            isActive = pathname.startsWith('/sales');
+          } else {
+            isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard/overview');
+          }
           const Icon = item.icon;
           const accent = ACCENT_STYLES[item.accent ?? 'cyan'];
           
@@ -126,40 +151,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Bottom Actions */}
-      <div className="flex flex-col gap-4 w-full px-2 mt-auto">
-        {/* Theme Toggle */}
-        <button 
-          onClick={toggleTheme}
-          className="flex flex-col items-center justify-center gap-1 p-2 text-muted-foreground hover:text-foreground transition-all duration-300 group"
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-        >
-          <div className="relative w-5 h-5">
-            <Sun 
-              className={cn(
-                "absolute inset-0 w-5 h-5 transition-all duration-300",
-                theme === 'light' 
-                  ? "opacity-100 rotate-0 scale-100 text-amber-500" 
-                  : "opacity-0 -rotate-90 scale-0"
-              )} 
-            />
-            <Moon 
-              className={cn(
-                "absolute inset-0 w-5 h-5 transition-all duration-300",
-                theme === 'dark' 
-                  ? "opacity-100 rotate-0 scale-100" 
-                  : "opacity-0 rotate-90 scale-0"
-              )} 
-            />
-          </div>
-          <span className="text-[10px] font-medium">Theme</span>
-        </button>
-
-        <button className="flex flex-col items-center justify-center gap-1 p-2 text-muted-foreground hover:text-foreground transition-colors">
-           <UserPlus className="w-5 h-5" />
-           <span className="text-[10px] font-medium">Invite</span>
-        </button>
-        
+      {/* User Avatar */}
+      <div className="w-full px-2 pt-4 flex-shrink-0 border-t border-border/50 mt-2">
         <img 
           src="/images/user-avatar.png" 
           alt="User avatar" 

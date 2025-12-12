@@ -217,3 +217,4 @@ Each day of a crop's life follows a three-phase irrigation cycle:
 - Crop Steering & Irrigation Quick Reference (Combined) PDF
 - Irrigation Adjustment Strategies: Dryback & EC PDF
 - Industry best practices for controlled environment agriculture
+

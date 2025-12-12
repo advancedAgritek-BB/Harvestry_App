@@ -129,3 +129,4 @@ export function TCOComparison({ harvestryPrice, isAnnual }: TCOComparisonProps) 
 
 
 
+

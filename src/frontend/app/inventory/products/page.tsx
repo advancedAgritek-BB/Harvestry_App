@@ -22,6 +22,7 @@ import {
   Recycle,
   ChevronLeft,
   ArrowUpDown,
+  Printer,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useManufacturingStore } from '@/features/inventory/stores/manufacturingStore';
@@ -33,6 +34,31 @@ import {
   type InventoryCategory,
   type ProductStatus,
 } from '@/features/inventory/types';
+import { LabelPreviewSlideout, PrinterSettings } from '@/features/inventory/components/labels';
+import type { LabelTemplate } from '@/features/inventory/services/labels.service';
+
+// Product label templates
+const PRODUCT_LABEL_TEMPLATES: LabelTemplate[] = [
+  {
+    id: 'prod-tpl-1',
+    siteId: 'site-1',
+    name: 'Product Label - Standard',
+    jurisdiction: 'ALL',
+    labelType: 'product',
+    format: 'zpl',
+    barcodeFormat: 'gs1-128',
+    barcodePosition: { x: 10, y: 40, width: 180, height: 30 },
+    widthInches: 2,
+    heightInches: 1,
+    fields: [],
+    requiredPhrases: [],
+    jurisdictionRules: {},
+    isActive: true,
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
 
 // Category icons mapping
 const CATEGORY_ICONS: Record<InventoryCategory, React.ElementType> = {
@@ -120,10 +146,12 @@ function ProductRow({
   product,
   onEdit,
   onView,
+  onPrintLabel,
 }: {
   product: Product;
   onEdit: () => void;
   onView: () => void;
+  onPrintLabel: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const categoryConfig = CATEGORY_CONFIG[product.category];
@@ -222,6 +250,16 @@ function ProductRow({
                   <Copy className="w-4 h-4" />
                   Duplicate
                 </button>
+                <button
+                  onClick={() => {
+                    onPrintLabel();
+                    setMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-white/5"
+                >
+                  <Printer className="w-4 h-4" />
+                  Print Label
+                </button>
                 <hr className="my-1 border-border" />
                 <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10">
                   <Trash2 className="w-4 h-4" />
@@ -281,6 +319,12 @@ export default function ProductCatalogPage() {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [sortBy, setSortBy] = useState<'name' | 'sku' | 'category'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  
+  // Label preview state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<LabelTemplate | null>(PRODUCT_LABEL_TEMPLATES[0]);
+  const [isPrinterSettingsOpen, setIsPrinterSettingsOpen] = useState(false);
 
   // Load products on mount
   useEffect(() => {
@@ -511,6 +555,10 @@ export default function ProductCatalogPage() {
                       // Navigate to product detail
                       window.location.href = `/inventory/products/${product.id}`;
                     }}
+                    onPrintLabel={() => {
+                      setPreviewProduct(product);
+                      setIsPreviewOpen(true);
+                    }}
                   />
                 ))}
               </tbody>
@@ -541,6 +589,36 @@ export default function ProductCatalogPage() {
           </div>
         )}
       </main>
+
+      {/* Label Preview Slideout */}
+      <LabelPreviewSlideout
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        template={selectedTemplate}
+        availableTemplates={PRODUCT_LABEL_TEMPLATES}
+        onTemplateChange={(id) => {
+          const t = PRODUCT_LABEL_TEMPLATES.find(tpl => tpl.id === id);
+          if (t) setSelectedTemplate(t);
+        }}
+        entityData={previewProduct ? {
+          productName: previewProduct.name,
+          strainName: previewProduct.strainName,
+          lotNumber: previewProduct.sku,
+        } : null}
+        entityType="product"
+        onPrint={async () => console.log('Printing product label:', previewProduct?.sku)}
+        onDownload={async (format) => console.log('Downloading as:', format)}
+        onOpenSettings={() => {
+          setIsPreviewOpen(false);
+          setIsPrinterSettingsOpen(true);
+        }}
+      />
+
+      {/* Printer Settings Modal */}
+      <PrinterSettings
+        isOpen={isPrinterSettingsOpen}
+        onClose={() => setIsPrinterSettingsOpen(false)}
+      />
     </div>
   );
 }

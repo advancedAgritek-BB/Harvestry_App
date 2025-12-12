@@ -116,6 +116,28 @@ Track every plant from clone to cure with rule-based lifecycle transitions.
 - **Observations:** Attach photos, notes, and measurements to any batch, task, or room
 - **Movement Auditing:** Know where every plant has been and when
 
+### 🧬 Genetics & Strain Library
+
+Your genetic library becomes a strategic asset.
+
+- **Strain Profiles:** Breeder, seedbank, genetic classification, nominal cannabinoid percentages
+- **Phenotype Tracking:** Individual phenotype variants with performance history
+- **Crop Steering Profiles:** Per-strain VPD, EC, temperature, and VWC targets by growth phase
+- **Response Curves:** Model how each strain responds to environmental parameters
+- **Harvest Performance:** Historical yield data by strain, room, and operator
+- **METRC Integration:** Automatic strain sync with state compliance systems
+
+### ⚖️ Harvest Workflow & Scale Integration
+
+Precision weighing integrated directly into your harvest workflow.
+
+- **Scale Device Management:** Support for OHAUS and other industrial scales via serial/USB
+- **Real-Time Weight Capture:** Automated readings during wet and dry weigh phases
+- **Tare & Calibration:** Built-in calibration workflows with audit trails
+- **Weight Adjustments:** Tracked adjustments with reason codes and dual approval
+- **Waste Tracking:** Every gram of waste documented with disposal method
+- **METRC Sync:** Automatic harvest weight reporting to compliance systems
+
 ### ✅ Intelligent Task Management
 
 Transform your SOPs into executable workflows.
@@ -126,6 +148,31 @@ Transform your SOPs into executable workflows.
 - **Multi-Person Approvals:** High-risk actions require dual sign-off
 - **Evidence Capture:** Attach photos and notes as proof of completion
 - **Slack Integration:** Tasks flow to where your team already works
+- **AI Assignee Recommendations:** Optimal assignment based on workload, skills, and history
+- **Critical Path Analysis:** Identify which tasks are blocking the most work
+
+### 👥 Labor Management
+
+Complete workforce visibility for cultivation operations.
+
+- **Team Structure:** Define teams with leads, members, and role-based permissions
+- **Shift Scheduling:** Template-based scheduling with demand forecasting
+- **Time Tracking:** Clock in/out with badge integration, task-level time capture
+- **Productivity Metrics:** Output per labor hour by task type, team, and individual
+- **Labor Budgets:** Track actual vs. budgeted hours with variance alerts
+- **Compliance:** Break enforcement, overtime tracking, certification expiry warnings
+- **HRIS Integration:** Sync employee data from your existing HR systems
+
+### 🗺️ Spatial Management
+
+Model your facility exactly as it exists.
+
+- **Hierarchical Locations:** Site → Building → Room → Zone → Rack → Position
+- **Zone Configuration:** Define capacity, environmental targets, and equipment per zone
+- **Emitter Specifications:** Track emitter count, flow rate, and calibration per zone
+- **Spatial Queries:** Find all plants in a zone, all equipment in a room, all packages at a location
+- **Movement Routing:** Optimal pick paths based on location topology
+- **Capacity Planning:** Visualize utilization and plan future grows
 
 ### 📦 Unified Inventory & Labeling
 
@@ -133,10 +180,22 @@ One system of record for everything you grow, process, and sell.
 
 - **Universal Locations:** Vault, room, zone, rack, bin, truck, customer, staging, lab
 - **Lot Tracking:** QA status, expiration, holds, and quarantine
-- **Movement History:** Complete chain of custody
+- **Movement History:** Complete chain of custody with graph-based anomaly detection
 - **Returns Handling:** Automatically creates child lots on HOLD
 - **GS1/UDI Labels:** Jurisdiction-compliant labeling built in
 - **Unit Conversions:** Work in your preferred units; we handle the math
+- **Lineage Tracking:** Full ancestry from source harvest through every transformation
+
+### 🚚 Sales & Transfers
+
+Manage your entire sales pipeline from order to delivery.
+
+- **Customer Management:** Dispensaries, retailers, and wholesale accounts
+- **Order Workflow:** Quote → Order → Pick → Pack → Ship → Invoice
+- **Manifest Generation:** METRC/BioTrack manifest creation and tracking
+- **Transfer Verification:** Two-way handoff confirmation with signature capture
+- **Returns Processing:** RMA workflow with reason codes and quality disposition
+- **Credit Management:** Customer credit limits, payment terms, and aging reports
 
 ### 🏭 Processing & Manufacturing
 
@@ -201,6 +260,78 @@ Let the data work for you.
 - **Feedback Loops:** Models improve as you validate or correct predictions
 
 AI suggestions start as recommendations. Flip the flag when you're ready for auto-apply.
+
+### 🔮 Graph Intelligence & Knowledge Graph
+
+Harvestry's proprietary **Graph ML engine** transforms your operational data into actionable intelligence by understanding the relationships between everything in your facility.
+
+**Traceability Anomaly Detection:**
+- Detect unusual package movement patterns, suspicious approval sequences, and atypical user behavior
+- Graph-based scoring that catches "weird combinations" that simple rules miss
+- Human-readable explanations for every anomaly: *"Unusual location path (score: 0.8); Off-hours activity (score: 0.6)"*
+- Automatic flagging of compliance risks before they become problems
+
+**Irrigation Response Intelligence:**
+- Detect when VWC sensors aren't responding appropriately to irrigation events
+- Zone-level baseline comparison identifies clogged emitters, sensor drift, or substrate issues
+- Correlate command execution, flow detection, and moisture response in a single graph
+- Early warning before crop stress occurs
+
+**Smart Task Management:**
+- AI-recommended assignees based on task type affinity, current workload, and historical performance
+- ETA predictions with confidence intervals and risk factors
+- Critical path analysis showing which tasks are blocking the most work
+- Automatic identification of bottlenecks in your workflow
+
+**Knowledge Graph Queries:**
+- Answer complex operational questions: *"Which movements are downstream of this remediation?"*
+- Trace lineage across your entire operation with graph traversal
+- Understand *why* something happened by exploring node neighborhoods
+- Compliance-ready explanations with full provenance
+
+### 💬 Cultivation Copilot (LLM-Powered)
+
+An intelligent assistant that understands your cultivation context.
+
+**Dashboard Integration:**
+- Inline "Ask" buttons on every dashboard section—get instant explanations for anomalies
+- Multi-turn chat for deeper analysis with citations back to source data
+- Command palette for quick actions: *"Run plant health check for Room A"*
+
+**High-Value Use Cases:**
+- **Environment Watch:** Explain sensor anomalies, phase transition risks, mortality spikes
+- **Irrigation Validation:** Check schedules vs. recipes, flag over/under-watering signals
+- **IPM Readiness:** Surface overdue tasks, generate checklists, highlight coverage gaps
+- **Harvest Prep:** Identify blocks nearing harvest, estimate readiness windows
+- **Report Interpretation:** Summarize KPIs with trend deltas and outliers—fully cited
+
+**Safety by Design:**
+- Recommendations only—no direct actuation without explicit approval
+- Deterministic context assembly from verified data sources
+- Confidence and provenance in every suggestion
+- PII redaction and complete audit logging
+
+### 📊 Cultivation Command Center
+
+A data-rich, real-time dashboard designed for serious growers.
+
+**Environmental Mastery:**
+- 5-metric summary: Temperature/VPD, Humidity/DLI, PPFD, CO₂ bands, Substrate EC/pH
+- Multi-line trend charts with lazy-loaded series for performance
+- Custom VWC sensor coloring with persistent preferences
+- Setpoints overlay with auto-expand on active issues
+
+**Irrigation Visualization:**
+- Dual-bar charts: Volume (mL) + End VWC for every event
+- Phase tabs: P1 Ramp, P2 Maintenance, P3 Dryback, All
+- Schedule Performance Panel with alignment scoring
+- Quick-pick shots with confirmation modals
+
+**Spatial Intelligence:**
+- Zone heatmaps with metric selector (Temp, RH, VWC, EC, PPFD)
+- Color-coded cells showing value intensity
+- Click-through to sensor and zone details
+- Room navigation cards for quick switching
 
 ### 🎯 Autosteer MPC (Advanced)
 
@@ -306,6 +437,10 @@ Built for the speed of real operations:
 | Black-box automation you can't trust | Safety-first with complete explainability |
 | Reactive maintenance | Predictive equipment health |
 | Reports you build yourself | KPIs and dashboards out of the box |
+| Rule-based anomaly detection | Graph ML that catches unusual patterns |
+| Manual task assignment | AI-recommended assignees with workload balancing |
+| Hoping irrigation is working | VWC response verification per zone |
+| Searching logs for answers | Knowledge graph with natural language queries |
 
 ---
 
@@ -331,6 +466,7 @@ This is software built by people who understand the industry—for people who ar
 *Grow Smarter. Stay Compliant. Scale Confidently.*
 
 © 2025 Harvestry, Inc. All Rights Reserved.
+
 
 
 

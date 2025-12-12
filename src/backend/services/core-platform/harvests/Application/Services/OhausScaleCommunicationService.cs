@@ -457,3 +457,4 @@ internal class UsbScaleConnection : IScaleConnection
 
 
 
+

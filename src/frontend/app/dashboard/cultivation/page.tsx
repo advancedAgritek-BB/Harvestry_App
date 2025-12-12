@@ -12,23 +12,25 @@ import {
   TargetsVsCurrentWidget, 
   QuickActionsWidget 
 } from '@/features/dashboard/widgets/cultivation/SidebarWidgets';
-import { SiteRoomSelector } from '@/components/SiteRoomSelector';
+import { RoomSelector } from '@/components/SiteRoomSelector';
 import { useSelectedSite, useSelectedRoom } from '@/stores/siteRoomStore';
+import { useAuthStore } from '@/stores/auth/authStore';
 
 function CultivationHeader() {
   const selectedSite = useSelectedSite();
   const selectedRoom = useSelectedRoom();
+  const organizationName = useAuthStore((state) => state.user?.organizationName);
 
   return (
     <div className="h-14 border-b border-border flex items-center px-6 justify-between bg-surface/50 backdrop-blur shrink-0">
-      <h1 className="font-bold text-lg tracking-tight text-foreground">
-        Harvestry{' '}
+      <h1 className="text-lg tracking-tight text-foreground">
+        <span className="font-bold">{organizationName || 'Organization'}</span>
         <span className="text-muted-foreground/60 font-light">
-          / Cultivation / {selectedRoom?.name || 'Select Room'}
+          {' / '}{selectedSite?.name || 'Select Site'}{' / '}{selectedRoom?.name || 'Select Room'}
         </span>
       </h1>
       <div className="flex items-center gap-4">
-        <SiteRoomSelector />
+        <RoomSelector />
         <span className="text-sm text-muted-foreground">Range: Last 24h</span>
       </div>
     </div>
@@ -38,8 +40,9 @@ function CultivationHeader() {
 function HeaderFallback() {
   return (
     <div className="h-14 border-b border-border flex items-center px-6 justify-between bg-surface/50 backdrop-blur shrink-0">
-      <h1 className="font-bold text-lg tracking-tight text-foreground">
-        Harvestry <span className="text-muted-foreground/60 font-light">/ Cultivation / Loading...</span>
+      <h1 className="text-lg tracking-tight text-foreground">
+        <span className="font-bold">Loading...</span>
+        <span className="text-muted-foreground/60 font-light">{' / ... / ...'}</span>
       </h1>
       <div className="flex gap-4 text-sm text-muted-foreground">
         <span>Loading...</span>

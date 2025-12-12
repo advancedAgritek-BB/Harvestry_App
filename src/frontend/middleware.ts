@@ -15,6 +15,8 @@ const PROTECTED_ROUTES = [
   '/dashboard',
   '/admin',
   '/inventory',
+  '/sales',
+  '/transfers',
   '/settings',
 ];
 

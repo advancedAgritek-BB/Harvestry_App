@@ -257,3 +257,4 @@ public sealed class ScaleReading : Entity<Guid>
 
 
 
+

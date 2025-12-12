@@ -134,3 +134,4 @@ CREATE TRIGGER dashboards_updated_at BEFORE UPDATE ON analytics.dashboards
 
 
 
+

@@ -80,11 +80,13 @@ export function useChartHorizontalScroll({
   useEffect(() => {
     if (dataLength <= 0) return;
     
-    const dataLengthChanged = prevDataLength.current !== dataLength;
-    prevDataLength.current = dataLength;
+    const previousLength = prevDataLength.current;
+    const dataLengthChanged = previousLength !== dataLength;
     
     // Only reset if data length actually changed
     if (!dataLengthChanged) return;
+    
+    prevDataLength.current = dataLength;
     
     // If we have an initialVisibleCount, maintain that viewport size
     if (initialVisibleCount && initialVisibleCount < dataLength) {
@@ -94,7 +96,7 @@ export function useChartHorizontalScroll({
       // Keep end at max (show latest data)
       setStartIndex(Math.max(0, dataLength - newViewportSize));
       setEndIndex(dataLength - 1);
-    } else if (viewportSize.current >= prevDataLength.current || viewportSize.current >= dataLength) {
+    } else if (viewportSize.current >= previousLength || viewportSize.current >= dataLength) {
       // Was showing all data, continue to show all
       viewportSize.current = dataLength;
       setStartIndex(0);

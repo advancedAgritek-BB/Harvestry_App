@@ -31,3 +31,4 @@
 - DTO contracts in `labor/Application/DTOs/LaborContracts.cs` define request/response shapes for employees, shifts, time entries, and budgets.
 
 
+

@@ -82,3 +82,4 @@ public sealed record Skill(string Name);
 public sealed record Certification(string Name, DateOnly? ExpiresOn);
 
 
+

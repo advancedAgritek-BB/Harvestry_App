@@ -4,18 +4,21 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import '@/styles/globals.css';
 import { ThemeProvider } from '@/components/common/ThemeProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { PermissionsProvider } from '@/providers/PermissionsProvider';
 import { DemoSeeder } from '@/components/demo/DemoSeeder';
 
 const fontSans = Inter({ 
   subsets: ['latin'], 
   variable: '--font-primary',
   display: 'swap',
+  preload: true,
 });
 
 const fontMono = JetBrains_Mono({ 
   subsets: ['latin'], 
   variable: '--font-mono',
   display: 'swap',
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -38,11 +41,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${fontSans.variable} ${fontMono.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen bg-background text-foreground font-sans antialiased selection:bg-cyan-500/30 selection:text-primary">
+      <body className={`min-h-screen bg-background text-foreground antialiased selection:bg-cyan-500/30 selection:text-primary ${fontSans.className}`}>
         <ThemeProvider defaultTheme="dark">
           <AuthProvider>
-            <DemoSeeder />
-            {children}
+            <PermissionsProvider>
+              <DemoSeeder />
+              {children}
+            </PermissionsProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

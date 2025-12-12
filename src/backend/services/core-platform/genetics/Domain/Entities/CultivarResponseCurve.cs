@@ -396,3 +396,4 @@ public enum ResponseCurveType
     /// <summary>Humidity response</summary>
     Humidity = 8
 }
+

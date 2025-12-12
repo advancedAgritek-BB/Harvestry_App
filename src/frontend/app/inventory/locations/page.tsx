@@ -18,6 +18,31 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { LocationType, LocationStatus } from '@/features/inventory/types';
+import { LabelPreviewSlideout, PrinterSettings } from '@/features/inventory/components/labels';
+import type { LabelTemplate } from '@/features/inventory/services/labels.service';
+
+// Location QR label templates
+const LOCATION_LABEL_TEMPLATES: LabelTemplate[] = [
+  {
+    id: 'loc-tpl-1',
+    siteId: 'site-1',
+    name: 'Location QR Code',
+    jurisdiction: 'ALL',
+    labelType: 'location',
+    format: 'zpl',
+    barcodeFormat: 'qr',
+    barcodePosition: { x: 20, y: 20, width: 160, height: 160 },
+    widthInches: 2,
+    heightInches: 2,
+    fields: [],
+    requiredPhrases: [],
+    jurisdictionRules: {},
+    isActive: true,
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
 
 const LOCATION_ICONS: Record<LocationType, React.ElementType> = {
   room: Warehouse,
@@ -219,6 +244,11 @@ export default function LocationsPage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['vault-a']));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<LocationNode | null>(null);
+  
+  // Label preview state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<LabelTemplate | null>(LOCATION_LABEL_TEMPLATES[0]);
+  const [isPrinterSettingsOpen, setIsPrinterSettingsOpen] = useState(false);
 
   const handleToggle = (id: string) => {
     const next = new Set(expanded);
@@ -400,7 +430,10 @@ export default function LocationsPage() {
                       <Package className="w-4 h-4" />
                       View Lots
                     </button>
-                    <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 text-foreground text-sm hover:bg-white/10 transition-colors">
+                    <button 
+                      onClick={() => setIsPreviewOpen(true)}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 text-foreground text-sm hover:bg-white/10 transition-colors"
+                    >
                       <QrCode className="w-4 h-4" />
                       Print Label
                     </button>
@@ -416,6 +449,36 @@ export default function LocationsPage() {
           </div>
         </div>
       </div>
+
+      {/* Label Preview Slideout */}
+      <LabelPreviewSlideout
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        template={selectedTemplate}
+        availableTemplates={LOCATION_LABEL_TEMPLATES}
+        onTemplateChange={(id) => {
+          const t = LOCATION_LABEL_TEMPLATES.find(tpl => tpl.id === id);
+          if (t) setSelectedTemplate(t);
+        }}
+        entityData={selectedNode ? {
+          lotNumber: selectedNode.code,
+          productName: selectedNode.name,
+          locationName: selectedNode.name,
+        } : null}
+        entityType="location"
+        onPrint={async () => console.log('Printing location label:', selectedNode?.name)}
+        onDownload={async (format) => console.log('Downloading as:', format)}
+        onOpenSettings={() => {
+          setIsPreviewOpen(false);
+          setIsPrinterSettingsOpen(true);
+        }}
+      />
+
+      {/* Printer Settings Modal */}
+      <PrinterSettings
+        isOpen={isPrinterSettingsOpen}
+        onClose={() => setIsPrinterSettingsOpen(false)}
+      />
     </div>
   );
 }

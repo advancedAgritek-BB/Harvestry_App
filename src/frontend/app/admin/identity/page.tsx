@@ -9,18 +9,10 @@ import {
   Plus,
   Edit2,
   Trash2,
-  MoreHorizontal,
-  Mail,
-  Phone,
-  MapPin,
-  CheckCircle,
-  XCircle,
-  Clock,
 } from 'lucide-react';
 import {
   AdminCard,
   AdminSection,
-  AdminGrid,
   AdminTabs,
   TabPanel,
   AdminTable,
@@ -33,8 +25,8 @@ import {
   FormField,
   Input,
   Select,
-  Switch,
   Checkbox,
+  PermissionEditor,
 } from '@/components/admin';
 
 const IDENTITY_TABS = [
@@ -96,6 +88,26 @@ export default function IdentityAdminPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+
+  // Role form state
+  const [roleName, setRoleName] = useState('');
+  const [roleDescription, setRoleDescription] = useState('');
+  const [rolePermissions, setRolePermissions] = useState<string[]>([]);
+
+  // Reset role form when modal closes
+  const handleCloseRoleModal = () => {
+    setIsRoleModalOpen(false);
+    setRoleName('');
+    setRoleDescription('');
+    setRolePermissions([]);
+  };
+
+  // Handle role creation
+  const handleCreateRole = () => {
+    // TODO: API call to create role
+    console.log('Creating role:', { roleName, roleDescription, permissions: rolePermissions });
+    handleCloseRoleModal();
+  };
 
   // Users columns
   const userColumns = [
@@ -441,32 +453,47 @@ export default function IdentityAdminPage() {
       {/* Role Modal */}
       <AdminModal
         isOpen={isRoleModalOpen}
-        onClose={() => setIsRoleModalOpen(false)}
+        onClose={handleCloseRoleModal}
         title="Create Role"
-        description="Define a new role with permissions"
-        size="lg"
+        description="Define a new role with granular permissions"
+        size="xl"
         footer={
           <>
-            <Button variant="ghost" onClick={() => setIsRoleModalOpen(false)}>Cancel</Button>
-            <Button onClick={() => setIsRoleModalOpen(false)}>Create Role</Button>
+            <Button variant="ghost" onClick={handleCloseRoleModal}>Cancel</Button>
+            <Button 
+              onClick={handleCreateRole}
+              disabled={!roleName.trim() || rolePermissions.length === 0}
+            >
+              Create Role
+            </Button>
           </>
         }
       >
         <div className="space-y-6">
-          <FormField label="Role Name" required><Input placeholder="e.g., Shift Supervisor" /></FormField>
-          <FormField label="Description"><Input placeholder="Brief description of the role" /></FormField>
-          <div className="p-4 bg-white/5 rounded-lg">
-            <h4 className="text-sm font-medium text-foreground mb-3">Permissions</h4>
-            <div className="grid grid-cols-2 gap-3">
-              <Checkbox checked={true} onChange={() => {}} label="View Dashboard" />
-              <Checkbox checked={true} onChange={() => {}} label="View Cultivation" />
-              <Checkbox checked={false} onChange={() => {}} label="Edit Recipes" />
-              <Checkbox checked={false} onChange={() => {}} label="Configure Sensors" />
-              <Checkbox checked={false} onChange={() => {}} label="Manage Users" />
-              <Checkbox checked={false} onChange={() => {}} label="Access Compliance" />
-              <Checkbox checked={false} onChange={() => {}} label="Admin Settings" />
-              <Checkbox checked={false} onChange={() => {}} label="Access Simulator" />
-            </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Role Name" required>
+              <Input 
+                placeholder="e.g., Shift Supervisor" 
+                value={roleName}
+                onChange={(e) => setRoleName(e.target.value)}
+              />
+            </FormField>
+            <FormField label="Description">
+              <Input 
+                placeholder="Brief description of the role" 
+                value={roleDescription}
+                onChange={(e) => setRoleDescription(e.target.value)}
+              />
+            </FormField>
+          </div>
+          
+          <div className="border-t border-border pt-4">
+            <h4 className="text-sm font-medium text-foreground mb-4">Permissions</h4>
+            <PermissionEditor
+              selectedPermissions={rolePermissions}
+              onChange={setRolePermissions}
+              showBundles={true}
+            />
           </div>
         </div>
       </AdminModal>

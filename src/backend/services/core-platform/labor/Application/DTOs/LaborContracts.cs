@@ -11,3 +11,4 @@ public record TimeEntryResponse(Guid Id, Guid EmployeeId, string Status, decimal
 public record BudgetResponse(Guid Id, string Scope, decimal Budget, decimal Actual, decimal Variance);
 
 
+

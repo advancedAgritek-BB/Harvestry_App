@@ -4,9 +4,41 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { ChevronUp, ChevronDown, MoreHorizontal, Search } from 'lucide-react';
 
+function getColumnWidthClass(width?: string): string | undefined {
+  if (!width) return undefined;
+  const trimmed = width.trim();
+
+  // If caller already provided a Tailwind class, keep as-is.
+  if (
+    trimmed.startsWith('w-') ||
+    trimmed.startsWith('min-w-') ||
+    trimmed.startsWith('max-w-') ||
+    trimmed.startsWith('basis-')
+  ) {
+    return trimmed;
+  }
+
+  // If caller provided a CSS length (common in this codebase: "80px", "120px"),
+  // convert to Tailwind arbitrary width to avoid inline styles.
+  const isCssLength = /^-?\d+(\.\d+)?(px|rem|em|%|vw|vh|ch)$/.test(trimmed);
+  if (isCssLength) return `w-[${trimmed}]`;
+
+  // Fallback: treat as class string to avoid breaking unknown formats.
+  return trimmed;
+}
+
 interface Column<T> {
+  /**
+   * Column key.
+   * - If it matches a property on the row, we'll display that value by default.
+   * - For computed columns, provide a stable string key and a `render` function.
+   */
   key: keyof T | string;
   header: string;
+  /**
+   * Column width.
+   * Prefer CSS lengths (e.g. "80px") or Tailwind width classes (e.g. "w-24", "w-[120px]").
+   */
   width?: string;
   sortable?: boolean;
   render?: (item: T, index: number) => React.ReactNode;
@@ -23,7 +55,7 @@ interface AdminTableProps<T> {
   onSort?: (key: string) => void;
 }
 
-export function AdminTable<T extends Record<string, unknown>>({
+export function AdminTable<T extends object>({
   columns,
   data,
   keyField,
@@ -45,14 +77,13 @@ export function AdminTable<T extends Record<string, unknown>>({
                   className={cn(
                     'px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider',
                     column.sortable && 'cursor-pointer hover:text-foreground',
-                    column.width
+                    getColumnWidthClass(column.width)
                   )}
-                  style={{ width: column.width }}
                   onClick={() => column.sortable && onSort?.(column.key.toString())}
                 >
                   <div className="flex items-center gap-1">
                     {column.header}
-                    {column.sortable && sortConfig?.key === column.key && (
+                    {column.sortable && sortConfig?.key === column.key.toString() && (
                       sortConfig.direction === 'asc' ? (
                         <ChevronUp className="w-3 h-3" />
                       ) : (
@@ -91,7 +122,7 @@ export function AdminTable<T extends Record<string, unknown>>({
                     >
                       {column.render
                         ? column.render(item, index)
-                        : String(item[column.key as keyof T] ?? '')}
+                        : String((item as any)[column.key as any] ?? '')}
                     </td>
                   ))}
                 </tr>
@@ -120,21 +151,28 @@ interface TableActionButtonProps {
   onClick: () => void;
   children: React.ReactNode;
   variant?: 'default' | 'danger';
+  title?: string;
+  disabled?: boolean;
 }
 
 export function TableActionButton({
   onClick,
   children,
   variant = 'default',
+  title,
+  disabled = false,
 }: TableActionButtonProps) {
   return (
     <button
       onClick={onClick}
+      title={title}
+      disabled={disabled}
       className={cn(
         'p-1.5 rounded-md transition-colors',
         variant === 'default'
           ? 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-          : 'text-rose-400 hover:text-rose-300 hover:bg-rose-500/10'
+          : 'text-rose-400 hover:text-rose-300 hover:bg-rose-500/10',
+        disabled && 'opacity-50 cursor-not-allowed'
       )}
     >
       {children}
