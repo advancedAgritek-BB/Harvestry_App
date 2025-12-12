@@ -207,8 +207,8 @@ export const capacityTiers: CapacityTier[] = [
 export const addOns: AddOn[] = [
   {
     id: 'compliance',
-    name: 'Regulatory Compliance',
-    description: 'METRC & BioTrack integration for licensed markets',
+    name: 'Regulatory Sync (METRC & BioTrack)',
+    description: 'Real-time state compliance integration for licensed markets',
     monthlyPrice: 200,
     annualPrice: 180,
     includes: [

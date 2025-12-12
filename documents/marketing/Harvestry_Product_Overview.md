@@ -163,6 +163,17 @@ Complete workforce visibility for cultivation operations.
 - **Compliance:** Break enforcement, overtime tracking, certification expiry warnings
 - **HRIS Integration:** Sync employee data from your existing HR systems
 
+### 📅 Visual Production Planning
+
+Plan your grows with clarity and confidence.
+
+- **Gantt Scheduling:** Drag-and-drop batch scheduling across rooms and zones
+- **What-If Modeling:** Simulate schedule changes to see impact on harvest dates and yields
+- **Capacity Optimization:** Automatic conflict detection and room utilization insights
+- **Phase Forecasting:** Project when batches will transition through each growth phase
+- **Resource Alignment:** Coordinate labor, equipment, and material needs with your schedule
+- **Export & Share:** Generate timeline views for stakeholder communication
+
 ### 🗺️ Spatial Management
 
 Model your facility exactly as it exists.

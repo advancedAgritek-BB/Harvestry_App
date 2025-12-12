@@ -78,7 +78,7 @@ public static class PermissionSections
         id: "sales",
         label: "Sales & Fulfillment",
         description: "Sales orders, allocation, picking, packing, and shipping",
-        displayOrder: 4,
+        displayOrder: 5,
         permissions: new[]
         {
             new PermissionDefinition("sales:orders:view", "View Sales Orders", "View sales orders and related documents"),
@@ -96,7 +96,7 @@ public static class PermissionSections
         id: "transfers",
         label: "Transfers & Manifests",
         description: "Outbound transfers, transport manifests, and inbound receipts",
-        displayOrder: 5,
+        displayOrder: 6,
         permissions: new[]
         {
             new PermissionDefinition("transfers:view", "View Transfers", "View outbound/inbound transfer records"),
@@ -113,7 +113,7 @@ public static class PermissionSections
         id: "plants",
         label: "Plants & Batches",
         description: "Plant lifecycle management from clone to harvest",
-        displayOrder: 5,
+        displayOrder: 7,
         permissions: new[]
         {
             new PermissionDefinition("plants:view", "View Plants", "View plant records and batch information"),
@@ -128,7 +128,7 @@ public static class PermissionSections
         id: "harvests",
         label: "Harvests & Processing",
         description: "Harvest workflows, weighing, and processing",
-        displayOrder: 6,
+        displayOrder: 8,
         permissions: new[]
         {
             new PermissionDefinition("harvests:view", "View Harvests", "View harvest records and history"),
@@ -143,7 +143,7 @@ public static class PermissionSections
         id: "labtests",
         label: "Lab Testing & QA",
         description: "Laboratory testing, quality assurance, and certifications",
-        displayOrder: 7,
+        displayOrder: 9,
         permissions: new[]
         {
             new PermissionDefinition("labtests:view", "View Lab Results", "View test results and certificates"),
@@ -156,7 +156,7 @@ public static class PermissionSections
         id: "compliance",
         label: "Compliance & Reporting",
         description: "Regulatory compliance, METRC integration, and audit trails",
-        displayOrder: 8,
+        displayOrder: 10,
         permissions: new[]
         {
             new PermissionDefinition("compliance:view", "View Compliance Data", "View compliance status and reports"),
@@ -171,7 +171,7 @@ public static class PermissionSections
         id: "tasks",
         label: "Tasks & SOPs",
         description: "Task management, workflows, and standard operating procedures",
-        displayOrder: 9,
+        displayOrder: 11,
         permissions: new[]
         {
             new PermissionDefinition("tasks:view", "View Tasks", "View assigned and available tasks"),
@@ -187,7 +187,7 @@ public static class PermissionSections
         id: "labor",
         label: "Labor & Scheduling",
         description: "Employee scheduling, time tracking, and team management",
-        displayOrder: 10,
+        displayOrder: 12,
         permissions: new[]
         {
             new PermissionDefinition("labor:view", "View Schedules", "View shift schedules and assignments"),
@@ -202,7 +202,7 @@ public static class PermissionSections
         id: "library",
         label: "Library & Genetics",
         description: "Strain library, genetics, and recipe management",
-        displayOrder: 11,
+        displayOrder: 13,
         permissions: new[]
         {
             new PermissionDefinition("library:view", "View Library", "View strains, genetics, and recipes"),
@@ -216,7 +216,7 @@ public static class PermissionSections
         id: "analytics",
         label: "Analytics & Reports",
         description: "Business intelligence, custom reports, and data analysis",
-        displayOrder: 12,
+        displayOrder: 14,
         permissions: new[]
         {
             new PermissionDefinition("analytics:view", "View Analytics", "Access analytics dashboards"),
@@ -229,7 +229,7 @@ public static class PermissionSections
         id: "admin",
         label: "Administration",
         description: "System administration, user management, and configuration",
-        displayOrder: 13,
+        displayOrder: 15,
         permissions: new[]
         {
             new PermissionDefinition("admin:users", "Manage Users", "Create, edit, and deactivate users"),
@@ -246,7 +246,7 @@ public static class PermissionSections
         id: "simulator",
         label: "Simulator & Dev Tools",
         description: "Development tools and simulation environment",
-        displayOrder: 14,
+        displayOrder: 16,
         permissions: new[]
         {
             new PermissionDefinition("simulator:access", "Access Simulator", "Access the simulation environment"),

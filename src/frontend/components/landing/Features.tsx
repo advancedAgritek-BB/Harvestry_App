@@ -15,7 +15,14 @@ import {
   Brain,
   Gauge,
   Users,
-  CalendarDays
+  CalendarDays,
+  Dna,
+  Scale,
+  Truck,
+  MapPin,
+  Network,
+  Wrench,
+  Cpu
 } from 'lucide-react';
 import { AnimatedSection, StaggerContainer } from './AnimatedSection';
 import { useScrollAnimation } from './hooks/useScrollAnimation';
@@ -76,8 +83,32 @@ const features = [
     color: 'sky',
   },
   {
+    icon: Dna,
+    title: 'Genetics & Strain Library',
+    description: 'Strain profiles with breeder info, phenotype tracking, per-strain crop steering targets, and harvest performance history.',
+    color: 'violet',
+  },
+  {
+    icon: Scale,
+    title: 'Harvest Workflow & Scale Integration',
+    description: 'Industrial scale integration (OHAUS & more), real-time weight capture, tare calibration, and tracked adjustments with dual approval.',
+    color: 'amber',
+  },
+  {
+    icon: Truck,
+    title: 'Sales & Transfers',
+    description: 'Full order lifecycle from quote to invoice. Manifest generation, transfer verification with signature capture, and RMA workflow.',
+    color: 'sky',
+  },
+  {
+    icon: MapPin,
+    title: 'Spatial Management',
+    description: 'Model your facility: Site → Building → Room → Zone → Rack. Capacity planning, emitter specs per zone, and optimal pick paths.',
+    color: 'cyan',
+  },
+  {
     icon: Brain,
-    title: 'Meet Harvey, Your AI Expert',
+    title: 'Harvey — Cultivation Copilot',
     description: "The industry's most advanced cultivation AI. Harvey learns your operation, spots problems before you do, and delivers expert advice—all trained on your data in a private, secure environment.",
     color: 'violet',
   },
@@ -214,6 +245,58 @@ export function Features() {
           {features.map((feature, index) => (
             <FeatureCard key={feature.title} feature={feature} index={index} />
           ))}
+        </div>
+
+        {/* Advanced Capabilities Section */}
+        <div className="mt-20">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-violet/10 border border-accent-violet/20 text-accent-violet text-sm font-medium mb-4">
+              <Cpu className="h-4 w-4" />
+              Advanced Capabilities
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-bold mb-3">
+              Next-Generation{' '}
+              <span className="text-accent-violet">Intelligence & Automation</span>
+            </h3>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              For operators ready to push the boundaries of what cultivation software can do.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-5">
+            {/* Graph Intelligence */}
+            <div className="group p-6 rounded-2xl bg-gradient-to-br from-accent-violet/5 to-accent-cyan/5 border border-accent-violet/20 hover:border-accent-violet/40 transition-all duration-300">
+              <div className="inline-flex p-3 rounded-xl bg-accent-violet/10 mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Network className="h-6 w-6 text-accent-violet" />
+              </div>
+              <h4 className="text-lg font-semibold mb-2">Graph Intelligence</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Graph ML engine detects traceability anomalies, irrigation response issues, and unusual patterns. Natural language knowledge graph queries.
+              </p>
+            </div>
+
+            {/* Predictive Maintenance */}
+            <div className="group p-6 rounded-2xl bg-gradient-to-br from-accent-amber/5 to-accent-rose/5 border border-accent-amber/20 hover:border-accent-amber/40 transition-all duration-300">
+              <div className="inline-flex p-3 rounded-xl bg-accent-amber/10 mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Wrench className="h-6 w-6 text-accent-amber" />
+              </div>
+              <h4 className="text-lg font-semibold mb-2">Predictive Maintenance</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Equipment health scoring for pumps, valves, sensors. Drift detection, failure probability, and automatic work order generation.
+              </p>
+            </div>
+
+            {/* Autosteer MPC */}
+            <div className="group p-6 rounded-2xl bg-gradient-to-br from-accent-emerald/5 to-accent-cyan/5 border border-accent-emerald/20 hover:border-accent-emerald/40 transition-all duration-300">
+              <div className="inline-flex p-3 rounded-xl bg-accent-emerald/10 mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Cpu className="h-6 w-6 text-accent-emerald" />
+              </div>
+              <h4 className="text-lg font-semibold mb-2">Autosteer MPC</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Model Predictive Control for joint optimization of irrigation, climate, and lighting. A/B block testing with full explainability.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
